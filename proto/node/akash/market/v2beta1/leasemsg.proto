@@ -3,9 +3,9 @@ package akash.market.v2beta1;
 
 import "gogoproto/gogo.proto";
 
-import "akash/market/v2beta1/bid.proto";
-import "akash/market/v2beta1/lease.proto";
-import "akash/market/v2beta1/types.proto";
+import "akash/market/v1/bid.proto";
+import "akash/market/v1/lease.proto";
+import "akash/market/v1/types.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v2beta1";
 
@@ -14,7 +14,7 @@ message MsgCreateLease {
   option (gogoproto.equal)      = false;
 
   // BidId is the unique identifier of the Bid.
-  BidID bid_id = 1 [
+  akash.market.v1.BidID bid_id = 1 [
     (gogoproto.customname) = "BidID",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "id",
@@ -30,7 +30,7 @@ message MsgWithdrawLease {
   option (gogoproto.equal) = false;
 
   // BidId is the unique identifier of the Bid.
-  LeaseID id = 1 [
+  akash.market.v1.LeaseID id = 1 [
     (gogoproto.customname) = "ID",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "id",
@@ -46,14 +46,14 @@ message MsgCloseLease {
   option (gogoproto.equal) = false;
 
   // LeaseID is the unique identifier of the Lease.
-  LeaseID id = 1 [
+  akash.market.v1.LeaseID id = 1 [
     (gogoproto.customname) = "ID",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "id",
     (gogoproto.moretags)   = "yaml:\"id\""
   ];
 
-  LeaseClosedReason reason = 2 [
+  akash.market.v1.LeaseClosedReason reason = 2 [
     (gogoproto.jsontag)  = "reason",
     (gogoproto.moretags) = "yaml:\"reason\""
   ];
@@ -61,3 +61,25 @@ message MsgCloseLease {
 
 // MsgCloseLeaseResponse defines the Msg/CloseLease response type.
 message MsgCloseLeaseResponse {}
+
+// MsgLeaseStartReclaim is sent by the provider to initiate reclamation on an active lease.
+message MsgLeaseStartReclaim {
+  option (gogoproto.equal) = false;
+
+  // Id is the unique identifier of the Lease.
+  akash.market.v1.LeaseID id = 1 [
+    (gogoproto.customname) = "ID",
+    (gogoproto.nullable)   = false,
+    (gogoproto.jsontag)    = "id",
+    (gogoproto.moretags)   = "yaml:\"id\""
+  ];
+
+  // reason is the provider's stated reason for initiating reclamation.
+  akash.market.v1.LeaseClosedReason reason = 2 [
+    (gogoproto.jsontag)  = "reason",
+    (gogoproto.moretags) = "yaml:\"reason\""
+  ];
+}
+
+// MsgLeaseStartReclaimResponse is the response from starting lease reclamation.
+message MsgLeaseStartReclaimResponse {}
