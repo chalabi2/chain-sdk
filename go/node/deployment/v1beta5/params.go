@@ -3,6 +3,7 @@ package v1beta5
 import (
 	"fmt"
 	"math"
+	"time"
 
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -10,12 +11,26 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	v1 "pkg.akt.dev/go/node/deployment/v1"
+	"pkg.akt.dev/go/node/types/unit"
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
+var (
+	// DefaultMaxVolumeSize matches the compiled per-unit storage cap the
+	// param replaces for volume groups.
+	DefaultMaxVolumeSize uint64 = 32 * unit.Ti
+
+	DefaultMaxVolumeRetention = 720 * time.Hour // 30 days
+
+	DefaultMaxVolumeReplicas uint32 = 4
+)
+
 const (
-	keyMinDeposits = "MinDeposits"
+	keyMinDeposits        = "MinDeposits"
+	keyMaxVolumeSize      = "MaxVolumeSize"
+	keyMaxVolumeRetention = "MaxVolumeRetention"
+	keyMaxVolumeReplicas  = "MaxVolumeReplicas"
 )
 
 func ParamKeyTable() paramtypes.KeyTable {
@@ -25,6 +40,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair([]byte(keyMinDeposits), &p.MinDeposits, validateMinDeposits),
+		paramtypes.NewParamSetPair([]byte(keyMaxVolumeSize), &p.MaxVolumeSize, validateMaxVolumeSize),
+		paramtypes.NewParamSetPair([]byte(keyMaxVolumeRetention), &p.MaxVolumeRetention, validateMaxVolumeRetention),
+		paramtypes.NewParamSetPair([]byte(keyMaxVolumeReplicas), &p.MaxVolumeReplicas, validateMaxVolumeReplicas),
 	}
 }
 
@@ -34,11 +52,23 @@ func DefaultParams() Params {
 			sdk.NewCoin("uakt", sdkmath.NewInt(500000)),
 			sdk.NewCoin("uact", sdkmath.NewInt(500000)),
 		},
+		MaxVolumeSize:      DefaultMaxVolumeSize,
+		MaxVolumeRetention: DefaultMaxVolumeRetention,
+		MaxVolumeReplicas:  DefaultMaxVolumeReplicas,
 	}
 }
 
 func (p Params) Validate() error {
 	if err := validateMinDeposits(p.MinDeposits); err != nil {
+		return err
+	}
+	if err := validateMaxVolumeSize(p.MaxVolumeSize); err != nil {
+		return err
+	}
+	if err := validateMaxVolumeRetention(p.MaxVolumeRetention); err != nil {
+		return err
+	}
+	if err := validateMaxVolumeReplicas(p.MaxVolumeReplicas); err != nil {
 		return err
 	}
 	return nil
@@ -90,6 +120,41 @@ func validateMinDeposits(i interface{}) error {
 
 	if _, exists := check["uact"]; !exists {
 		return fmt.Errorf("%w: Min Deposits - uact not given: %#v", v1.ErrInvalidParam, vals)
+	}
+
+	return nil
+}
+
+func validateMaxVolumeSize(i interface{}) error {
+	val, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("%w: Max Volume Size - invalid type: %T", v1.ErrInvalidParam, i)
+	}
+
+	if val == 0 {
+		return fmt.Errorf("%w: Max Volume Size must be > 0", v1.ErrInvalidParam)
+	}
+
+	return nil
+}
+
+func validateMaxVolumeRetention(i interface{}) error {
+	val, ok := i.(time.Duration)
+	if !ok {
+		return fmt.Errorf("%w: Max Volume Retention - invalid type: %T", v1.ErrInvalidParam, i)
+	}
+
+	if val < 0 {
+		return fmt.Errorf("%w: Max Volume Retention must be >= 0", v1.ErrInvalidParam)
+	}
+
+	return nil
+}
+
+func validateMaxVolumeReplicas(i interface{}) error {
+	_, ok := i.(uint32)
+	if !ok {
+		return fmt.Errorf("%w: Max Volume Replicas - invalid type: %T", v1.ErrInvalidParam, i)
 	}
 
 	return nil

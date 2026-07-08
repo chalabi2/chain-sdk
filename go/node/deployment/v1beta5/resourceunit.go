@@ -6,6 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	v1 "pkg.akt.dev/go/node/deployment/v1"
 	types "pkg.akt.dev/go/node/types/resources/v1beta4"
 )
 
@@ -15,11 +16,18 @@ func (r *ResourceUnit) FullPrice() sdk.DecCoin {
 }
 
 func (r *ResourceUnit) Dup() ResourceUnit {
-	return ResourceUnit{
+	res := ResourceUnit{
 		Resources: r.Resources.Dup(),
 		Count:     r.Count,
 		Price:     r.GetPrice(),
 	}
+
+	if len(r.Volumes) > 0 {
+		res.Volumes = make([]v1.VolumeRef, 0, len(r.Volumes))
+		res.Volumes = append(res.Volumes, r.Volumes...)
+	}
+
+	return res
 }
 
 func (r *ResourceUnit) validate() error {

@@ -9,6 +9,7 @@ import type { DeepPartial, MessageFns } from "../../../../../encoding/typeEncodi
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { PlacementRequirements } from "../../base/attributes/v1/attribute.ts";
+import { VolumePolicy } from "../v1/volume.ts";
 import { ResourceUnit } from "./resourceunit.ts";
 
 /**
@@ -30,10 +31,16 @@ export interface GroupSpec {
    * Each ResourceUnit defines the specific resources (e.g., CPU, memory) assigned.
    */
   resources: ResourceUnit[];
+  /**
+   * Volume, when set, declares this a storage-only volume group and carries
+   * its lifecycle contract. Nil for every pre-AEP-87 group, so the store
+   * migration is re-serialization only.
+   */
+  volume: VolumePolicy | undefined;
 }
 
 function createBaseGroupSpec(): GroupSpec {
-  return { name: "", requirements: undefined, resources: [] };
+  return { name: "", requirements: undefined, resources: [], volume: undefined };
 }
 
 export const GroupSpec: MessageFns<GroupSpec, "akash.deployment.v1beta5.GroupSpec"> = {
@@ -48,6 +55,9 @@ export const GroupSpec: MessageFns<GroupSpec, "akash.deployment.v1beta5.GroupSpe
     }
     for (const v of message.resources) {
       ResourceUnit.encode(v!, writer.uint32(26).fork()).join();
+    }
+    if (message.volume !== undefined) {
+      VolumePolicy.encode(message.volume, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -83,6 +93,14 @@ export const GroupSpec: MessageFns<GroupSpec, "akash.deployment.v1beta5.GroupSpe
           message.resources.push(ResourceUnit.decode(reader, reader.uint32()));
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.volume = VolumePolicy.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -99,6 +117,7 @@ export const GroupSpec: MessageFns<GroupSpec, "akash.deployment.v1beta5.GroupSpe
       resources: globalThis.Array.isArray(object?.resources)
         ? object.resources.map((e: any) => ResourceUnit.fromJSON(e))
         : [],
+      volume: isSet(object.volume) ? VolumePolicy.fromJSON(object.volume) : undefined,
     };
   },
 
@@ -113,6 +132,9 @@ export const GroupSpec: MessageFns<GroupSpec, "akash.deployment.v1beta5.GroupSpe
     if (message.resources?.length) {
       obj.resources = message.resources.map((e) => ResourceUnit.toJSON(e));
     }
+    if (message.volume !== undefined) {
+      obj.volume = VolumePolicy.toJSON(message.volume);
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<GroupSpec>): GroupSpec {
@@ -122,6 +144,9 @@ export const GroupSpec: MessageFns<GroupSpec, "akash.deployment.v1beta5.GroupSpe
       ? PlacementRequirements.fromPartial(object.requirements)
       : undefined;
     message.resources = object.resources?.map((e) => ResourceUnit.fromPartial(e)) || [];
+    message.volume = (object.volume !== undefined && object.volume !== null)
+      ? VolumePolicy.fromPartial(object.volume)
+      : undefined;
     return message;
   },
 };

@@ -9,6 +9,7 @@ import type { DeepPartial, MessageFns } from "../../../../../encoding/typeEncodi
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { DecCoin } from "../../../cosmos/base/v1beta1/coin.ts";
+import { VolumeRef } from "../../deployment/v1/volume.ts";
 import { BidID } from "./bid.ts";
 import { LeaseID } from "./lease.ts";
 import { OrderID } from "./order.ts";
@@ -87,6 +88,36 @@ export interface EventLeaseReclaimStarted {
   reason: LeaseClosedReason;
   /** deadline is the unix timestamp when the reclamation window expires. */
   deadline: bigint;
+}
+
+/**
+ * EventVolumeAttached is triggered when a compute lease attaches an
+ * externally-leased volume.
+ */
+export interface EventVolumeAttached {
+  /** LeaseId is the unique identifier of the compute lease. */
+  leaseId:
+    | LeaseID
+    | undefined;
+  /** Volume references the attached volume. */
+  volume: VolumeRef | undefined;
+}
+
+/**
+ * EventVolumeDetached is triggered when a compute lease detaches from an
+ * externally-leased volume, on any close path.
+ */
+export interface EventVolumeDetached {
+  /** LeaseId is the unique identifier of the compute lease. */
+  leaseId:
+    | LeaseID
+    | undefined;
+  /** Volume references the detached volume. */
+  volume:
+    | VolumeRef
+    | undefined;
+  /** Reason is why the detach happened. */
+  reason: LeaseClosedReason;
 }
 
 function createBaseEventOrderCreated(): EventOrderCreated {
@@ -575,6 +606,178 @@ export const EventLeaseReclaimStarted: MessageFns<
     message.id = (object.id !== undefined && object.id !== null) ? LeaseID.fromPartial(object.id) : undefined;
     message.reason = object.reason ?? 0;
     message.deadline = (object.deadline !== undefined && object.deadline !== null) ? BigInt(object.deadline) : 0n;
+    return message;
+  },
+};
+
+function createBaseEventVolumeAttached(): EventVolumeAttached {
+  return { leaseId: undefined, volume: undefined };
+}
+
+export const EventVolumeAttached: MessageFns<EventVolumeAttached, "akash.market.v1.EventVolumeAttached"> = {
+  $type: "akash.market.v1.EventVolumeAttached" as const,
+
+  encode(message: EventVolumeAttached, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.leaseId !== undefined) {
+      LeaseID.encode(message.leaseId, writer.uint32(10).fork()).join();
+    }
+    if (message.volume !== undefined) {
+      VolumeRef.encode(message.volume, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventVolumeAttached {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventVolumeAttached();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.leaseId = LeaseID.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.volume = VolumeRef.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventVolumeAttached {
+    return {
+      leaseId: isSet(object.lease_id) ? LeaseID.fromJSON(object.lease_id) : undefined,
+      volume: isSet(object.volume) ? VolumeRef.fromJSON(object.volume) : undefined,
+    };
+  },
+
+  toJSON(message: EventVolumeAttached): unknown {
+    const obj: any = {};
+    if (message.leaseId !== undefined) {
+      obj.lease_id = LeaseID.toJSON(message.leaseId);
+    }
+    if (message.volume !== undefined) {
+      obj.volume = VolumeRef.toJSON(message.volume);
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<EventVolumeAttached>): EventVolumeAttached {
+    const message = createBaseEventVolumeAttached();
+    message.leaseId = (object.leaseId !== undefined && object.leaseId !== null)
+      ? LeaseID.fromPartial(object.leaseId)
+      : undefined;
+    message.volume = (object.volume !== undefined && object.volume !== null)
+      ? VolumeRef.fromPartial(object.volume)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseEventVolumeDetached(): EventVolumeDetached {
+  return { leaseId: undefined, volume: undefined, reason: 0 };
+}
+
+export const EventVolumeDetached: MessageFns<EventVolumeDetached, "akash.market.v1.EventVolumeDetached"> = {
+  $type: "akash.market.v1.EventVolumeDetached" as const,
+
+  encode(message: EventVolumeDetached, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.leaseId !== undefined) {
+      LeaseID.encode(message.leaseId, writer.uint32(10).fork()).join();
+    }
+    if (message.volume !== undefined) {
+      VolumeRef.encode(message.volume, writer.uint32(18).fork()).join();
+    }
+    if (message.reason !== 0) {
+      writer.uint32(24).int32(message.reason);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventVolumeDetached {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventVolumeDetached();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.leaseId = LeaseID.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.volume = VolumeRef.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.reason = reader.int32() as any;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventVolumeDetached {
+    return {
+      leaseId: isSet(object.lease_id) ? LeaseID.fromJSON(object.lease_id) : undefined,
+      volume: isSet(object.volume) ? VolumeRef.fromJSON(object.volume) : undefined,
+      reason: isSet(object.reason) ? leaseClosedReasonFromJSON(object.reason) : 0,
+    };
+  },
+
+  toJSON(message: EventVolumeDetached): unknown {
+    const obj: any = {};
+    if (message.leaseId !== undefined) {
+      obj.lease_id = LeaseID.toJSON(message.leaseId);
+    }
+    if (message.volume !== undefined) {
+      obj.volume = VolumeRef.toJSON(message.volume);
+    }
+    if (message.reason !== 0) {
+      obj.reason = leaseClosedReasonToJSON(message.reason);
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<EventVolumeDetached>): EventVolumeDetached {
+    const message = createBaseEventVolumeDetached();
+    message.leaseId = (object.leaseId !== undefined && object.leaseId !== null)
+      ? LeaseID.fromPartial(object.leaseId)
+      : undefined;
+    message.volume = (object.volume !== undefined && object.volume !== null)
+      ? VolumeRef.fromPartial(object.volume)
+      : undefined;
+    message.reason = object.reason ?? 0;
     return message;
   },
 };

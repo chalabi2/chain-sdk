@@ -741,6 +741,9 @@ impl serde::Serialize for GroupSpec {
         if !self.resources.is_empty() {
             len += 1;
         }
+        if self.volume.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.deployment.v1beta5.GroupSpec", len)?;
         if !self.name.is_empty() {
             struct_ser.serialize_field("name", &self.name)?;
@@ -750,6 +753,9 @@ impl serde::Serialize for GroupSpec {
         }
         if !self.resources.is_empty() {
             struct_ser.serialize_field("resources", &self.resources)?;
+        }
+        if let Some(v) = self.volume.as_ref() {
+            struct_ser.serialize_field("volume", v)?;
         }
         struct_ser.end()
     }
@@ -764,6 +770,7 @@ impl<'de> serde::Deserialize<'de> for GroupSpec {
             "name",
             "requirements",
             "resources",
+            "volume",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -771,6 +778,7 @@ impl<'de> serde::Deserialize<'de> for GroupSpec {
             Name,
             Requirements,
             Resources,
+            Volume,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -795,6 +803,7 @@ impl<'de> serde::Deserialize<'de> for GroupSpec {
                             "name" => Ok(GeneratedField::Name),
                             "requirements" => Ok(GeneratedField::Requirements),
                             "resources" => Ok(GeneratedField::Resources),
+                            "volume" => Ok(GeneratedField::Volume),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -817,6 +826,7 @@ impl<'de> serde::Deserialize<'de> for GroupSpec {
                 let mut name__ = None;
                 let mut requirements__ = None;
                 let mut resources__ = None;
+                let mut volume__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Name => {
@@ -837,12 +847,19 @@ impl<'de> serde::Deserialize<'de> for GroupSpec {
                             }
                             resources__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::Volume => {
+                            if volume__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("volume"));
+                            }
+                            volume__ = map_.next_value()?;
+                        }
                     }
                 }
                 Ok(GroupSpec {
                     name: name__.unwrap_or_default(),
                     requirements: requirements__,
                     resources: resources__.unwrap_or_default(),
+                    volume: volume__,
                 })
             }
         }
@@ -2104,9 +2121,29 @@ impl serde::Serialize for Params {
         if !self.min_deposits.is_empty() {
             len += 1;
         }
+        if self.max_volume_size != 0 {
+            len += 1;
+        }
+        if self.max_volume_retention.is_some() {
+            len += 1;
+        }
+        if self.max_volume_replicas != 0 {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.deployment.v1beta5.Params", len)?;
         if !self.min_deposits.is_empty() {
             struct_ser.serialize_field("minDeposits", &self.min_deposits)?;
+        }
+        if self.max_volume_size != 0 {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("maxVolumeSize", ToString::to_string(&self.max_volume_size).as_str())?;
+        }
+        if let Some(v) = self.max_volume_retention.as_ref() {
+            struct_ser.serialize_field("maxVolumeRetention", v)?;
+        }
+        if self.max_volume_replicas != 0 {
+            struct_ser.serialize_field("maxVolumeReplicas", &self.max_volume_replicas)?;
         }
         struct_ser.end()
     }
@@ -2120,11 +2157,20 @@ impl<'de> serde::Deserialize<'de> for Params {
         const FIELDS: &[&str] = &[
             "min_deposits",
             "minDeposits",
+            "max_volume_size",
+            "maxVolumeSize",
+            "max_volume_retention",
+            "maxVolumeRetention",
+            "max_volume_replicas",
+            "maxVolumeReplicas",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             MinDeposits,
+            MaxVolumeSize,
+            MaxVolumeRetention,
+            MaxVolumeReplicas,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -2147,6 +2193,9 @@ impl<'de> serde::Deserialize<'de> for Params {
                     {
                         match value {
                             "minDeposits" | "min_deposits" => Ok(GeneratedField::MinDeposits),
+                            "maxVolumeSize" | "max_volume_size" => Ok(GeneratedField::MaxVolumeSize),
+                            "maxVolumeRetention" | "max_volume_retention" => Ok(GeneratedField::MaxVolumeRetention),
+                            "maxVolumeReplicas" | "max_volume_replicas" => Ok(GeneratedField::MaxVolumeReplicas),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -2167,6 +2216,9 @@ impl<'de> serde::Deserialize<'de> for Params {
                     V: serde::de::MapAccess<'de>,
             {
                 let mut min_deposits__ = None;
+                let mut max_volume_size__ = None;
+                let mut max_volume_retention__ = None;
+                let mut max_volume_replicas__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::MinDeposits => {
@@ -2175,10 +2227,35 @@ impl<'de> serde::Deserialize<'de> for Params {
                             }
                             min_deposits__ = Some(map_.next_value()?);
                         }
+                        GeneratedField::MaxVolumeSize => {
+                            if max_volume_size__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("maxVolumeSize"));
+                            }
+                            max_volume_size__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
+                        GeneratedField::MaxVolumeRetention => {
+                            if max_volume_retention__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("maxVolumeRetention"));
+                            }
+                            max_volume_retention__ = map_.next_value()?;
+                        }
+                        GeneratedField::MaxVolumeReplicas => {
+                            if max_volume_replicas__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("maxVolumeReplicas"));
+                            }
+                            max_volume_replicas__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(Params {
                     min_deposits: min_deposits__.unwrap_or_default(),
+                    max_volume_size: max_volume_size__.unwrap_or_default(),
+                    max_volume_retention: max_volume_retention__,
+                    max_volume_replicas: max_volume_replicas__.unwrap_or_default(),
                 })
             }
         }
@@ -2979,6 +3056,9 @@ impl serde::Serialize for ResourceUnit {
         if self.price.is_some() {
             len += 1;
         }
+        if !self.volumes.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.deployment.v1beta5.ResourceUnit", len)?;
         if let Some(v) = self.resource.as_ref() {
             struct_ser.serialize_field("resource", v)?;
@@ -2988,6 +3068,9 @@ impl serde::Serialize for ResourceUnit {
         }
         if let Some(v) = self.price.as_ref() {
             struct_ser.serialize_field("price", v)?;
+        }
+        if !self.volumes.is_empty() {
+            struct_ser.serialize_field("volumes", &self.volumes)?;
         }
         struct_ser.end()
     }
@@ -3002,6 +3085,7 @@ impl<'de> serde::Deserialize<'de> for ResourceUnit {
             "resource",
             "count",
             "price",
+            "volumes",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -3009,6 +3093,7 @@ impl<'de> serde::Deserialize<'de> for ResourceUnit {
             Resource,
             Count,
             Price,
+            Volumes,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -3033,6 +3118,7 @@ impl<'de> serde::Deserialize<'de> for ResourceUnit {
                             "resource" => Ok(GeneratedField::Resource),
                             "count" => Ok(GeneratedField::Count),
                             "price" => Ok(GeneratedField::Price),
+                            "volumes" => Ok(GeneratedField::Volumes),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -3055,6 +3141,7 @@ impl<'de> serde::Deserialize<'de> for ResourceUnit {
                 let mut resource__ = None;
                 let mut count__ = None;
                 let mut price__ = None;
+                let mut volumes__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Resource => {
@@ -3077,12 +3164,19 @@ impl<'de> serde::Deserialize<'de> for ResourceUnit {
                             }
                             price__ = map_.next_value()?;
                         }
+                        GeneratedField::Volumes => {
+                            if volumes__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("volumes"));
+                            }
+                            volumes__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(ResourceUnit {
                     resource: resource__,
                     count: count__.unwrap_or_default(),
                     price: price__,
+                    volumes: volumes__.unwrap_or_default(),
                 })
             }
         }

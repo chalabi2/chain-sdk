@@ -10,6 +10,7 @@ import type { DeepPartial, MessageFns } from "../../../../../encoding/typeEncodi
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { DeploymentID } from "./deployment.ts";
 import { GroupID } from "./group.ts";
+import { VolumeRef } from "./volume.ts";
 
 /**
  * EventDeploymentCreated event is triggered when deployment is created on chain.
@@ -71,6 +72,23 @@ export interface EventGroupPaused {
 export interface EventGroupClosed {
   /** ID is the unique identifier of the group. */
   id: GroupID | undefined;
+}
+
+/**
+ * EventVolumeAdopted is triggered when a new volume group adopts a dead
+ * retained volume, transferring the vid's data continuity to the new group.
+ */
+export interface EventVolumeAdopted {
+  /** ID is the unique identifier of the new (adopting) volume group. */
+  id:
+    | GroupID
+    | undefined;
+  /** Adopted references the dead retained volume being adopted. */
+  adopted:
+    | VolumeRef
+    | undefined;
+  /** Vid is the data-continuity label shared by both volumes. */
+  vid: string;
 }
 
 function createBaseEventDeploymentCreated(): EventDeploymentCreated {
@@ -443,6 +461,98 @@ export const EventGroupClosed: MessageFns<EventGroupClosed, "akash.deployment.v1
   fromPartial(object: DeepPartial<EventGroupClosed>): EventGroupClosed {
     const message = createBaseEventGroupClosed();
     message.id = (object.id !== undefined && object.id !== null) ? GroupID.fromPartial(object.id) : undefined;
+    return message;
+  },
+};
+
+function createBaseEventVolumeAdopted(): EventVolumeAdopted {
+  return { id: undefined, adopted: undefined, vid: "" };
+}
+
+export const EventVolumeAdopted: MessageFns<EventVolumeAdopted, "akash.deployment.v1.EventVolumeAdopted"> = {
+  $type: "akash.deployment.v1.EventVolumeAdopted" as const,
+
+  encode(message: EventVolumeAdopted, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== undefined) {
+      GroupID.encode(message.id, writer.uint32(10).fork()).join();
+    }
+    if (message.adopted !== undefined) {
+      VolumeRef.encode(message.adopted, writer.uint32(18).fork()).join();
+    }
+    if (message.vid !== "") {
+      writer.uint32(26).string(message.vid);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventVolumeAdopted {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventVolumeAdopted();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = GroupID.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.adopted = VolumeRef.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.vid = reader.string();
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventVolumeAdopted {
+    return {
+      id: isSet(object.id) ? GroupID.fromJSON(object.id) : undefined,
+      adopted: isSet(object.adopted) ? VolumeRef.fromJSON(object.adopted) : undefined,
+      vid: isSet(object.vid) ? globalThis.String(object.vid) : "",
+    };
+  },
+
+  toJSON(message: EventVolumeAdopted): unknown {
+    const obj: any = {};
+    if (message.id !== undefined) {
+      obj.id = GroupID.toJSON(message.id);
+    }
+    if (message.adopted !== undefined) {
+      obj.adopted = VolumeRef.toJSON(message.adopted);
+    }
+    if (message.vid !== "") {
+      obj.vid = message.vid;
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<EventVolumeAdopted>): EventVolumeAdopted {
+    const message = createBaseEventVolumeAdopted();
+    message.id = (object.id !== undefined && object.id !== null) ? GroupID.fromPartial(object.id) : undefined;
+    message.adopted = (object.adopted !== undefined && object.adopted !== null)
+      ? VolumeRef.fromPartial(object.adopted)
+      : undefined;
+    message.vid = object.vid ?? "";
     return message;
   },
 };

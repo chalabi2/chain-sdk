@@ -10,6 +10,7 @@ import type { DeepPartial, MessageFns } from "../../../../../encoding/typeEncodi
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { DecCoin } from "../../../cosmos/base/v1beta1/coin.ts";
 import { Resources } from "../../base/resources/v1beta4/resources.ts";
+import { VolumeRef } from "../v1/volume.ts";
 
 /** ResourceUnit extends Resources and adds Count along with the Price. */
 export interface ResourceUnit {
@@ -20,11 +21,20 @@ export interface ResourceUnit {
   /** Count corresponds to the amount of replicas to run of the resources. */
   count: number;
   /** Price holds the pricing for the resource units. */
-  price: DecCoin | undefined;
+  price:
+    | DecCoin
+    | undefined;
+  /**
+   * Volumes lists externally-leased volumes this unit's services mount.
+   * Attached volumes contribute zero storage quantity to the unit: no
+   * Storage entry corresponds to a VolumeRef. Empty for all pre-AEP-87
+   * deployments.
+   */
+  volumes: VolumeRef[];
 }
 
 function createBaseResourceUnit(): ResourceUnit {
-  return { resource: undefined, count: 0, price: undefined };
+  return { resource: undefined, count: 0, price: undefined, volumes: [] };
 }
 
 export const ResourceUnit: MessageFns<ResourceUnit, "akash.deployment.v1beta5.ResourceUnit"> = {
@@ -39,6 +49,9 @@ export const ResourceUnit: MessageFns<ResourceUnit, "akash.deployment.v1beta5.Re
     }
     if (message.price !== undefined) {
       DecCoin.encode(message.price, writer.uint32(26).fork()).join();
+    }
+    for (const v of message.volumes) {
+      VolumeRef.encode(v!, writer.uint32(34).fork()).join();
     }
     return writer;
   },
@@ -74,6 +87,14 @@ export const ResourceUnit: MessageFns<ResourceUnit, "akash.deployment.v1beta5.Re
           message.price = DecCoin.decode(reader, reader.uint32());
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.volumes.push(VolumeRef.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -88,6 +109,7 @@ export const ResourceUnit: MessageFns<ResourceUnit, "akash.deployment.v1beta5.Re
       resource: isSet(object.resource) ? Resources.fromJSON(object.resource) : undefined,
       count: isSet(object.count) ? globalThis.Number(object.count) : 0,
       price: isSet(object.price) ? DecCoin.fromJSON(object.price) : undefined,
+      volumes: globalThis.Array.isArray(object?.volumes) ? object.volumes.map((e: any) => VolumeRef.fromJSON(e)) : [],
     };
   },
 
@@ -102,6 +124,9 @@ export const ResourceUnit: MessageFns<ResourceUnit, "akash.deployment.v1beta5.Re
     if (message.price !== undefined) {
       obj.price = DecCoin.toJSON(message.price);
     }
+    if (message.volumes?.length) {
+      obj.volumes = message.volumes.map((e) => VolumeRef.toJSON(e));
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<ResourceUnit>): ResourceUnit {
@@ -113,6 +138,7 @@ export const ResourceUnit: MessageFns<ResourceUnit, "akash.deployment.v1beta5.Re
     message.price = (object.price !== undefined && object.price !== null)
       ? DecCoin.fromPartial(object.price)
       : undefined;
+    message.volumes = object.volumes?.map((e) => VolumeRef.fromPartial(e)) || [];
     return message;
   },
 };
