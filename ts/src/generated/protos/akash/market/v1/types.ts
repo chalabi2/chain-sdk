@@ -17,6 +17,11 @@ export enum LeaseClosedReason {
   /** lease_closed_owner - values between 1..9999 indicate owner‑initiated close */
   lease_closed_owner = 1,
   /**
+   * reason_volume_migrate - reason_volume_migrate owner closes a volume lease to migrate it to
+   * another provider
+   */
+  reason_volume_migrate = 101,
+  /**
    * lease_closed_reason_unstable - values between 10000..19999 are indicating provider initiated close
    * lease_closed_reason_unstable lease workloads have been unstable
    */
@@ -27,8 +32,16 @@ export enum LeaseClosedReason {
   lease_closed_reason_unspecified = 10002,
   /** lease_closed_reason_manifest_timeout - lease_closed_reason_manifest_timeout provider closed leases due to manifest not received */
   lease_closed_reason_manifest_timeout = 10003,
+  /** reason_volume_evict - reason_volume_evict provider decommissions a volume (via reclaim) */
+  reason_volume_evict = 10101,
   /** lease_closed_reason_insufficient_funds - values between 20000..29999 indicate network‑initiated close */
   lease_closed_reason_insufficient_funds = 20000,
+  /** reason_volume_closed_retain - reason_volume_closed_retain tenant closed the volume; the retain window runs */
+  reason_volume_closed_retain = 20101,
+  /** reason_volume_unfunded - reason_volume_unfunded volume lease closed by the escrow exhaustion cascade */
+  reason_volume_unfunded = 20102,
+  /** reason_volume_detach - reason_volume_detach compute lease force-closed by cascade-detach of its volume */
+  reason_volume_detach = 20103,
   UNRECOGNIZED = -1,
 }
 
@@ -40,6 +53,9 @@ export function leaseClosedReasonFromJSON(object: any): LeaseClosedReason {
     case 1:
     case "lease_closed_owner":
       return LeaseClosedReason.lease_closed_owner;
+    case 101:
+    case "reason_volume_migrate":
+      return LeaseClosedReason.reason_volume_migrate;
     case 10000:
     case "lease_closed_reason_unstable":
       return LeaseClosedReason.lease_closed_reason_unstable;
@@ -52,9 +68,21 @@ export function leaseClosedReasonFromJSON(object: any): LeaseClosedReason {
     case 10003:
     case "lease_closed_reason_manifest_timeout":
       return LeaseClosedReason.lease_closed_reason_manifest_timeout;
+    case 10101:
+    case "reason_volume_evict":
+      return LeaseClosedReason.reason_volume_evict;
     case 20000:
     case "lease_closed_reason_insufficient_funds":
       return LeaseClosedReason.lease_closed_reason_insufficient_funds;
+    case 20101:
+    case "reason_volume_closed_retain":
+      return LeaseClosedReason.reason_volume_closed_retain;
+    case 20102:
+    case "reason_volume_unfunded":
+      return LeaseClosedReason.reason_volume_unfunded;
+    case 20103:
+    case "reason_volume_detach":
+      return LeaseClosedReason.reason_volume_detach;
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -68,6 +96,8 @@ export function leaseClosedReasonToJSON(object: LeaseClosedReason): string {
       return "lease_closed_invalid";
     case LeaseClosedReason.lease_closed_owner:
       return "lease_closed_owner";
+    case LeaseClosedReason.reason_volume_migrate:
+      return "reason_volume_migrate";
     case LeaseClosedReason.lease_closed_reason_unstable:
       return "lease_closed_reason_unstable";
     case LeaseClosedReason.lease_closed_reason_decommission:
@@ -76,8 +106,16 @@ export function leaseClosedReasonToJSON(object: LeaseClosedReason): string {
       return "lease_closed_reason_unspecified";
     case LeaseClosedReason.lease_closed_reason_manifest_timeout:
       return "lease_closed_reason_manifest_timeout";
+    case LeaseClosedReason.reason_volume_evict:
+      return "reason_volume_evict";
     case LeaseClosedReason.lease_closed_reason_insufficient_funds:
       return "lease_closed_reason_insufficient_funds";
+    case LeaseClosedReason.reason_volume_closed_retain:
+      return "reason_volume_closed_retain";
+    case LeaseClosedReason.reason_volume_unfunded:
+      return "reason_volume_unfunded";
+    case LeaseClosedReason.reason_volume_detach:
+      return "reason_volume_detach";
     case LeaseClosedReason.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";

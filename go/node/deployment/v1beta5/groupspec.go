@@ -34,6 +34,7 @@ func (g GroupSpec) Dup() GroupSpec {
 		Name:         g.Name,
 		Requirements: g.Requirements.Dup(),
 		Resources:    g.Resources.Dup(),
+		Volume:       g.Volume.Dup(),
 	}
 
 	return res

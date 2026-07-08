@@ -4,6 +4,7 @@ package akash.deployment.v1beta5;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "pkg.akt.dev/go/node/deployment/v1beta5";
 
@@ -17,5 +18,31 @@ message Params {
     (gogoproto.nullable)     = false,
     (gogoproto.jsontag)      = "min_deposits",
     (gogoproto.moretags)     = "yaml:\"min_deposits\""
+  ];
+
+  // MaxVolumeSize is the maximum size in bytes of the single storage entry
+  // of a volume group. Applies to volume groups ONLY; compute groups keep
+  // the compiled per-unit storage cap.
+  uint64 max_volume_size = 2 [
+    (gogoproto.customname) = "MaxVolumeSize",
+    (gogoproto.jsontag)    = "max_volume_size",
+    (gogoproto.moretags)   = "yaml:\"max_volume_size\""
+  ];
+
+  // MaxVolumeRetention bounds VolumePolicy.retention: the longest post-close
+  // window a tenant may ask a provider to keep volume data adoptable.
+  google.protobuf.Duration max_volume_retention = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "max_volume_retention",
+    (gogoproto.moretags)    = "yaml:\"max_volume_retention\""
+  ];
+
+  // MaxVolumeReplicas bounds VolumePolicy.max_replicas: the most replica
+  // volumes a tenant may point at one volume.
+  uint32 max_volume_replicas = 4 [
+    (gogoproto.customname) = "MaxVolumeReplicas",
+    (gogoproto.jsontag)    = "max_volume_replicas",
+    (gogoproto.moretags)   = "yaml:\"max_volume_replicas\""
   ];
 }

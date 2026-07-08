@@ -1,0 +1,28 @@
+syntax = "proto3";
+package akash.escrow.v1;
+
+import "gogoproto/gogo.proto";
+
+import "akash/escrow/id/v1/id.proto";
+
+option go_package = "pkg.akt.dev/go/node/escrow/v1";
+
+// EventAccountRunway is emitted at every settle of an account with open
+// payments: the deterministic, tenant-computable exhaustion deadline.
+message EventAccountRunway {
+  // ID is the unique identifier of the account.
+  akash.escrow.id.v1.Account id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "ID",
+    (gogoproto.jsontag)    = "id",
+    (gogoproto.moretags)   = "yaml:\"id\""
+  ];
+
+  // ProjectedDepletionHeight is the block height at which the account's
+  // funds no longer cover its open payment rates. 0 means the funds cover
+  // no full block.
+  int64 projected_depletion_height = 2 [
+    (gogoproto.jsontag)  = "projected_depletion_height",
+    (gogoproto.moretags) = "yaml:\"projected_depletion_height\""
+  ];
+}

@@ -4,6 +4,7 @@ package akash.deployment.v1beta5;
 import "gogoproto/gogo.proto";
 
 import "akash/base/attributes/v1/attribute.proto";
+import "akash/deployment/v1/volume.proto";
 import "akash/deployment/v1beta5/resourceunit.proto";
 
 option go_package = "pkg.akt.dev/go/node/deployment/v1beta5";
@@ -35,5 +36,14 @@ message GroupSpec {
     (gogoproto.castrepeated) = "ResourceUnits",
     (gogoproto.jsontag)      = "resources",
     (gogoproto.moretags)     = "yaml:\"resources\""
+  ];
+
+  // Volume, when set, declares this a storage-only volume group and carries
+  // its lifecycle contract. Nil for every pre-AEP-87 group, so the store
+  // migration is re-serialization only.
+  akash.deployment.v1.VolumePolicy volume = 4 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "volume,omitempty",
+    (gogoproto.moretags) = "yaml:\"volume,omitempty\""
   ];
 }

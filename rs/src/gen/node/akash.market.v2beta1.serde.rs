@@ -2590,6 +2590,12 @@ impl serde::Serialize for Params {
         if self.max_reclamation_window.is_some() {
             len += 1;
         }
+        if self.volume_orders_enabled {
+            len += 1;
+        }
+        if self.min_volume_reclamation_window.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v2beta1.Params", len)?;
         if let Some(v) = self.bid_min_deposit.as_ref() {
             struct_ser.serialize_field("bidMinDeposit", v)?;
@@ -2605,6 +2611,12 @@ impl serde::Serialize for Params {
         }
         if let Some(v) = self.max_reclamation_window.as_ref() {
             struct_ser.serialize_field("maxReclamationWindow", v)?;
+        }
+        if self.volume_orders_enabled {
+            struct_ser.serialize_field("volumeOrdersEnabled", &self.volume_orders_enabled)?;
+        }
+        if let Some(v) = self.min_volume_reclamation_window.as_ref() {
+            struct_ser.serialize_field("minVolumeReclamationWindow", v)?;
         }
         struct_ser.end()
     }
@@ -2626,6 +2638,10 @@ impl<'de> serde::Deserialize<'de> for Params {
             "minReclamationWindow",
             "max_reclamation_window",
             "maxReclamationWindow",
+            "volume_orders_enabled",
+            "volumeOrdersEnabled",
+            "min_volume_reclamation_window",
+            "minVolumeReclamationWindow",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -2635,6 +2651,8 @@ impl<'de> serde::Deserialize<'de> for Params {
             BidMinDeposits,
             MinReclamationWindow,
             MaxReclamationWindow,
+            VolumeOrdersEnabled,
+            MinVolumeReclamationWindow,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -2661,6 +2679,8 @@ impl<'de> serde::Deserialize<'de> for Params {
                             "bidMinDeposits" | "bid_min_deposits" => Ok(GeneratedField::BidMinDeposits),
                             "minReclamationWindow" | "min_reclamation_window" => Ok(GeneratedField::MinReclamationWindow),
                             "maxReclamationWindow" | "max_reclamation_window" => Ok(GeneratedField::MaxReclamationWindow),
+                            "volumeOrdersEnabled" | "volume_orders_enabled" => Ok(GeneratedField::VolumeOrdersEnabled),
+                            "minVolumeReclamationWindow" | "min_volume_reclamation_window" => Ok(GeneratedField::MinVolumeReclamationWindow),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -2685,6 +2705,8 @@ impl<'de> serde::Deserialize<'de> for Params {
                 let mut bid_min_deposits__ = None;
                 let mut min_reclamation_window__ = None;
                 let mut max_reclamation_window__ = None;
+                let mut volume_orders_enabled__ = None;
+                let mut min_volume_reclamation_window__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::BidMinDeposit => {
@@ -2719,6 +2741,18 @@ impl<'de> serde::Deserialize<'de> for Params {
                             }
                             max_reclamation_window__ = map_.next_value()?;
                         }
+                        GeneratedField::VolumeOrdersEnabled => {
+                            if volume_orders_enabled__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("volumeOrdersEnabled"));
+                            }
+                            volume_orders_enabled__ = Some(map_.next_value()?);
+                        }
+                        GeneratedField::MinVolumeReclamationWindow => {
+                            if min_volume_reclamation_window__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("minVolumeReclamationWindow"));
+                            }
+                            min_volume_reclamation_window__ = map_.next_value()?;
+                        }
                     }
                 }
                 Ok(Params {
@@ -2727,6 +2761,8 @@ impl<'de> serde::Deserialize<'de> for Params {
                     bid_min_deposits: bid_min_deposits__.unwrap_or_default(),
                     min_reclamation_window: min_reclamation_window__,
                     max_reclamation_window: max_reclamation_window__,
+                    volume_orders_enabled: volume_orders_enabled__.unwrap_or_default(),
+                    min_volume_reclamation_window: min_volume_reclamation_window__,
                 })
             }
         }

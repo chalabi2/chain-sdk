@@ -5,6 +5,8 @@ import "gogoproto/gogo.proto";
 
 import "cosmos/base/v1beta1/coin.proto";
 
+import "akash/deployment/v1/volume.proto";
+
 import "akash/market/v1/bid.proto";
 import "akash/market/v1/order.proto";
 import "akash/market/v1/lease.proto";
@@ -140,3 +142,51 @@ message EventLeaseReclaimStarted {
   ];
 }
 
+
+// EventVolumeAttached is triggered when a compute lease attaches an
+// externally-leased volume.
+message EventVolumeAttached {
+  option (gogoproto.equal) = true;
+
+  // LeaseId is the unique identifier of the compute lease.
+  LeaseID lease_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "LeaseID",
+    (gogoproto.jsontag)    = "lease_id",
+    (gogoproto.moretags)   = "yaml:\"lease_id\""
+  ];
+
+  // Volume references the attached volume.
+  akash.deployment.v1.VolumeRef volume = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "volume",
+    (gogoproto.moretags) = "yaml:\"volume\""
+  ];
+}
+
+// EventVolumeDetached is triggered when a compute lease detaches from an
+// externally-leased volume, on any close path.
+message EventVolumeDetached {
+  option (gogoproto.equal) = true;
+
+  // LeaseId is the unique identifier of the compute lease.
+  LeaseID lease_id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "LeaseID",
+    (gogoproto.jsontag)    = "lease_id",
+    (gogoproto.moretags)   = "yaml:\"lease_id\""
+  ];
+
+  // Volume references the detached volume.
+  akash.deployment.v1.VolumeRef volume = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "volume",
+    (gogoproto.moretags) = "yaml:\"volume\""
+  ];
+
+  // Reason is why the detach happened.
+  LeaseClosedReason reason = 3 [
+    (gogoproto.jsontag)  = "reason",
+    (gogoproto.moretags) = "yaml:\"reason\""
+  ];
+}

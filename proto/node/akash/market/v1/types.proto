@@ -21,6 +21,12 @@ enum LeaseClosedReason {
     (gogoproto.enumvalue_customname) = "LeaseClosedReasonOwner"
   ];
 
+  // reason_volume_migrate owner closes a volume lease to migrate it to
+  // another provider
+  reason_volume_migrate = 101 [
+    (gogoproto.enumvalue_customname) = "LeaseClosedReasonVolumeMigrate"
+  ];
+
   // values between 10000..19999 are indicating provider initiated close
   // lease_closed_reason_unstable lease workloads have been unstable
   lease_closed_reason_unstable = 10000 [
@@ -39,8 +45,28 @@ enum LeaseClosedReason {
     (gogoproto.enumvalue_customname) = "LeaseClosedReasonManifestTimeout"
   ];
 
+  // reason_volume_evict provider decommissions a volume (via reclaim)
+  reason_volume_evict = 10101 [
+    (gogoproto.enumvalue_customname) = "LeaseClosedReasonVolumeEvict"
+  ];
+
   // values between 20000..29999 indicate network‑initiated close
   lease_closed_reason_insufficient_funds = 20000 [
     (gogoproto.enumvalue_customname) = "LeaseClosedReasonInsufficientFunds"
+  ];
+
+  // reason_volume_closed_retain tenant closed the volume; the retain window runs
+  reason_volume_closed_retain = 20101 [
+    (gogoproto.enumvalue_customname) = "LeaseClosedReasonVolumeClosedRetain"
+  ];
+
+  // reason_volume_unfunded volume lease closed by the escrow exhaustion cascade
+  reason_volume_unfunded = 20102 [
+    (gogoproto.enumvalue_customname) = "LeaseClosedReasonVolumeUnfunded"
+  ];
+
+  // reason_volume_detach compute lease force-closed by cascade-detach of its volume
+  reason_volume_detach = 20103 [
+    (gogoproto.enumvalue_customname) = "LeaseClosedReasonVolumeDetach"
   ];
 }

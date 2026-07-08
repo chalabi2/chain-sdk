@@ -21,12 +21,19 @@ var (
 
 	DefaultMinReclamationWindow = 1 * time.Hour
 	DefaultMaxReclamationWindow = 720 * time.Hour // 30 days
+
+	// DefaultVolumeOrdersEnabled ships the AEP-87 feature flag off; it is
+	// flipped by governance.
+	DefaultVolumeOrdersEnabled = false
+
+	DefaultMinVolumeReclamationWindow = 24 * time.Hour
 )
 
 const (
-	keyBidMinDeposit  = "BidMinDeposit"
-	keyBidMinDeposits = "BidMinDeposits"
-	keyOrderMaxBids   = "OrderMaxBids"
+	keyBidMinDeposit       = "BidMinDeposit"
+	keyBidMinDeposits      = "BidMinDeposits"
+	keyOrderMaxBids        = "OrderMaxBids"
+	keyVolumeOrdersEnabled = "VolumeOrdersEnabled"
 )
 
 func ParamKeyTable() paramtypes.KeyTable {
@@ -38,6 +45,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair([]byte(keyBidMinDeposit), &p.BidMinDeposit, validateCoin),
 		paramtypes.NewParamSetPair([]byte(keyBidMinDeposits), &p.BidMinDeposits, validateCoins),
 		paramtypes.NewParamSetPair([]byte(keyOrderMaxBids), &p.OrderMaxBids, validateOrderMaxBids),
+		paramtypes.NewParamSetPair([]byte(keyVolumeOrdersEnabled), &p.VolumeOrdersEnabled, validateBool),
 	}
 }
 
@@ -49,8 +57,10 @@ func DefaultParams() Params {
 			DefaultBidMinDeposit,
 			DefaultBidMinDepositACT,
 		),
-		MinReclamationWindow: DefaultMinReclamationWindow,
-		MaxReclamationWindow: DefaultMaxReclamationWindow,
+		MinReclamationWindow:       DefaultMinReclamationWindow,
+		MaxReclamationWindow:       DefaultMaxReclamationWindow,
+		VolumeOrdersEnabled:        DefaultVolumeOrdersEnabled,
+		MinVolumeReclamationWindow: DefaultMinVolumeReclamationWindow,
 	}
 }
 
@@ -68,6 +78,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateReclamationWindows(p.MinReclamationWindow, p.MaxReclamationWindow); err != nil {
+		return err
+	}
+
+	if err := validateMinVolumeReclamationWindow(p.MinVolumeReclamationWindow); err != nil {
 		return err
 	}
 
@@ -107,6 +121,23 @@ func validateReclamationWindows(min, max time.Duration) error {
 
 	if max <= min {
 		return fmt.Errorf("%w: max reclamation window must be > min reclamation window", v1.ErrInvalidParam)
+	}
+
+	return nil
+}
+
+func validateBool(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("%w: invalid type %T", v1.ErrInvalidParam, i)
+	}
+
+	return nil
+}
+
+func validateMinVolumeReclamationWindow(min time.Duration) error {
+	if min < 0 {
+		return fmt.Errorf("%w: min volume reclamation window must be >= 0", v1.ErrInvalidParam)
 	}
 
 	return nil

@@ -1,0 +1,122 @@
+syntax = "proto3";
+package akash.deployment.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "pkg.akt.dev/go/node/deployment/v1";
+
+// VolumeRef addresses one Storage entry of a storage-only ("volume") group.
+message VolumeRef {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  // Owner is the account bech32 address of the user who owns the volume group.
+  // It is a string representing a valid bech32 account address.
+  //
+  // Example:
+  //   "akash1..."
+  string owner = 1 [
+    (cosmos_proto.scalar) = "cosmos.AddressString",
+    (gogoproto.jsontag)   = "owner",
+    (gogoproto.moretags)  = "yaml:\"owner\""
+  ];
+
+  // Dseq (deployment sequence number) of the volume deployment.
+  uint64 dseq = 2 [
+    (gogoproto.customname) = "DSeq",
+    (gogoproto.jsontag)    = "dseq",
+    (gogoproto.moretags)   = "yaml:\"dseq\""
+  ];
+
+  // Gseq (group sequence number) of the volume group. Always 1 in v1:
+  // a deployment containing a volume group contains only that group.
+  uint32 gseq = 3 [
+    (gogoproto.customname) = "GSeq",
+    (gogoproto.jsontag)    = "gseq",
+    (gogoproto.moretags)   = "yaml:\"gseq\""
+  ];
+
+  // Name is the Storage.Name of the single storage entry in the volume group.
+  string name = 4 [
+    (gogoproto.jsontag)  = "name",
+    (gogoproto.moretags) = "yaml:\"name\""
+  ];
+}
+
+// VolumePolicy marks a group as a storage-only volume group and carries its
+// lifecycle contract. Presence of this message IS the volume discriminator.
+message VolumePolicy {
+  option (gogoproto.equal) = true;
+
+  // ReclaimPolicy declares what happens to the volume's data after its
+  // lease closes.
+  enum ReclaimPolicy {
+    option (gogoproto.goproto_enum_prefix) = false;
+
+    // Prefix should start with 0 in enum. So declaring dummy state.
+    invalid = 0 [(gogoproto.enumvalue_customname) = "VolumeReclaimInvalid"];
+    // retain keeps the data adoptable for the retention window after close.
+    retain = 1 [(gogoproto.enumvalue_customname) = "VolumeReclaimRetain"];
+    // delete destroys the data immediately after close and detach.
+    delete = 2 [(gogoproto.enumvalue_customname) = "VolumeReclaimDelete"];
+  }
+
+  // Vid is the tenant-chosen data-continuity label (DNS-label grammar,
+  // [a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?). Typed field -- NEVER a storage
+  // attribute (attributes flow into AttributesSubsetOf provider matching
+  // and would make the order unbiddable).
+  string vid = 1 [
+    (gogoproto.jsontag)  = "vid",
+    (gogoproto.moretags) = "yaml:\"vid\""
+  ];
+
+  // Reclaim declares the post-close fate of the volume's data.
+  ReclaimPolicy reclaim = 2 [
+    (gogoproto.jsontag)  = "reclaim",
+    (gogoproto.moretags) = "yaml:\"reclaim\""
+  ];
+
+  // Retention is the post-close window the provider must keep the data
+  // adoptable. Bounded by deployment Params.MaxVolumeRetention; priced into
+  // the bid. GC deadline is chain-computable: closedLease.ClosedAt + retention.
+  google.protobuf.Duration retention = 3 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "retention",
+    (gogoproto.moretags)    = "yaml:\"retention\""
+  ];
+
+  // MaxAttachments bounds concurrent attached compute leases.
+  // Validation forces 1 in v1 (RWO); the field exists so RWX is additive.
+  uint32 max_attachments = 4 [
+    (gogoproto.jsontag)  = "max_attachments",
+    (gogoproto.moretags) = "yaml:\"max_attachments\""
+  ];
+
+  // MaxReplicas declares how many replica volumes the tenant may point at
+  // this volume (replica_of backrefs). >0 obliges the winning provider to
+  // serve replication export traffic -- a bid-time-known, priced duty.
+  uint32 max_replicas = 5 [
+    (gogoproto.jsontag)  = "max_replicas",
+    (gogoproto.moretags) = "yaml:\"max_replicas\""
+  ];
+
+  // Adopt, when set, makes this volume an ADOPTION of a dead retained volume:
+  // same owner, same vid, group closed, within its retention window. Bids are
+  // chain-gated to the provider of adopt's last closed lease.
+  VolumeRef adopt = 6 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "adopt,omitempty",
+    (gogoproto.moretags) = "yaml:\"adopt,omitempty\""
+  ];
+
+  // ReplicaOf, when set, declares this volume a replica of the named volume
+  // (same owner). Drives data-plane authorization on both ends.
+  VolumeRef replica_of = 7 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "replica_of,omitempty",
+    (gogoproto.moretags) = "yaml:\"replica_of,omitempty\""
+  ];
+}
