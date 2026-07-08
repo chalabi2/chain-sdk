@@ -12,12 +12,12 @@ import (
 )
 
 var (
-	msgTypeCreateBid     = ""
-	msgTypeCloseBid      = ""
-	msgTypeCreateLease   = ""
-	msgTypeCloseLease    = ""
-	msgTypeWithdrawLease    = ""
-	msgTypeUpdateParams     = ""
+	msgTypeCreateBid         = ""
+	msgTypeCloseBid          = ""
+	msgTypeCreateLease       = ""
+	msgTypeCloseLease        = ""
+	msgTypeWithdrawLease     = ""
+	msgTypeUpdateParams      = ""
 	msgTypeLeaseStartReclaim = ""
 )
 
