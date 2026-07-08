@@ -9,3 +9,4 @@ export { Cluster } from "./akash/inventory/v1/cluster.ts";
 export { LeaseServiceStatus, LeaseIPStatus, ForwarderPortStatus, ServiceStatus, SendManifestRequest, SendManifestResponse, ServiceLogsRequest, ServiceLogs, ServiceLogsResponse, ShellRequest, ServiceStatusRequest, ServiceStatusResponse, AttestationQuoteRequest, AttestationGPUReport, AttestationQuoteResponse } from "./akash/provider/lease/v1/service.ts";
 export { ResourcesMetric, Leases, ReservationsMetric, Reservations, Inventory, ClusterStatus, BidEngineStatus, ManifestStatus, Status } from "./akash/provider/v1/status.ts";
 export { BidScreeningRequest, BidScreeningResponse } from "./akash/provider/v1/validation.ts";
+export { ExportRequest, ExportChunk, StatusRequest, StatusResponse } from "./akash/volume/v1/service.ts";
