@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	atypes "pkg.akt.dev/go/node/audit/v1"
+	v1 "pkg.akt.dev/go/node/deployment/v1"
 	attr "pkg.akt.dev/go/node/types/attributes/v1"
 )
 
@@ -152,12 +153,112 @@ func (g *GroupSpec) validate() error {
 		return fmt.Errorf("empty group spec name denomination")
 	}
 
-	if err := g.GetResourceUnits().Validate(); err != nil {
+	if g.Volume != nil {
+		if err := g.validateVolumeGroup(); err != nil {
+			return err
+		}
+	} else if err := g.GetResourceUnits().Validate(); err != nil {
 		return err
 	}
 
 	if err := g.validatePricing(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// validateVolumeGroup does stateless validation of a storage-only (volume)
+// group: the VolumePolicy fields plus the present-but-zero resource shape.
+// The compute-group totals in ResourceUnits.Validate do not apply — a volume
+// group requests zero CPU/memory/GPU by construction.
+func (g *GroupSpec) validateVolumeGroup() error {
+	vol := g.Volume
+
+	if err := v1.ValidateVID(vol.Vid); err != nil {
+		return err
+	}
+
+	switch vol.Reclaim {
+	case v1.VolumeReclaimRetain, v1.VolumeReclaimDelete:
+	default:
+		return fmt.Errorf("error: invalid volume reclaim policy (%v)", vol.Reclaim)
+	}
+
+	if vol.Retention < 0 {
+		return fmt.Errorf("error: invalid volume retention (%v < 0 fails)", vol.Retention)
+	}
+
+	if vol.MaxAttachments != 1 {
+		return fmt.Errorf("error: invalid volume max_attachments (%v != 1 fails)", vol.MaxAttachments)
+	}
+
+	if vol.Adopt != nil && vol.ReplicaOf != nil {
+		return fmt.Errorf("error: volume adopt and replica_of are mutually exclusive")
+	}
+
+	if err := validateVolumePolicyRef("adopt", vol.Adopt); err != nil {
+		return err
+	}
+
+	if err := validateVolumePolicyRef("replica_of", vol.ReplicaOf); err != nil {
+		return err
+	}
+
+	if len(g.Resources) != 1 {
+		return fmt.Errorf("error: invalid volume group resources (exactly one unit required, %v given)", len(g.Resources))
+	}
+
+	if err := g.Resources[0].validateVolumeUnit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateVolumePolicyRef(field string, ref *v1.VolumeRef) error {
+	if ref == nil {
+		return nil
+	}
+
+	if err := ref.Validate(); err != nil {
+		return err
+	}
+
+	if ref.GSeq != 1 {
+		return fmt.Errorf("error: invalid volume %s reference %q (gseq must be 1)", field, ref.String())
+	}
+
+	return nil
+}
+
+// ValidateVolumeBounds enforces the param-bounded volume group rules against
+// the deployment module params: storage size <= MaxVolumeSize, retention <=
+// MaxVolumeRetention, max_replicas <= MaxVolumeReplicas. ValidateBasic covers
+// the stateless shape; the deployment msg server calls this with current
+// chain state. A nil-Volume (compute) group always passes.
+func (g GroupSpec) ValidateVolumeBounds(p Params) error {
+	if g.Volume == nil {
+		return nil
+	}
+
+	for i := range g.Resources {
+		for _, storage := range g.Resources[i].Storage {
+			if storage.Quantity.Value() > p.MaxVolumeSize {
+				return fmt.Errorf("%w: volume size too large (%v > %v fails)",
+					v1.ErrInvalidParam, storage.Quantity.Value(), p.MaxVolumeSize)
+			}
+		}
+	}
+
+	if g.Volume.Retention > p.MaxVolumeRetention {
+		return fmt.Errorf("%w: volume retention too long (%v > %v fails)",
+			v1.ErrInvalidParam, g.Volume.Retention, p.MaxVolumeRetention)
+	}
+
+	if g.Volume.MaxReplicas > p.MaxVolumeReplicas {
+		return fmt.Errorf("%w: volume max_replicas too large (%v > %v fails)",
+			v1.ErrInvalidParam, g.Volume.MaxReplicas, p.MaxVolumeReplicas)
 	}
 
 	return nil

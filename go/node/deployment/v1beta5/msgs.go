@@ -101,6 +101,23 @@ func (msg *MsgCreateDeployment) ValidateBasic() error {
 			return err
 		}
 
+		if gs.Volume != nil {
+			// single-group invariant: gseq of a volume group is always 1 and
+			// the deployment's escrow account is coterminous with the volume
+			if len(msg.Groups) != 1 {
+				return v1.ErrInvalidGroups.Wrapf("volume group %q must be the only group in a deployment", gs.GetName())
+			}
+
+			// adopt/replica_of always target the deployment owner's own volumes
+			if ref := gs.Volume.Adopt; ref != nil && ref.Owner != msg.ID.Owner {
+				return v1.ErrInvalidGroups.Wrap("volume adopt reference owner must match deployment owner")
+			}
+
+			if ref := gs.Volume.ReplicaOf; ref != nil && ref.Owner != msg.ID.Owner {
+				return v1.ErrInvalidGroups.Wrap("volume replica_of reference owner must match deployment owner")
+			}
+		}
+
 		// deposit must be same denom as price
 		if !msg.Deposit.Amount.IsZero() {
 			if gdenom := gs.Price().Denom; gdenom != msg.Deposit.Amount.Denom {
