@@ -12,11 +12,30 @@ apis:
       rename:
         Params: DeploymentParams
   - url: "./.cache/tmp/swagger-gen/akash/deployment/v1beta4/service.swagger.json"
+  - url: "./.cache/tmp/swagger-gen/akash/deployment/v1beta5/query.swagger.json"
+    operationIds:
+      rename:
+        Deployments: DeploymentsV1beta5
+        Deployment: DeploymentV1beta5
+        Group: GroupV1beta5
+        Params: DeploymentParamsV1beta5
+  - url: "./.cache/tmp/swagger-gen/akash/deployment/v1beta5/service.swagger.json"
   - url: "./.cache/tmp/swagger-gen/akash/market/v1beta5/query.swagger.json"
     operationIds:
       rename:
         Params: MarketParams
   - url: "./.cache/tmp/swagger-gen/akash/market/v1beta5/service.swagger.json"
+  - url: "./.cache/tmp/swagger-gen/akash/market/v2beta1/query.swagger.json"
+    operationIds:
+      rename:
+        Orders: OrdersV2beta1
+        Order: OrderV2beta1
+        Bids: BidsV2beta1
+        Bid: BidV2beta1
+        Leases: LeasesV2beta1
+        Lease: LeaseV2beta1
+        Params: MarketParamsV2beta1
+  - url: "./.cache/tmp/swagger-gen/akash/market/v2beta1/service.swagger.json"
   - url: "./.cache/tmp/swagger-gen/akash/provider/v1beta4/query.swagger.json"
   - url: "./.cache/tmp/swagger-gen/akash/take/v1/query.swagger.json"
     operationIds:
