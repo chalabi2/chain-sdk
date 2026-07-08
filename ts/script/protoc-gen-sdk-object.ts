@@ -19,6 +19,15 @@ runNodeJs(
 );
 
 const PROTO_PATH = "protos";
+
+// ECMAScript reserved words that cannot name a function expression.
+const RESERVED_WORDS = new Set([
+  "break", "case", "catch", "class", "const", "continue", "debugger",
+  "default", "delete", "do", "else", "enum", "export", "extends", "false",
+  "finally", "for", "function", "if", "import", "in", "instanceof", "new",
+  "null", "return", "super", "switch", "this", "throw", "true", "try",
+  "typeof", "var", "void", "while", "with", "yield",
+]);
 function generateTs(schema: Schema): void {
   const servicesLoaderDefs: string[] = [];
   const sdkDefs: Record<string, string> = {};
@@ -54,8 +63,12 @@ function generateTs(schema: Schema): void {
       let comment = jsDoc(method, methodName);
       if (comment) comment += "\n";
 
+      // a reserved word is valid as an object key but not as a named
+      // function expression (e.g. VolumeTransfer.Export -> "export")
+      const fnName = RESERVED_WORDS.has(methodName) ? `${methodName}$` : methodName;
+
       return comment
-        + `${methodName}: withMetadata(async function ${methodName}(${methodArgs.join(", ")}) {\n`
+        + `${methodName}: withMetadata(async function ${fnName}(${methodArgs.join(", ")}) {\n`
         + `  const service = await serviceLoader.loadAt(${serviceIndex});\n`
         + `  return ${isMsgService ? "getMsgClient" : "getClient"}(service).${decapitalize(method.name)}(input, options);\n`
         + `}, { path: [${serviceIndex}, ${JSON.stringify(method.localName)}], serviceLoader })`
