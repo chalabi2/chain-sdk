@@ -51,7 +51,8 @@
         "price": {
           "denom": "uakt",
           "amount": "300.000000000000000000"
-        }
+        },
+        "volumes": null
       },
       {
         "resource": {
@@ -85,7 +86,8 @@
         "price": {
           "denom": "uakt",
           "amount": "500.000000000000000000"
-        }
+        },
+        "volumes": null
       },
       {
         "resource": {
@@ -123,7 +125,8 @@
         "price": {
           "denom": "uakt",
           "amount": "100.000000000000000000"
-        }
+        },
+        "volumes": null
       }
     ]
   }

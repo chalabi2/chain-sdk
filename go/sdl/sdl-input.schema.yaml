@@ -171,6 +171,124 @@ definitions:
       required:
         - global
 
+  volumeExternalRef:
+    description: >-
+      Reference to an existing, separately leased volume deployment (SDL 2.2+).
+      The owner defaults to the transaction signer when omitted.
+    additionalProperties: false
+    properties:
+      external:
+        additionalProperties: false
+        properties:
+          dseq:
+            type: integer
+            minimum: 1
+          owner:
+            type: string
+            minLength: 1
+        required:
+          - dseq
+        type: object
+    required:
+      - external
+    type: object
+
+  volumePolicyRef:
+    description: >-
+      Reference to another volume deployment of the same owner (adopt /
+      replica-of). The name defaults to the declaring volume's own name.
+    additionalProperties: false
+    properties:
+      dseq:
+        type: integer
+        minimum: 1
+      name:
+        type: string
+        minLength: 1
+    required:
+      - dseq
+    type: object
+
+  volumeDeclaration:
+    description: >-
+      New volume declaration (SDL 2.2+). Compiles to its own storage-only
+      deployment; the volumes key doubles as the vid data-continuity label.
+    additionalProperties: false
+    properties:
+      size:
+        type: string
+      class:
+        description: Storage class backing the volume (ram cannot back a volume)
+        enum: [beta1, beta2, beta3, default]
+        type: string
+      lifecycle:
+        additionalProperties: false
+        properties:
+          reclaim:
+            enum: [retain, delete]
+            type: string
+          retention:
+            type: string
+            pattern: "^[1-9][0-9]*(s|m|h)$"
+            description: >-
+              Post-close adoption window as a whole number followed by a
+              unit (s, m, or h). E.g. "168h".
+        type: object
+      max-replicas:
+        type: integer
+        minimum: 0
+      adopt:
+        $ref: '#/definitions/volumePolicyRef'
+      replica-of:
+        $ref: '#/definitions/volumePolicyRef'
+    required:
+      - size
+    type: object
+
+  legacyVersionConstraints:
+    description: >-
+      SDL 2.0/2.1 require services and compute profiles and know nothing of
+      the volumes stanza (2.2+).
+    if:
+      properties:
+        version:
+          enum:
+            - '2.0'
+            - '2.1'
+      required:
+        - version
+    then:
+      required:
+        - services
+      properties:
+        profiles:
+          required:
+            - compute
+      not:
+        required:
+          - volumes
+
+  v2_2RequiresServicesOrVolumes:
+    description: >-
+      SDL 2.2 must declare services (compute deployment, possibly attaching
+      external volumes) or a volume (storage-only deployment).
+    if:
+      properties:
+        version:
+          const: '2.2'
+      required:
+        - version
+    then:
+      anyOf:
+        - required:
+            - services
+        - required:
+            - volumes
+
+allOf:
+  - $ref: '#/definitions/legacyVersionConstraints'
+  - $ref: '#/definitions/v2_2RequiresServicesOrVolumes'
+
 properties:
   deployment:
     additionalProperties:
@@ -351,8 +469,10 @@ properties:
             - pricing
           type: object
         type: object
+    # compute is additionally required for SDL 2.0/2.1
+    # (see definitions/legacyVersionConstraints); a 2.2 volume-only SDL has
+    # no compute profiles.
     required:
-      - compute
       - placement
     type: object
 
@@ -492,6 +612,13 @@ properties:
                     $ref: '#/definitions/absolutePath'
                   readOnly:
                     type: boolean
+                  volume:
+                    description: >-
+                      Name of the volumes stanza entry this storage param
+                      mounts (SDL 2.2+). Excludes a matching compute profile
+                      storage entry; a mount is required.
+                    type: string
+                    minLength: 1
                 type: object
               type: object
             permissions:
@@ -540,11 +667,28 @@ properties:
     enum:
       - '2.0'
       - '2.1'
+      - '2.2'
     type: string
 
+  volumes:
+    description: >-
+      Volume declarations and external volume references (SDL 2.2+). Each
+      key is the volume's vid data-continuity label (DNS-label grammar). An
+      entry either declares a new volume (its own storage-only deployment)
+      or references an external, separately leased one for attaching.
+    additionalProperties: false
+    patternProperties:
+      '^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$':
+        oneOf:
+          - $ref: '#/definitions/volumeExternalRef'
+          - $ref: '#/definitions/volumeDeclaration'
+    type: object
+
+# services is additionally required for SDL 2.0/2.1; a 2.2 SDL declares
+# services or volumes (see definitions/legacyVersionConstraints and
+# definitions/v2_2RequiresServicesOrVolumes).
 required:
   - version
-  - services
   - profiles
   - deployment
 title: Akash SDL Input Schema

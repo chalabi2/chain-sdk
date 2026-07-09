@@ -45,7 +45,16 @@ func (r *ResourceUnit) validate() error {
 	// 		validationConfig.MaxUnitCount, r.Count, validationConfig.MinUnitCount)
 	// }
 
-	if err := validateResources(r.Resources); err != nil {
+	units := r.Resources
+
+	// A unit mounting externally-leased volumes may declare no local storage
+	// at all — attached volumes contribute zero storage quantity, and the
+	// proto wire round-trips an empty repeated field to nil.
+	if units.Storage == nil && len(r.Volumes) > 0 {
+		units.Storage = make(types.Volumes, 0)
+	}
+
+	if err := validateResources(units); err != nil {
 		return err
 	}
 

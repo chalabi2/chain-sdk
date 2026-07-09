@@ -1,19 +1,12 @@
 [
   {
-    "name": "us-west",
+    "name": "anywhere",
     "requirements": {
       "signed_by": {
         "all_of": null,
-        "any_of": [
-          "akash1vz375dkt0c60annyp6mkzeejfq0qpyevhseu05"
-        ]
+        "any_of": null
       },
-      "attributes": [
-        {
-          "key": "region",
-          "value": "us-west"
-        }
-      ]
+      "attributes": null
     },
     "resources": [
       {
@@ -21,22 +14,14 @@
           "id": 1,
           "cpu": {
             "units": {
-              "val": "500"
+              "val": "2000"
             }
           },
           "memory": {
             "size": {
-              "val": "536870912"
+              "val": "4294967296"
             }
           },
-          "storage": [
-            {
-              "name": "default",
-              "size": {
-                "val": "536870912"
-              }
-            }
-          ],
           "gpu": {
             "units": {
               "val": "0"
@@ -44,6 +29,7 @@
           },
           "endpoints": [
             {
+              "kind": 1,
               "sequence_number": 0
             }
           ]
@@ -51,9 +37,16 @@
         "count": 1,
         "price": {
           "denom": "uakt",
-          "amount": "1000.000000000000000000"
+          "amount": "800.000000000000000000"
         },
-        "volumes": null
+        "volumes": [
+          {
+            "owner": "akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh",
+            "dseq": 1234567,
+            "gseq": 1,
+            "name": "myapp-pgdata"
+          }
+        ]
       }
     ]
   }

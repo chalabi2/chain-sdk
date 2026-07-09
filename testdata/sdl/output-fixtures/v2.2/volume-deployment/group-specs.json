@@ -1,17 +1,19 @@
 [
   {
-    "name": "datacenter",
+    "name": "us-west",
     "requirements": {
       "signed_by": {
         "all_of": null,
-        "any_of": [
-          "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
-        ]
+        "any_of": null
       },
       "attributes": [
         {
+          "key": "capabilities/storage/volumes",
+          "value": "true"
+        },
+        {
           "key": "region",
-          "value": "us-central"
+          "value": "us-west"
         }
       ]
     },
@@ -21,41 +23,19 @@
           "id": 1,
           "cpu": {
             "units": {
-              "val": "1000"
+              "val": "0"
             }
           },
           "memory": {
             "size": {
-              "val": "2147483648"
+              "val": "0"
             }
           },
           "storage": [
             {
-              "name": "cache",
+              "name": "myapp-pgdata",
               "size": {
-                "val": "1073741824"
-              },
-              "attributes": [
-                {
-                  "key": "class",
-                  "value": "ram"
-                },
-                {
-                  "key": "persistent",
-                  "value": "false"
-                }
-              ]
-            },
-            {
-              "name": "logs",
-              "size": {
-                "val": "5368709120"
-              }
-            },
-            {
-              "name": "data",
-              "size": {
-                "val": "21474836480"
+                "val": "214748364800"
               },
               "attributes": [
                 {
@@ -74,19 +54,22 @@
               "val": "0"
             }
           },
-          "endpoints": [
-            {
-              "sequence_number": 0
-            }
-          ]
+          "endpoints": []
         },
         "count": 1,
         "price": {
           "denom": "uakt",
-          "amount": "400.000000000000000000"
+          "amount": "150.000000000000000000"
         },
         "volumes": null
       }
-    ]
+    ],
+    "volume": {
+      "vid": "myapp-pgdata",
+      "reclaim": 1,
+      "retention": 604800000000000,
+      "max_attachments": 1,
+      "max_replicas": 2
+    }
   }
 ]
