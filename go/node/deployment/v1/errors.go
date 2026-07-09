@@ -32,6 +32,12 @@ const (
 	errInvalidPrice
 	errDuplicateGroupName
 	errInvalidReclamation
+	errVolumeOrdersDisabled
+	errVidInUse
+	errVidRetained
+	errVolumeAttached
+	errInvalidVolumeAdoption
+	errInvalidVolumeReplica
 )
 
 var (
@@ -87,4 +93,22 @@ var (
 	ErrDuplicateGroupName = sdkerrors.RegisterWithGRPCCode(ModuleName, errDuplicateGroupName, codes.InvalidArgument, "duplicate group name")
 	// ErrInvalidReclamation indicates reclamation configuration is invalid
 	ErrInvalidReclamation = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidReclamation, codes.InvalidArgument, "invalid reclamation configuration")
+	// ErrVolumeOrdersDisabled is the error when a volume group is created
+	// while the market VolumeOrdersEnabled feature flag is off
+	ErrVolumeOrdersDisabled = sdkerrors.RegisterWithGRPCCode(ModuleName, errVolumeOrdersDisabled, codes.FailedPrecondition, "volume orders disabled")
+	// ErrVidInUse is the error when the vid resolves to a live volume of
+	// the same owner
+	ErrVidInUse = sdkerrors.RegisterWithGRPCCode(ModuleName, errVidInUse, codes.AlreadyExists, "vid in use by a live volume")
+	// ErrVidRetained is the error when the vid resolves to a dead volume
+	// still inside its retention window and the create does not adopt it
+	ErrVidRetained = sdkerrors.RegisterWithGRPCCode(ModuleName, errVidRetained, codes.FailedPrecondition, "vid retained by a dead volume; adopt it or wait out the retention window")
+	// ErrVolumeAttached is the error when closing a volume group that
+	// still has attached compute leases
+	ErrVolumeAttached = sdkerrors.RegisterWithGRPCCode(ModuleName, errVolumeAttached, codes.FailedPrecondition, "volume has attached leases; close compute first")
+	// ErrInvalidVolumeAdoption is the error when the adopt reference fails
+	// stateful validation
+	ErrInvalidVolumeAdoption = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidVolumeAdoption, codes.InvalidArgument, "invalid volume adoption")
+	// ErrInvalidVolumeReplica is the error when the replica_of reference
+	// fails stateful validation
+	ErrInvalidVolumeReplica = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidVolumeReplica, codes.InvalidArgument, "invalid volume replica")
 )
