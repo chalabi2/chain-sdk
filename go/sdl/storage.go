@@ -34,6 +34,9 @@ type v2StorageAttributes types.Attributes
 type v2ServiceStorageParams struct {
 	Mount    string `yaml:"mount"`
 	ReadOnly bool   `yaml:"readOnly"`
+	// Volume names an externally-leased volume (a `volumes:` stanza entry)
+	// this storage param mounts. SDL v2.2+ only; earlier versions reject it.
+	Volume string `yaml:"volume,omitempty"`
 }
 
 type v2ResourceStorage struct {

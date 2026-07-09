@@ -8,9 +8,9 @@ import (
 	"github.com/blang/semver/v4"
 	"gopkg.in/yaml.v3"
 
-	manifest "pkg.akt.dev/go/manifest/v2beta3"
+	manifest "pkg.akt.dev/go/manifest/v2beta4"
 	dv1 "pkg.akt.dev/go/node/deployment/v1"
-	dtypes "pkg.akt.dev/go/node/deployment/v1beta4"
+	dtypes "pkg.akt.dev/go/node/deployment/v1beta5"
 )
 
 const (
@@ -28,7 +28,27 @@ type SDL interface {
 	Manifest() (manifest.Manifest, error)
 	Version() ([]byte, error)
 	Reclamation() (*dv1.DeploymentReclamation, error)
+	// Volumes returns the storage-only (volume) groups declared by the SDL.
+	// Only SDL v2.2+ can declare volumes; earlier versions return empty.
+	Volumes() (dtypes.GroupSpecs, error)
 	validate() error
+}
+
+// ReadOption configures Read/ReadFile.
+type ReadOption func(*readOptions)
+
+type readOptions struct {
+	owner string
+}
+
+// WithOwner supplies the deployment owner (the tx signer, bech32) to the
+// parser. SDL v2.2 volume references compile to on-chain VolumeRefs keyed by
+// owner; the SDL grammar deliberately omits the owner (it is always the
+// signer), so the caller provides it here. Ignored by SDL versions < 2.2.
+func WithOwner(owner string) ReadOption {
+	return func(o *readOptions) {
+		o.owner = owner
+	}
 }
 
 var _ SDL = (*sdl)(nil)
@@ -65,8 +85,15 @@ func (s *sdl) UnmarshalYAML(node *yaml.Node) error {
 		}
 
 		result.data = &decoded
-	} else if result.Ver.GE(semver.MustParse("2.1.0")) {
+	} else if result.Ver.GE(semver.MustParse("2.1.0")) && result.Ver.LT(semver.MustParse("2.2.0")) {
 		var decoded v2_1
+		if err := node.Decode(&decoded); err != nil {
+			return err
+		}
+
+		result.data = &decoded
+	} else if result.Ver.GE(semver.MustParse("2.2.0")) && result.Ver.LT(semver.MustParse("3.0.0")) {
+		var decoded v2_2
 		if err := node.Decode(&decoded); err != nil {
 			return err
 		}
@@ -82,16 +109,21 @@ func (s *sdl) UnmarshalYAML(node *yaml.Node) error {
 }
 
 // ReadFile read from given path and returns SDL instance
-func ReadFile(path string) (SDL, error) {
+func ReadFile(path string, opts ...ReadOption) (SDL, error) {
 	buf, err := os.ReadFile(path) //nolint: gosec
 	if err != nil {
 		return nil, err
 	}
-	return Read(buf)
+	return Read(buf, opts...)
 }
 
 // Read reads buffer data and returns SDL instance
-func Read(buf []byte) (sdlObj SDL, err error) {
+func Read(buf []byte, opts ...ReadOption) (sdlObj SDL, err error) {
+	options := &readOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
 	schemaErr := validateInputAgainstSchema(buf)
 
 	// Soft check if schema validation passed but the SDL is rejected by the Go parser
@@ -102,6 +134,12 @@ func Read(buf []byte) (sdlObj SDL, err error) {
 	obj := &sdl{}
 	if err = yaml.Unmarshal(buf, obj); err != nil {
 		return nil, err
+	}
+
+	if options.owner != "" {
+		if data, ok := obj.data.(*v2_2); ok {
+			data.owner = options.owner
+		}
 	}
 
 	if err = obj.validate(); err != nil {
@@ -165,6 +203,14 @@ func (s *sdl) Reclamation() (*dv1.DeploymentReclamation, error) {
 	}
 
 	return s.data.Reclamation()
+}
+
+func (s *sdl) Volumes() (dtypes.GroupSpecs, error) {
+	if s.data == nil {
+		return dtypes.GroupSpecs{}, errUninitializedConfig
+	}
+
+	return s.data.Volumes()
 }
 
 func (s *sdl) validate() error {

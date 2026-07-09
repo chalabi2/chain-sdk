@@ -271,9 +271,10 @@ func TestSchemaValidation_Version(t *testing.T) {
 	}{
 		{"valid_2_0", `"2.0"`, false},
 		{"valid_2_1", `"2.1"`, false},
+		{"valid_2_2", `"2.2"`, false},
 		{"invalid_1_0", `"1.0"`, true},
 		{"invalid_3_0", `"3.0"`, true},
-		{"invalid_2_2", `"2.2"`, true},
+		{"invalid_2_3", `"2.3"`, true},
 		{"invalid_number", "2.0", true},
 	}
 

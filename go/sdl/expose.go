@@ -6,7 +6,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	manifest "pkg.akt.dev/go/manifest/v2beta3"
+	manifest "pkg.akt.dev/go/manifest/v2beta4"
 )
 
 type v2Accept struct {

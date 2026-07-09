@@ -1,0 +1,53 @@
+[
+  {
+    "name": "anywhere",
+    "requirements": {
+      "signed_by": {
+        "all_of": null,
+        "any_of": null
+      },
+      "attributes": null
+    },
+    "resources": [
+      {
+        "resource": {
+          "id": 1,
+          "cpu": {
+            "units": {
+              "val": "2000"
+            }
+          },
+          "memory": {
+            "size": {
+              "val": "4294967296"
+            }
+          },
+          "gpu": {
+            "units": {
+              "val": "0"
+            }
+          },
+          "endpoints": [
+            {
+              "kind": 1,
+              "sequence_number": 0
+            }
+          ]
+        },
+        "count": 1,
+        "price": {
+          "denom": "uakt",
+          "amount": "800.000000000000000000"
+        },
+        "volumes": [
+          {
+            "owner": "akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh",
+            "dseq": 1234567,
+            "gseq": 1,
+            "name": "myapp-pgdata"
+          }
+        ]
+      }
+    ]
+  }
+]

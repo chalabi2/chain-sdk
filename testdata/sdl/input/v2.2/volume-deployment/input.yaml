@@ -1,0 +1,26 @@
+version: "2.2"
+
+volumes:
+  myapp-pgdata:
+    size: 200Gi
+    class: beta3
+    lifecycle:
+      reclaim: retain
+      retention: 168h
+    max-replicas: 2
+
+profiles:
+  placement:
+    us-west:
+      attributes:
+        region: us-west
+      pricing:
+        myapp-pgdata:
+          denom: uakt
+          amount: 150
+
+deployment:
+  myapp-pgdata:
+    us-west:
+      profile: myapp-pgdata
+      count: 1
