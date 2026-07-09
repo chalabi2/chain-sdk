@@ -75,23 +75,37 @@ func TestRegistryToAkashModules(t *testing.T) {
 	r := DefaultRegistry()
 	akash := r.ToAkash()
 
+	// Per-API-version module expectations: v1beta4 carries the AEP-87
+	// module bumps, v1beta3 keeps the legacy module versions.
+	expected := map[string]map[string]string{
+		VersionV1beta3: {"deployment": "v1beta4", "market": "v1beta5"},
+		VersionV1beta4: {"deployment": "v1beta5", "market": "v2beta1"},
+	}
+
 	for _, vi := range akash.SupportedVersions {
 		if len(vi.Modules) == 0 {
 			t.Errorf("version %q should have module list", vi.ApiVersion)
 		}
 
-		// Check that deployment module is present
-		found := false
-		for _, m := range vi.Modules {
-			if m.Module == "deployment" {
-				found = true
-				if m.Version != "v1beta4" {
-					t.Errorf("version %q: expected deployment module version %q, got %q", vi.ApiVersion, "v1beta4", m.Version)
+		want, ok := expected[vi.ApiVersion]
+		if !ok {
+			t.Errorf("unexpected api version %q", vi.ApiVersion)
+			continue
+		}
+
+		for module, version := range want {
+			found := false
+			for _, m := range vi.Modules {
+				if m.Module == module {
+					found = true
+					if m.Version != version {
+						t.Errorf("version %q: expected %s module version %q, got %q", vi.ApiVersion, module, version, m.Version)
+					}
 				}
 			}
-		}
-		if !found {
-			t.Errorf("version %q: deployment module not found", vi.ApiVersion)
+			if !found {
+				t.Errorf("version %q: %s module not found", vi.ApiVersion, module)
+			}
 		}
 	}
 }
