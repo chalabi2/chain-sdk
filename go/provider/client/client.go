@@ -23,9 +23,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	manifest "pkg.akt.dev/go/manifest/v2beta3"
+	manifest "pkg.akt.dev/go/manifest/v2beta4"
 	ctypes "pkg.akt.dev/go/node/cert/v1"
-	dtypes "pkg.akt.dev/go/node/deployment/v1beta4"
+	dtypes "pkg.akt.dev/go/node/deployment/v1beta5"
 	mtypes "pkg.akt.dev/go/node/market/v1"
 	providerv1 "pkg.akt.dev/go/provider/v1"
 	ajwt "pkg.akt.dev/go/util/jwt"

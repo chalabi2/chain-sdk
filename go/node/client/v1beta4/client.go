@@ -46,6 +46,29 @@ type (
 	ConfirmFn        = v1beta3.ConfirmFn
 )
 
+// Re-export client errors so callers need not import v1beta3 directly.
+var (
+	ErrClientNotFound = v1beta3.ErrClientNotFound
+	ErrNodeNotSynced  = v1beta3.ErrNodeNotSynced
+)
+
+// Re-export broadcast option constructors so callers configuring the
+// version-agnostic broadcast machinery need not import v1beta3 directly.
+var (
+	WithBroadcastMode     = v1beta3.WithBroadcastMode
+	WithBroadcastTimeout  = v1beta3.WithBroadcastTimeout
+	WithConfirmFn         = v1beta3.WithConfirmFn
+	WithFees              = v1beta3.WithFees
+	WithGas               = v1beta3.WithGas
+	WithGasAdjustment     = v1beta3.WithGasAdjustment
+	WithGasPrices         = v1beta3.WithGasPrices
+	WithGenerateOnly      = v1beta3.WithGenerateOnly
+	WithNote              = v1beta3.WithNote
+	WithResultCodeAsError = v1beta3.WithResultCodeAsError
+	WithSkipConfirm       = v1beta3.WithSkipConfirm
+	WithTimeoutHeight     = v1beta3.WithTimeoutHeight
+)
+
 // QueryClient is the interface that exposes query modules.
 type QueryClient interface {
 	Deployment() dtypes.QueryClient
