@@ -146,4 +146,12 @@ message Lease {
     (gogoproto.jsontag)  = "reclamation,omitempty",
     (gogoproto.moretags) = "yaml:\"reclamation,omitempty\""
   ];
+
+  // ClosedAt is the block time (unix seconds) at which the Lease was closed.
+  // Zero means the Lease is not closed, or was closed before this field
+  // existed (pre-upgrade).
+  int64 closed_at = 8 [
+    (gogoproto.jsontag)  = "closed_at",
+    (gogoproto.moretags) = "yaml:\"closed_at\""
+  ];
 }

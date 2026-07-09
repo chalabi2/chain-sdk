@@ -1181,6 +1181,9 @@ impl serde::Serialize for Lease {
         if self.reclamation.is_some() {
             len += 1;
         }
+        if self.closed_at != 0 {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v1.Lease", len)?;
         if let Some(v) = self.id.as_ref() {
             struct_ser.serialize_field("id", v)?;
@@ -1211,6 +1214,11 @@ impl serde::Serialize for Lease {
         if let Some(v) = self.reclamation.as_ref() {
             struct_ser.serialize_field("reclamation", v)?;
         }
+        if self.closed_at != 0 {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("closedAt", ToString::to_string(&self.closed_at).as_str())?;
+        }
         struct_ser.end()
     }
 }
@@ -1230,6 +1238,8 @@ impl<'de> serde::Deserialize<'de> for Lease {
             "closedOn",
             "reason",
             "reclamation",
+            "closed_at",
+            "closedAt",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -1241,6 +1251,7 @@ impl<'de> serde::Deserialize<'de> for Lease {
             ClosedOn,
             Reason,
             Reclamation,
+            ClosedAt,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -1269,6 +1280,7 @@ impl<'de> serde::Deserialize<'de> for Lease {
                             "closedOn" | "closed_on" => Ok(GeneratedField::ClosedOn),
                             "reason" => Ok(GeneratedField::Reason),
                             "reclamation" => Ok(GeneratedField::Reclamation),
+                            "closedAt" | "closed_at" => Ok(GeneratedField::ClosedAt),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -1295,6 +1307,7 @@ impl<'de> serde::Deserialize<'de> for Lease {
                 let mut closed_on__ = None;
                 let mut reason__ = None;
                 let mut reclamation__ = None;
+                let mut closed_at__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Id => {
@@ -1343,6 +1356,14 @@ impl<'de> serde::Deserialize<'de> for Lease {
                             }
                             reclamation__ = map_.next_value()?;
                         }
+                        GeneratedField::ClosedAt => {
+                            if closed_at__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("closedAt"));
+                            }
+                            closed_at__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(Lease {
@@ -1353,6 +1374,7 @@ impl<'de> serde::Deserialize<'de> for Lease {
                     closed_on: closed_on__.unwrap_or_default(),
                     reason: reason__.unwrap_or_default(),
                     reclamation: reclamation__,
+                    closed_at: closed_at__.unwrap_or_default(),
                 })
             }
         }

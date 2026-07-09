@@ -75,7 +75,15 @@ export interface Lease {
    * Reclamation holds reclamation configuration and state, if applicable.
    * Nil if reclamation is not configured for this lease.
    */
-  reclamation: Reclamation | undefined;
+  reclamation:
+    | Reclamation
+    | undefined;
+  /**
+   * ClosedAt is the block time (unix seconds) at which the Lease was closed.
+   * Zero means the Lease is not closed, or was closed before this field
+   * existed (pre-upgrade).
+   */
+  closedAt: bigint;
 }
 
 /** State is an enum which refers to state of lease. */
@@ -277,7 +285,16 @@ export const LeaseID: MessageFns<LeaseID, "akash.market.v1.LeaseID"> = {
 };
 
 function createBaseLease(): Lease {
-  return { id: undefined, state: 0, price: undefined, createdAt: 0n, closedOn: 0n, reason: 0, reclamation: undefined };
+  return {
+    id: undefined,
+    state: 0,
+    price: undefined,
+    createdAt: 0n,
+    closedOn: 0n,
+    reason: 0,
+    reclamation: undefined,
+    closedAt: 0n,
+  };
 }
 
 export const Lease: MessageFns<Lease, "akash.market.v1.Lease"> = {
@@ -310,6 +327,12 @@ export const Lease: MessageFns<Lease, "akash.market.v1.Lease"> = {
     }
     if (message.reclamation !== undefined) {
       Reclamation.encode(message.reclamation, writer.uint32(58).fork()).join();
+    }
+    if (message.closedAt !== 0n) {
+      if (BigInt.asIntN(64, message.closedAt) !== message.closedAt) {
+        throw new globalThis.Error("value provided for field message.closedAt of type int64 too large");
+      }
+      writer.uint32(64).int64(message.closedAt);
     }
     return writer;
   },
@@ -377,6 +400,14 @@ export const Lease: MessageFns<Lease, "akash.market.v1.Lease"> = {
           message.reclamation = Reclamation.decode(reader, reader.uint32());
           continue;
         }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.closedAt = reader.int64() as bigint;
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -395,6 +426,7 @@ export const Lease: MessageFns<Lease, "akash.market.v1.Lease"> = {
       closedOn: isSet(object.closed_on) ? BigInt(object.closed_on) : 0n,
       reason: isSet(object.reason) ? leaseClosedReasonFromJSON(object.reason) : 0,
       reclamation: isSet(object.reclamation) ? Reclamation.fromJSON(object.reclamation) : undefined,
+      closedAt: isSet(object.closed_at) ? BigInt(object.closed_at) : 0n,
     };
   },
 
@@ -421,6 +453,9 @@ export const Lease: MessageFns<Lease, "akash.market.v1.Lease"> = {
     if (message.reclamation !== undefined) {
       obj.reclamation = Reclamation.toJSON(message.reclamation);
     }
+    if (message.closedAt !== 0n) {
+      obj.closed_at = message.closedAt.toString();
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<Lease>): Lease {
@@ -436,6 +471,7 @@ export const Lease: MessageFns<Lease, "akash.market.v1.Lease"> = {
     message.reclamation = (object.reclamation !== undefined && object.reclamation !== null)
       ? Reclamation.fromPartial(object.reclamation)
       : undefined;
+    message.closedAt = (object.closedAt !== undefined && object.closedAt !== null) ? BigInt(object.closedAt) : 0n;
     return message;
   },
 };
