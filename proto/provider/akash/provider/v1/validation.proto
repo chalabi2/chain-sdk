@@ -4,7 +4,7 @@ package akash.provider.v1;
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
-import "akash/deployment/v1beta4/groupspec.proto";
+import "akash/deployment/v1beta5/groupspec.proto";
 import "akash/market/v1beta5/resourcesoffer.proto";
 
 option go_package = "pkg.akt.dev/go/provider/v1";
@@ -13,7 +13,7 @@ option go_package = "pkg.akt.dev/go/provider/v1";
 // specification for bid eligibility against the provider's capabilities.
 message BidScreeningRequest {
   // GroupSpec is the deployment group specification to screen for bid eligibility.
-  akash.deployment.v1beta4.GroupSpec group_spec = 1 [
+  akash.deployment.v1beta5.GroupSpec group_spec = 1 [
     (gogoproto.customname) = "GroupSpec",
     (gogoproto.jsontag)    = "group_spec",
     (gogoproto.moretags)   = "yaml:\"group_spec\""
