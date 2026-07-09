@@ -4,7 +4,7 @@ import (
 	"time"
 
 	inventoryV1 "pkg.akt.dev/go/inventory/v1"
-	manifest "pkg.akt.dev/go/manifest/v2beta3"
+	manifest "pkg.akt.dev/go/manifest/v2beta4"
 )
 
 // ClusterStatus represents the current state of the provider's cluster, including
