@@ -11,7 +11,7 @@ import (
 
 	cflags "pkg.akt.dev/go/cli/flags"
 	dv1 "pkg.akt.dev/go/node/deployment/v1"
-	dv1beta "pkg.akt.dev/go/node/deployment/v1beta4"
+	dv1beta "pkg.akt.dev/go/node/deployment/v1beta5"
 	"pkg.akt.dev/go/node/types/constants"
 	"pkg.akt.dev/go/sdl"
 	cutils "pkg.akt.dev/go/util/tls"
@@ -60,7 +60,9 @@ func GetTxDeploymentCreateCmd() *cobra.Command {
 				return err
 			}
 
-			sdlManifest, err := sdl.ReadFile(args[0])
+			// SDL v2.2 volume references compile to owner-keyed VolumeRefs;
+			// the owner is always the tx signer. Ignored by earlier versions.
+			sdlManifest, err := sdl.ReadFile(args[0], sdl.WithOwner(cctx.FromAddress.String()))
 			if err != nil {
 				return err
 			}
@@ -184,7 +186,7 @@ func GetTxDeploymentUpdateCmd() *cobra.Command {
 				return err
 			}
 
-			sdlManifest, err := sdl.ReadFile(args[0])
+			sdlManifest, err := sdl.ReadFile(args[0], sdl.WithOwner(cctx.FromAddress.String()))
 			if err != nil {
 				return err
 			}
@@ -199,8 +201,11 @@ func GetTxDeploymentUpdateCmd() *cobra.Command {
 				return err
 			}
 
-			// Query the RPC node to make sure the existing groups are identical
-			existingDeployment, err := cl.Query().Deployment().Deployment(ctx, &dv1beta.QueryDeploymentRequest{
+			// Query the RPC node to make sure the existing groups are identical.
+			// The SDL compiles to deployment/v1beta5 group specs, so the
+			// comparison must read the deployment through the v1beta5 query
+			// surface (the composite client still exposes v1beta4).
+			existingDeployment, err := dv1beta.NewQueryClient(cctx).Deployment(ctx, &dv1beta.QueryDeploymentRequest{
 				ID: id,
 			})
 			if err != nil {
