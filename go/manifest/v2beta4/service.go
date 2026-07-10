@@ -8,6 +8,7 @@ import (
 	k8svalidation "k8s.io/apimachinery/pkg/util/validation"
 
 	dtypes "pkg.akt.dev/go/node/deployment/v1beta5"
+	rtypes "pkg.akt.dev/go/node/types/resources/v1beta4"
 )
 
 func (s *Service) validate(helper *validateManifestGroupsHelper) error {
@@ -22,6 +23,13 @@ func (s *Service) validate(helper *validateManifestGroupsHelper) error {
 
 	if len(s.Image) == 0 {
 		return fmt.Errorf("%w: service %q has empty image name", ErrInvalidManifest, s.Name)
+	}
+
+	// a service mounting only externally-leased volumes carries no local
+	// storage entry; the empty slice the SDL emits serializes to absent on
+	// the wire and decodes back to nil - normalize before validating.
+	if s.Resources.Storage == nil && s.Params != nil && len(s.Params.Storage) > 0 {
+		s.Resources.Storage = rtypes.Volumes{}
 	}
 
 	if err := s.Resources.Validate(); err != nil {
