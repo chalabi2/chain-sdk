@@ -3,6 +3,7 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,7 +70,7 @@ certificate or manifest submission is required. Accept a bid with
 				return err
 			}
 
-			warnVolumePolicy(cctx, volumes)
+			warnVolumePolicy(cmd.ErrOrStderr(), volumes)
 
 			id, err := cflags.DeploymentIDFromFlags(cmd.Flags(), cflags.WithOwner(cctx.FromAddress))
 			if err != nil {
@@ -205,8 +206,9 @@ func volumeGroupsFromSDL(sdlManifest sdl.SDL) (dv1beta.GroupSpecs, error) {
 
 // warnVolumePolicy surfaces policy choices that leave the volume without
 // redundancy or an adoption window; both are valid but easy to pick by
-// accident.
-func warnVolumePolicy(cctx sdkclient.Context, volumes dv1beta.GroupSpecs) {
+// accident. Warnings go to stderr — stdout carries the tx JSON response
+// and must stay machine-parseable.
+func warnVolumePolicy(out io.Writer, volumes dv1beta.GroupSpecs) {
 	for _, group := range volumes {
 		vol := group.Volume
 		if vol == nil {
@@ -214,13 +216,13 @@ func warnVolumePolicy(cctx sdkclient.Context, volumes dv1beta.GroupSpecs) {
 		}
 
 		if vol.MaxReplicas == 0 {
-			_ = cctx.PrintString(fmt.Sprintf("volume %q declares max-replicas: 0\n"+
-				"no provider is obliged to serve replica exports; the volume has no cross-provider redundancy\n", vol.Vid))
+			_, _ = fmt.Fprintf(out, "volume %q declares max-replicas: 0\n"+
+				"no provider is obliged to serve replica exports; the volume has no cross-provider redundancy\n", vol.Vid)
 		}
 
 		if vol.Retention == 0 {
-			_ = cctx.PrintString(fmt.Sprintf("volume %q declares no retention window\n"+
-				"after the volume closes there is no adoption window; the data is immediately eligible for garbage collection\n", vol.Vid))
+			_, _ = fmt.Fprintf(out, "volume %q declares no retention window\n"+
+				"after the volume closes there is no adoption window; the data is immediately eligible for garbage collection\n", vol.Vid)
 		}
 	}
 }
