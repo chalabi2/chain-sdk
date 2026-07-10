@@ -2,8 +2,11 @@ package events
 
 import (
 	"context"
+	"errors"
 
 	"github.com/boz/go-lifecycle"
+
+	"cosmossdk.io/log"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmclient "github.com/cometbft/cometbft/rpc/client"
@@ -21,12 +24,25 @@ import (
 	"pkg.akt.dev/go/util/pubsub"
 )
 
+// Option configures the events service.
+type Option func(*events)
+
+// WithLogger routes the pump's diagnostics to the given logger. Without it
+// the pump is silent, and a dead event feed is indistinguishable from a
+// quiet chain.
+func WithLogger(l log.Logger) Option {
+	return func(e *events) {
+		e.log = l
+	}
+}
+
 type events struct {
 	ctx    context.Context
 	group  *errgroup.Group
 	ebus   cmclient.EventsClient
 	client sdkclient.CometRPC
 	bus    pubsub.Bus
+	log    log.Logger
 	lc     lifecycle.Lifecycle
 }
 
@@ -49,7 +65,7 @@ type Service interface {
 // Returns:
 //   - Service: A running event monitoring service interface
 //   - error: Any error encountered during service initialization
-func NewEvents(pctx context.Context, node sdkclient.CometRPC, name string, bus pubsub.Bus) (Service, error) {
+func NewEvents(pctx context.Context, node sdkclient.CometRPC, name string, bus pubsub.Bus, opts ...Option) (Service, error) {
 	group, ctx := errgroup.WithContext(pctx)
 
 	ev := &events{
@@ -59,6 +75,11 @@ func NewEvents(pctx context.Context, node sdkclient.CometRPC, name string, bus p
 		client: node,
 		lc:     lifecycle.New(),
 		bus:    bus,
+		log:    log.NewNopLogger(),
+	}
+
+	for _, opt := range opts {
+		opt(ev)
 	}
 
 	const (
@@ -71,6 +92,8 @@ func NewEvents(pctx context.Context, node sdkclient.CometRPC, name string, bus p
 	if err != nil {
 		return nil, err
 	}
+
+	ev.log.Info("chain event pump subscribed", "subscriber", blkHeaderName)
 
 	startch := make(chan struct{}, 1)
 
@@ -118,7 +141,17 @@ loop:
 		case err := <-e.lc.ShutdownRequest():
 			e.lc.ShutdownInitiated(err)
 			break loop
-		case ev := <-ch:
+		case ev, ok := <-ch:
+			if !ok {
+				// the RPC client stopped feeding the subscription; a
+				// silent stall here is a dead event feed for every
+				// downstream consumer - fail loudly instead
+				err := errors.New("chain event subscription channel closed")
+				e.log.Error("chain event pump stopped", "subscriber", subs, "err", err)
+				e.lc.ShutdownInitiated(err)
+				break loop
+			}
+
 			// nolint: gocritic
 			switch evt := ev.Data.(type) {
 			case cmtypes.EventDataNewBlockHeader:
@@ -133,8 +166,11 @@ loop:
 func (e *events) processBlock(height int64) {
 	blkResults, err := e.client.BlockResults(e.ctx, &height)
 	if err != nil {
+		e.log.Error("fetching block results", "height", height, "err", err)
 		return
 	}
+
+	published := 0
 
 	for _, tx := range blkResults.TxsResults {
 		if tx == nil {
@@ -144,11 +180,15 @@ func (e *events) processBlock(height int64) {
 		for _, ev := range tx.Events {
 			if mev, ok := processEvent(ev); ok {
 				if err := e.bus.Publish(mev); err != nil {
+					e.log.Error("publishing chain event", "height", height, "err", err)
 					return
 				}
+				published++
 			}
 		}
 	}
+
+	e.log.Debug("block processed", "height", height, "events", published)
 }
 
 func processEvent(bev abci.Event) (interface{}, bool) {
