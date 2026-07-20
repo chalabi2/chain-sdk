@@ -7,7 +7,7 @@ import (
 
 	cflags "pkg.akt.dev/go/cli/flags"
 	"pkg.akt.dev/go/node/deployment/v1"
-	dvbeta "pkg.akt.dev/go/node/deployment/v1beta4"
+	dvbeta "pkg.akt.dev/go/node/deployment/v1beta5"
 )
 
 // GetQueryDeploymentCmds returns the query commands for the deployment module

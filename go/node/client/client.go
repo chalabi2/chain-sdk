@@ -93,7 +93,7 @@ func queryClientInfo(ctx context.Context, cctx sdkclient.Context) (*Akash, error
 			return nil, ErrDetectClientVersion
 		}
 	} else {
-		result.ClientInfo = ClientInfo{ApiVersion: VersionV1beta3}
+		result.ClientInfo = ClientInfo{ApiVersion: VersionV1beta4}
 	}
 
 	return result, nil

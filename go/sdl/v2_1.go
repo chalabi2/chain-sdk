@@ -8,9 +8,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	manifest "pkg.akt.dev/go/manifest/v2beta3"
+	manifest "pkg.akt.dev/go/manifest/v2beta4"
 	dv1 "pkg.akt.dev/go/node/deployment/v1"
-	dtypes "pkg.akt.dev/go/node/deployment/v1beta4"
+	dtypes "pkg.akt.dev/go/node/deployment/v1beta5"
 	types "pkg.akt.dev/go/node/types/attributes/v1"
 )
 
@@ -45,6 +45,11 @@ func (sdl *v2_1) Version() ([]byte, error) {
 
 func (sdl *v2_1) Reclamation() (*dv1.DeploymentReclamation, error) {
 	return sdl.ReclaimCfg.toDeploymentReclamation()
+}
+
+// Volumes returns no groups: SDL v2.1 cannot declare volumes.
+func (sdl *v2_1) Volumes() (dtypes.GroupSpecs, error) {
+	return dtypes.GroupSpecs{}, nil
 }
 
 func (sdl *v2_1) UnmarshalYAML(node *yaml.Node) error {
@@ -259,6 +264,14 @@ func (sdl *v2_1) validate() error {
 				mounts := make(map[string]string)
 
 				for name, params := range svc.Params.Storage {
+					if params.Volume != "" {
+						return fmt.Errorf(
+							"%w: service %q storage param %q sets volume; volume references require SDL version 2.2",
+							errSDLInvalid,
+							svcName,
+							name,
+						)
+					}
 
 					volume, exists := volumes[name]
 

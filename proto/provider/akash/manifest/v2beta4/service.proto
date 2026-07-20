@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package akash.manifest.v2beta4;
+
+import "gogoproto/gogo.proto";
+
+import "akash/manifest/v2beta4/serviceexpose.proto";
+import "akash/base/resources/v1beta4/resources.proto";
+
+option (gogoproto.goproto_stringer_all) = false;
+option (gogoproto.stringer_all)         = true;
+option go_package                       = "pkg.akt.dev/go/manifest/v2beta4";
+
+// StorageParams
+message StorageParams {
+    string name   = 1 [
+      (gogoproto.jsontag)  = "name",
+      (gogoproto.moretags) = "yaml:\"name\""
+    ];
+    string mount  = 2 [
+      (gogoproto.jsontag)  = "mount",
+      (gogoproto.moretags) = "yaml:\"mount\""
+    ];
+    bool read_only = 3 [
+      (gogoproto.jsontag)  = "readOnly",
+      (gogoproto.moretags) = "yaml:\"readOnly\""
+    ];
+    // volume mirrors the on-chain VolumeRef as "owner/dseq/gseq/name";
+    // empty for locally-provisioned (AEP-15) storage.
+    //
+    // JSON / YAML tags carry `omitempty`: the on-chain manifest `version`
+    // is a SHA hash of the JSON-serialized off-chain manifest, so a field
+    // that always serializes (even at zero value) would shift the hash for
+    // every non-volume SDL relative to v2beta3.
+    string volume = 4 [
+      (gogoproto.jsontag)  = "volume,omitempty",
+      (gogoproto.moretags) = "yaml:\"volume,omitempty\""
+    ];
+}
+
+// ServicePermissions defines resource access permissions for the service.
+// Resources map to Kubernetes RBAC permissions:
+//   - logs
+message ServicePermissions {
+  repeated string read = 1 [
+    (gogoproto.jsontag)  = "read,omitempty",
+    (gogoproto.moretags) = "yaml:\"read,omitempty\""
+  ];
+}
+
+// TEEParams configures Trusted Execution Environment for the service.
+// The type field selects the TEE capability and the provider resolves the
+// runtime class based on its detected platform (TDX or SNP).
+// The attestation field controls whether the provider injects an attestation sidecar.
+message TEEParams {
+  // type is the TEE capability: cpu, cpu-gpu
+  string type = 1 [
+    (gogoproto.jsontag)  = "type",
+    (gogoproto.moretags) = "yaml:\"type\""
+  ];
+  // attestation controls whether the provider injects an attestation sidecar.
+  // IMPORTANT: proto3 bool defaults to false, but the intended default is true.
+  // All producers MUST set this field explicitly. The Go SDL builder enforces
+  // this; non-Go clients must set attestation=true when sidecar injection is desired.
+  bool attestation = 2 [
+    (gogoproto.jsontag)  = "attestation",
+    (gogoproto.moretags) = "yaml:\"attestation\""
+  ];
+}
+
+// ServiceParams
+message ServiceParams {
+  repeated StorageParams storage = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "storage",
+    (gogoproto.moretags) = "yaml:\"storage\""
+  ];
+  ImageCredentials credentials = 10 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "credentials,omitempty",
+    (gogoproto.moretags) = "yaml:\"credentials,omitempty\""
+  ];
+  ServicePermissions permissions = 11 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "permissions,omitempty",
+    (gogoproto.moretags) = "yaml:\"permissions,omitempty\""
+  ];
+  TEEParams tee = 12 [
+    (gogoproto.nullable) = true,
+    (gogoproto.customname) = "TEE",
+    (gogoproto.jsontag)  = "tee,omitempty",
+    (gogoproto.moretags) = "yaml:\"tee,omitempty\""
+  ];
+}
+
+// Credentials to fetch image from registry
+message ImageCredentials {
+  string host = 1 [
+    (gogoproto.jsontag)  = "host",
+    (gogoproto.moretags) = "yaml:\"host\""
+  ];
+  string email = 2 [
+    (gogoproto.jsontag)  = "email",
+    (gogoproto.moretags) = "yaml:\"email\""
+  ];
+  string username = 3 [
+    (gogoproto.jsontag)  = "username",
+    (gogoproto.moretags) = "yaml:\"username\""
+  ];
+  string password = 4 [
+    (gogoproto.jsontag)  = "password",
+    (gogoproto.moretags) = "yaml:\"password\""
+  ];
+}
+
+// Service stores name, image, args, env, unit, count and expose list of service
+message Service {
+  string name = 1 [
+    (gogoproto.jsontag)  = "name",
+    (gogoproto.moretags) = "yaml:\"name\""
+  ];
+  string image = 2 [
+    (gogoproto.jsontag)  = "image",
+    (gogoproto.moretags) = "yaml:\"image\""
+  ];
+  repeated string command = 3 [
+    (gogoproto.jsontag)  = "command",
+    (gogoproto.moretags) = "yaml:\"command\""
+  ];
+  repeated string args = 4 [
+    (gogoproto.jsontag)  = "args",
+    (gogoproto.moretags) = "yaml:\"args\""
+  ];
+  repeated string env = 5 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "env",
+    (gogoproto.moretags) = "yaml:\"env\""
+  ];
+  akash.base.resources.v1beta4.Resources resources = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "resources",
+    (gogoproto.moretags) = "yaml:\"resources\""
+  ];
+  uint32 count = 7 [
+    (gogoproto.jsontag)  = "count",
+    (gogoproto.moretags) = "yaml:\"count\""
+  ];
+  repeated ServiceExpose expose = 8 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "ServiceExposes",
+    (gogoproto.jsontag)      = "expose",
+    (gogoproto.moretags)     = "yaml:\"expose\""
+  ];
+  ServiceParams params = 9 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "params,omitempty",
+    (gogoproto.moretags) = "yaml:\"params,omitempty\""
+  ];
+  ImageCredentials credentials = 10 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "credentials",
+    (gogoproto.moretags) = "yaml:\"credentials\""
+  ];
+
+  // InterconnectGroup carries the SDL gpu.attributes.interconnect_group
+  // peer-group label. Lifted from Resources.GPU.Attributes by the
+  // manifest builder so the off-chain workload builder can label pods
+  // for per-group anti-affinity. Services sharing the same value form
+  // one NCCL peer group; the provider schedules them on distinct nodes.
+  // Empty when the service is not part of any GPU interconnect group.
+  //
+  // JSON / YAML tags carry `omitempty`: the on-chain manifest `version`
+  // is a SHA hash of the JSON-serialized off-chain manifest, so any
+  // field that always serializes (even at zero value) would shift the
+  // hash for every non-interconnect SDL and break send-manifest
+  // validation on existing leases.
+  string interconnect_group = 11 [
+    (gogoproto.customname) = "InterconnectGroup",
+    (gogoproto.jsontag)    = "interconnectGroup,omitempty",
+    (gogoproto.moretags)   = "yaml:\"interconnectGroup,omitempty\""
+  ];
+}

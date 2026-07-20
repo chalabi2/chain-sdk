@@ -7,7 +7,7 @@ import (
 
 	cflags "pkg.akt.dev/go/cli/flags"
 	mv1 "pkg.akt.dev/go/node/market/v1"
-	mvbeta "pkg.akt.dev/go/node/market/v1beta5"
+	mvbeta "pkg.akt.dev/go/node/market/v2beta1"
 )
 
 // GetQueryMarketCmds returns the transaction commands for the market module

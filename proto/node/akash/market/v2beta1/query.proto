@@ -10,9 +10,13 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "akash/escrow/types/v1/account.proto";
 import "akash/escrow/types/v1/payment.proto";
 
+import "akash/market/v1/order.proto";
+import "akash/market/v1/bid.proto";
+import "akash/market/v1/lease.proto";
+import "akash/market/v1/filters.proto";
+
 import "akash/market/v2beta1/order.proto";
 import "akash/market/v2beta1/bid.proto";
-import "akash/market/v2beta1/lease.proto";
 import "akash/market/v2beta1/filters.proto";
 import "akash/market/v2beta1/params.proto";
 
@@ -59,7 +63,7 @@ service Query {
 // QueryOrdersRequest is request type for the Query/Orders RPC method.
 message QueryOrdersRequest {
   // Filters holds the fields to filter orders.
-  OrderFilters filters = 1 [
+  akash.market.v2beta1.OrderFilters filters = 1 [
     (gogoproto.nullable) = false
   ];
 
@@ -82,7 +86,7 @@ message QueryOrdersResponse {
 // QueryOrderRequest is request type for the Query/Order RPC method.
 message QueryOrderRequest {
   // Id is the unique identifier of the Order.
-  OrderID id = 1 [
+  akash.market.v1.OrderID id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "ID"
   ];
@@ -99,7 +103,7 @@ message QueryOrderResponse {
 // QueryBidsRequest is request type for the Query/Bids RPC method.
 message QueryBidsRequest {
   // Filters holds the fields to filter bids.
-  BidFilters filters = 1 [
+  akash.market.v2beta1.BidFilters filters = 1 [
     (gogoproto.nullable) = false
   ];
 
@@ -121,7 +125,7 @@ message QueryBidsResponse {
 // QueryBidRequest is request type for the Query/Bid RPC method.
 message QueryBidRequest {
   // Id is the unique identifier for the Bid.
-  BidID id = 1 [
+  akash.market.v1.BidID id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "ID"
   ];
@@ -142,7 +146,7 @@ message QueryBidResponse {
 // QueryLeasesRequest is request type for the Query/Leases RPC method.
 message QueryLeasesRequest {
   // Filters holds the fields to filter leases.
-  LeaseFilters filters = 1 [
+  akash.market.v1.LeaseFilters filters = 1 [
     (gogoproto.nullable) = false
   ];
 
@@ -164,7 +168,7 @@ message QueryLeasesResponse {
 // QueryLeaseRequest is request type for the Query/Lease RPC method.
 message QueryLeaseRequest {
   // Id is the unique identifier of the Lease.
-  LeaseID id = 1 [
+  akash.market.v1.LeaseID id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "ID"
   ];
@@ -173,7 +177,7 @@ message QueryLeaseRequest {
 // QueryLeaseResponse is response type for the Query/Lease RPC method
 message QueryLeaseResponse {
   // Lease holds the lease for a deployment.
-  Lease lease = 1 [
+  akash.market.v1.Lease lease = 1 [
     (gogoproto.nullable) = false
   ];
   // EscrowPayment holds information about the Lease's fractional payment.

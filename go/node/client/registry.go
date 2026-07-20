@@ -63,14 +63,15 @@ var v1beta3Modules = []ModuleVersion{
 }
 
 // v1beta4Modules defines the per-module versions for the v1beta4 API version.
-// Currently identical to v1beta3 — will diverge when module versions are bumped.
+// Diverges from v1beta3 with the AEP-87 module bumps: deployment/v1beta5 and
+// market/v2beta1.
 var v1beta4Modules = []ModuleVersion{
 	{Module: "audit", Version: "v1"},
 	{Module: "bme", Version: "v1"},
 	{Module: "cert", Version: "v1"},
-	{Module: "deployment", Version: "v1beta4"},
+	{Module: "deployment", Version: "v1beta5"},
 	{Module: "escrow", Version: "v1"},
-	{Module: "market", Version: "v1beta5"},
+	{Module: "market", Version: "v2beta1"},
 	{Module: "oracle", Version: "v2"},
 	{Module: "provider", Version: "v1beta4"},
 	{Module: "take", Version: "v1"},

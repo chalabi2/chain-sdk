@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	manifest "pkg.akt.dev/go/manifest/v2beta3"
-	dtypes "pkg.akt.dev/go/node/deployment/v1beta4"
+	manifest "pkg.akt.dev/go/manifest/v2beta4"
+	dtypes "pkg.akt.dev/go/node/deployment/v1beta5"
 	types "pkg.akt.dev/go/node/types/attributes/v1"
 )
 

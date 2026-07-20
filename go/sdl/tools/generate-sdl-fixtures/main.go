@@ -12,7 +12,7 @@ import (
 func main() {
 	inputRoot := filepath.Join("..", "..", "..", "..", "testdata", "sdl", "input")
 	outputRoot := filepath.Join("..", "..", "..", "..", "testdata", "sdl", "output-fixtures")
-	versions := []string{"v2.0", "v2.1"}
+	versions := []string{"v2.0", "v2.1", "v2.2"}
 
 	fixturesProcessed := 0
 

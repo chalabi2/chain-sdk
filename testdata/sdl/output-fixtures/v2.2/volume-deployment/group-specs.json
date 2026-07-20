@@ -1,0 +1,75 @@
+[
+  {
+    "name": "us-west",
+    "requirements": {
+      "signed_by": {
+        "all_of": null,
+        "any_of": null
+      },
+      "attributes": [
+        {
+          "key": "capabilities/storage/volumes",
+          "value": "true"
+        },
+        {
+          "key": "region",
+          "value": "us-west"
+        }
+      ]
+    },
+    "resources": [
+      {
+        "resource": {
+          "id": 1,
+          "cpu": {
+            "units": {
+              "val": "0"
+            }
+          },
+          "memory": {
+            "size": {
+              "val": "0"
+            }
+          },
+          "storage": [
+            {
+              "name": "myapp-pgdata",
+              "size": {
+                "val": "214748364800"
+              },
+              "attributes": [
+                {
+                  "key": "class",
+                  "value": "beta3"
+                },
+                {
+                  "key": "persistent",
+                  "value": "true"
+                }
+              ]
+            }
+          ],
+          "gpu": {
+            "units": {
+              "val": "0"
+            }
+          },
+          "endpoints": []
+        },
+        "count": 1,
+        "price": {
+          "denom": "uakt",
+          "amount": "150.000000000000000000"
+        },
+        "volumes": null
+      }
+    ],
+    "volume": {
+      "vid": "myapp-pgdata",
+      "reclaim": 1,
+      "retention": 604800000000000,
+      "max_attachments": 1,
+      "max_replicas": 2
+    }
+  }
+]

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
-	manifest "pkg.akt.dev/go/manifest/v2beta3"
-	dtypes "pkg.akt.dev/go/node/deployment/v1beta4"
+	manifest "pkg.akt.dev/go/manifest/v2beta4"
+	dtypes "pkg.akt.dev/go/node/deployment/v1beta5"
 	atypes "pkg.akt.dev/go/node/types/attributes/v1"
 	rtypes "pkg.akt.dev/go/node/types/resources/v1beta4"
 	"pkg.akt.dev/go/node/types/unit"

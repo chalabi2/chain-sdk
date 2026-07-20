@@ -12,7 +12,7 @@ import (
 
 	aclient "pkg.akt.dev/go/node/client"
 	cltypes "pkg.akt.dev/go/node/client/types"
-	"pkg.akt.dev/go/node/client/v1beta3"
+	"pkg.akt.dev/go/node/client/v1beta4"
 )
 
 var (
@@ -20,12 +20,12 @@ var (
 )
 
 func DiscoverQueryClient(ctx context.Context, cctx sdkclient.Context) (aclient.QueryClient, error) {
-	var cl v1beta3.QueryClient
+	var cl v1beta4.QueryClient
 	err := aclient.DiscoverQueryClient(ctx, cctx, func(i interface{}) error {
 		var valid bool
 
-		if cl, valid = i.(v1beta3.QueryClient); !valid {
-			return fmt.Errorf("%w: expected %s, actual %T", ErrInvalidClient, reflect.TypeOf((*v1beta3.QueryClient)(nil)).Elem(), i)
+		if cl, valid = i.(v1beta4.QueryClient); !valid {
+			return fmt.Errorf("%w: expected %s, actual %T", ErrInvalidClient, reflect.TypeOf((*v1beta4.QueryClient)(nil)).Elem(), i)
 		}
 
 		return nil
@@ -39,12 +39,12 @@ func DiscoverQueryClient(ctx context.Context, cctx sdkclient.Context) (aclient.Q
 }
 
 func DiscoverLightClient(ctx context.Context, cctx sdkclient.Context) (aclient.LightClient, error) {
-	var cl v1beta3.LightClient
+	var cl v1beta4.LightClient
 	err := aclient.DiscoverLightClient(ctx, cctx, func(i interface{}) error {
 		var valid bool
 
-		if cl, valid = i.(v1beta3.LightClient); !valid {
-			return fmt.Errorf("%w: expected %s, actual %T", ErrInvalidClient, reflect.TypeOf((*v1beta3.LightClient)(nil)).Elem(), i)
+		if cl, valid = i.(v1beta4.LightClient); !valid {
+			return fmt.Errorf("%w: expected %s, actual %T", ErrInvalidClient, reflect.TypeOf((*v1beta4.LightClient)(nil)).Elem(), i)
 		}
 
 		return nil
@@ -58,13 +58,13 @@ func DiscoverLightClient(ctx context.Context, cctx sdkclient.Context) (aclient.L
 }
 
 func DiscoverClient(ctx context.Context, cctx sdkclient.Context, opts ...cltypes.ClientOption) (aclient.Client, error) {
-	var cl v1beta3.Client
+	var cl v1beta4.Client
 
 	setupFn := func(i interface{}) error {
 		var valid bool
 
-		if cl, valid = i.(v1beta3.Client); !valid {
-			return fmt.Errorf("%w: expected %s, actual %T", ErrInvalidClient, reflect.TypeOf((*v1beta3.Client)(nil)).Elem(), i)
+		if cl, valid = i.(v1beta4.Client); !valid {
+			return fmt.Errorf("%w: expected %s, actual %T", ErrInvalidClient, reflect.TypeOf((*v1beta4.Client)(nil)).Elem(), i)
 		}
 
 		return nil

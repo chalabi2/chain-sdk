@@ -57,7 +57,8 @@
         "price": {
           "denom": "uakt",
           "amount": "10.000000000000000000"
-        }
+        },
+        "volumes": null
       }
     ]
   }

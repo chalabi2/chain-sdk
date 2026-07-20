@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 
 import "akash/deployment/v1/deployment.proto";
 import "akash/deployment/v1/group.proto";
+import "akash/deployment/v1/volume.proto";
 
 option go_package = "pkg.akt.dev/go/node/deployment/v1";
 
@@ -104,3 +105,29 @@ message EventGroupClosed {
   ];
 }
 
+// EventVolumeAdopted is triggered when a new volume group adopts a dead
+// retained volume, transferring the vid's data continuity to the new group.
+message EventVolumeAdopted {
+  option (gogoproto.equal) = true;
+
+  // ID is the unique identifier of the new (adopting) volume group.
+  GroupID id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "ID",
+    (gogoproto.jsontag)    = "id",
+    (gogoproto.moretags)   = "yaml:\"id\""
+  ];
+
+  // Adopted references the dead retained volume being adopted.
+  VolumeRef adopted = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "adopted",
+    (gogoproto.moretags) = "yaml:\"adopted\""
+  ];
+
+  // Vid is the data-continuity label shared by both volumes.
+  string vid = 3 [
+    (gogoproto.jsontag)  = "vid",
+    (gogoproto.moretags) = "yaml:\"vid\""
+  ];
+}

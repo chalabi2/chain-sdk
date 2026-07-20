@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 import "akash/base/resources/v1beta4/resources.proto";
+import "akash/deployment/v1/volume.proto";
 
 option go_package = "pkg.akt.dev/go/node/deployment/v1beta5";
 
@@ -26,10 +27,19 @@ message ResourceUnit {
     (gogoproto.moretags) = "yaml:\"count\""
   ];
   // Price holds the pricing for the resource units.
-  repeated cosmos.base.v1beta1.DecCoin prices = 3 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
-    (gogoproto.nullable)     = false,
-    (gogoproto.jsontag)      = "prices",
-    (gogoproto.moretags)     = "yaml:\"prices\""
+  cosmos.base.v1beta1.DecCoin price = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "price",
+    (gogoproto.moretags) = "yaml:\"price\""
+  ];
+
+  // Volumes lists externally-leased volumes this unit's services mount.
+  // Attached volumes contribute zero storage quantity to the unit: no
+  // Storage entry corresponds to a VolumeRef. Empty for all pre-AEP-87
+  // deployments.
+  repeated akash.deployment.v1.VolumeRef volumes = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "volumes",
+    (gogoproto.moretags) = "yaml:\"volumes\""
   ];
 }

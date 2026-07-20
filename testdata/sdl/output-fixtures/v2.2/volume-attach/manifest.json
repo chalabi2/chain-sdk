@@ -1,0 +1,74 @@
+[
+  {
+    "name": "anywhere",
+    "services": [
+      {
+        "name": "db",
+        "image": "postgres:16",
+        "command": null,
+        "args": null,
+        "env": null,
+        "resources": {
+          "id": 1,
+          "cpu": {
+            "units": {
+              "val": "2000"
+            }
+          },
+          "memory": {
+            "size": {
+              "val": "4294967296"
+            }
+          },
+          "gpu": {
+            "units": {
+              "val": "0"
+            }
+          },
+          "endpoints": [
+            {
+              "kind": 1,
+              "sequence_number": 0
+            }
+          ]
+        },
+        "count": 1,
+        "expose": [
+          {
+            "port": 5432,
+            "externalPort": 0,
+            "proto": "TCP",
+            "service": "",
+            "global": true,
+            "hosts": null,
+            "httpOptions": {
+              "maxBodySize": 1048576,
+              "readTimeout": 60000,
+              "sendTimeout": 60000,
+              "nextTries": 3,
+              "nextTimeout": 0,
+              "nextCases": [
+                "error",
+                "timeout"
+              ],
+              "proxyBufferSize": 16384
+            },
+            "ip": "",
+            "endpointSequenceNumber": 0
+          }
+        ],
+        "params": {
+          "storage": [
+            {
+              "name": "data",
+              "mount": "/var/lib/postgresql/data",
+              "readOnly": false,
+              "volume": "akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh/1234567/1/myapp-pgdata"
+            }
+          ]
+        },
+        "credentials": null
+      }
+    ]
+  }
+]

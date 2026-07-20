@@ -9,7 +9,7 @@ import type { DeepPartial, MessageFns } from "../../../../../encoding/typeEncodi
 /* eslint-disable */
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { DecCoin } from "../../../cosmos/base/v1beta1/coin.ts";
-import { GroupSpec } from "../../deployment/v1beta4/groupspec.ts";
+import { GroupSpec } from "../../deployment/v1beta5/groupspec.ts";
 import { ResourceOffer } from "../../market/v1beta5/resourcesoffer.ts";
 
 /**

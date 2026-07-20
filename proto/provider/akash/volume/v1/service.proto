@@ -1,0 +1,161 @@
+syntax = "proto3";
+package akash.volume.v1;
+
+import "google/api/annotations.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "pkg.akt.dev/go/volume/v1";
+
+// ExportRequest asks the exporting provider for a volume image stream.
+// Authorization is derived from chain state on both ends: the requester must
+// be the destination provider of a live migration/replication for the named
+// volume, and it must match the mTLS client certificate (x/cert identity).
+message ExportRequest {
+  // owner is the account bech32 address of the volume owner.
+  string owner = 1 [
+    (gogoproto.jsontag)  = "owner",
+    (gogoproto.moretags) = "yaml:\"owner\""
+  ];
+
+  // vid is the tenant-chosen data-continuity label of the volume.
+  string vid = 2 [
+    (gogoproto.jsontag)  = "vid",
+    (gogoproto.moretags) = "yaml:\"vid\""
+  ];
+
+  // dseq is the volume deployment on the EXPORTER's side.
+  uint64 dseq = 3 [
+    (gogoproto.customname) = "DSeq",
+    (gogoproto.jsontag)    = "dseq",
+    (gogoproto.moretags)   = "yaml:\"dseq\""
+  ];
+
+  // requester is the destination provider address; it must match the mTLS
+  // client certificate presented on the connection.
+  string requester = 4 [
+    (gogoproto.jsontag)  = "requester",
+    (gogoproto.moretags) = "yaml:\"requester\""
+  ];
+
+  // from_snapshot is the diff base snapshot id. Empty requests a full
+  // export; non-empty requests an incremental diff (resumable).
+  string from_snapshot = 5 [
+    (gogoproto.jsontag)  = "from_snapshot",
+    (gogoproto.moretags) = "yaml:\"from_snapshot\""
+  ];
+
+  // resume_offset is the byte offset to resume a previously interrupted
+  // export stream from.
+  uint64 resume_offset = 6 [
+    (gogoproto.jsontag)  = "resume_offset",
+    (gogoproto.moretags) = "yaml:\"resume_offset\""
+  ];
+}
+
+// ExportChunk is one verifiable chunk of the exported volume image stream.
+message ExportChunk {
+  // data is the raw image bytes of this chunk.
+  bytes data = 1 [
+    (gogoproto.jsontag)  = "data",
+    (gogoproto.moretags) = "yaml:\"data\""
+  ];
+
+  // sha256 is the digest of this chunk's data.
+  bytes sha256 = 2 [
+    (gogoproto.customname) = "SHA256",
+    (gogoproto.jsontag)    = "sha256",
+    (gogoproto.moretags)   = "yaml:\"sha256\""
+  ];
+
+  // offset is the byte offset of this chunk within the export stream.
+  uint64 offset = 3 [
+    (gogoproto.jsontag)  = "offset",
+    (gogoproto.moretags) = "yaml:\"offset\""
+  ];
+}
+
+// StatusRequest queries the exporting provider for the transfer state of a
+// volume. Authorization mirrors ExportRequest.
+message StatusRequest {
+  // owner is the account bech32 address of the volume owner.
+  string owner = 1 [
+    (gogoproto.jsontag)  = "owner",
+    (gogoproto.moretags) = "yaml:\"owner\""
+  ];
+
+  // vid is the tenant-chosen data-continuity label of the volume.
+  string vid = 2 [
+    (gogoproto.jsontag)  = "vid",
+    (gogoproto.moretags) = "yaml:\"vid\""
+  ];
+
+  // dseq is the volume deployment on the EXPORTER's side.
+  uint64 dseq = 3 [
+    (gogoproto.customname) = "DSeq",
+    (gogoproto.jsontag)    = "dseq",
+    (gogoproto.moretags)   = "yaml:\"dseq\""
+  ];
+
+  // requester is the destination provider address; it must match the mTLS
+  // client certificate presented on the connection.
+  string requester = 4 [
+    (gogoproto.jsontag)  = "requester",
+    (gogoproto.moretags) = "yaml:\"requester\""
+  ];
+}
+
+// StatusResponse reports sync lag, held snapshots, and the whole-image
+// digest so the importer can verify a completed transfer.
+message StatusResponse {
+  // snapshots lists the snapshot ids held for this volume, oldest first.
+  // Any of them may serve as a diff base for an incremental export.
+  repeated string snapshots = 1 [
+    (gogoproto.jsontag)  = "snapshots",
+    (gogoproto.moretags) = "yaml:\"snapshots\""
+  ];
+
+  // latest_snapshot is the most recent snapshot id.
+  string latest_snapshot = 2 [
+    (gogoproto.jsontag)  = "latest_snapshot",
+    (gogoproto.moretags) = "yaml:\"latest_snapshot\""
+  ];
+
+  // size is the size in bytes of the full image at the latest snapshot.
+  uint64 size = 3 [
+    (gogoproto.jsontag)  = "size",
+    (gogoproto.moretags) = "yaml:\"size\""
+  ];
+
+  // sha256 is the whole-image digest at the latest snapshot.
+  bytes sha256 = 4 [
+    (gogoproto.customname) = "SHA256",
+    (gogoproto.jsontag)    = "sha256",
+    (gogoproto.moretags)   = "yaml:\"sha256\""
+  ];
+
+  // sync_lag_seconds is the age of the latest snapshot relative to the
+  // live volume: how far behind a destination syncing from it would be.
+  int64 sync_lag_seconds = 5 [
+    (gogoproto.jsontag)  = "sync_lag_seconds",
+    (gogoproto.moretags) = "yaml:\"sync_lag_seconds\""
+  ];
+}
+
+// VolumeTransfer is the off-chain volume data plane, served by the storage
+// operator on the provider gateway. Both directions authenticate with mTLS
+// against on-chain provider identities (x/cert); authorization is derived
+// from chain state on both ends.
+service VolumeTransfer {
+  // Export streams the volume image, full or as a diff from a snapshot.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  rpc Export(ExportRequest) returns (stream ExportChunk);
+
+  // Status reports sync lag, snapshots held, and image digests.
+  // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
+  rpc Status(StatusRequest) returns (StatusResponse) {
+    option (google.api.http) = {
+      get: "/v1/volume/status",
+      response_body: "*"
+    };
+  }
+}

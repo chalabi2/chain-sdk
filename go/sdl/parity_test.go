@@ -11,7 +11,7 @@
 //   - Types & constraints: required fields, enums, string patterns, min/max, minLength
 //   - Patterns: endpoint names (^[a-z]+[-_\da-z]+$), denom (^(uakt|ibc/.*)$)
 //   - Conditionals: RAM storage -> persistent=false, IP endpoint -> global=true
-//   - Strict rules: email >=5 chars, password >=6 chars, version in {2.0, 2.1}, GPU vendor (nvidia only)
+//   - Strict rules: email >=5 chars, password >=6 chars, version in {2.0, 2.1, 2.2}, GPU vendor (nvidia only)
 //
 // Validation limitations:
 // Schema validates structure only. Go/TS parsers handle:
@@ -22,7 +22,7 @@
 // Test fixtures:
 //   - testdata/sdl/input/invalid/ - Both schema and Go parser reject
 //   - testdata/sdl/input/schema-only-invalid/ - Schema rejects, Go parser accepts (stricter rules)
-//   - testdata/sdl/input/v2.0/, v2.1/ - Valid fixtures for parity tests (pure fixtures comparison, no output schema validation)
+//   - testdata/sdl/input/v2.0/, v2.1/, v2.2/ - Valid fixtures for parity tests (pure fixtures comparison, no output schema validation)
 package sdl
 
 import (
@@ -43,6 +43,10 @@ func TestParityV2_0(t *testing.T) {
 
 func TestParityV2_1(t *testing.T) {
 	testParity(t, "v2.1")
+}
+
+func TestParityV2_2(t *testing.T) {
+	testParity(t, "v2.2")
 }
 
 func testParity(t *testing.T, version string) {
