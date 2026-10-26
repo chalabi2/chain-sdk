@@ -9,6 +9,7 @@ import "akash/market/v1beta5/resourcesoffer.proto";
 import "akash/market/v1/bid.proto";
 import "akash/base/deposit/v1/deposit.proto";
 import "akash/market/v1/types.proto";
+import "akash/deployment/v1/volume.proto";
 import "google/protobuf/duration.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v1beta5";
@@ -55,6 +56,16 @@ message MsgCreateBid {
     (gogoproto.stdduration) = true,
     (gogoproto.jsontag)     = "reclamation_window,omitempty",
     (gogoproto.moretags)    = "yaml:\"reclamation_window,omitempty\""
+  ];
+
+  // volume_policy is the volume policy the provider agrees to honor. A bid on
+  // a volume order must carry the order's policy unchanged, and a bid on any
+  // other order must leave it unset. Provider software that predates volumes
+  // never sets it, so it cannot win a volume order it would not honor.
+  akash.deployment.v1.VolumePolicy volume_policy = 6 [
+    (gogoproto.nullable) = true,
+    (gogoproto.jsontag)  = "volume_policy,omitempty",
+    (gogoproto.moretags) = "yaml:\"volume_policy,omitempty\""
   ];
 }
 

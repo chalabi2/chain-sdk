@@ -11,6 +11,7 @@ import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { DecCoin } from "../../../cosmos/base/v1beta1/coin.ts";
 import { Duration } from "../../../google/protobuf/duration.ts";
 import { Deposit } from "../../base/deposit/v1/deposit.ts";
+import { VolumePolicy } from "../../deployment/v1/volume.ts";
 import { BidID } from "../v1/bid.ts";
 import { LeaseClosedReason, leaseClosedReasonFromJSON, leaseClosedReasonToJSON } from "../v1/types.ts";
 import { ResourceOffer } from "./resourcesoffer.ts";
@@ -35,7 +36,16 @@ export interface MsgCreateBid {
    * If the order requires reclamation, this must be >= the order's min_window.
    * Nil means the provider does not offer reclamation on this bid.
    */
-  reclamationWindow: Duration | undefined;
+  reclamationWindow:
+    | Duration
+    | undefined;
+  /**
+   * volume_policy is the volume policy the provider agrees to honor. A bid on
+   * a volume order must carry the order's policy unchanged, and a bid on any
+   * other order must leave it unset. Provider software that predates volumes
+   * never sets it, so it cannot win a volume order it would not honor.
+   */
+  volumePolicy: VolumePolicy | undefined;
 }
 
 /** MsgCreateBidResponse defines the Msg/CreateBid response type. */
@@ -54,7 +64,14 @@ export interface MsgCloseBidResponse {
 }
 
 function createBaseMsgCreateBid(): MsgCreateBid {
-  return { id: undefined, price: undefined, deposit: undefined, resourcesOffer: [], reclamationWindow: undefined };
+  return {
+    id: undefined,
+    price: undefined,
+    deposit: undefined,
+    resourcesOffer: [],
+    reclamationWindow: undefined,
+    volumePolicy: undefined,
+  };
 }
 
 export const MsgCreateBid: MessageFns<MsgCreateBid, "akash.market.v1beta5.MsgCreateBid"> = {
@@ -75,6 +92,9 @@ export const MsgCreateBid: MessageFns<MsgCreateBid, "akash.market.v1beta5.MsgCre
     }
     if (message.reclamationWindow !== undefined) {
       Duration.encode(message.reclamationWindow, writer.uint32(42).fork()).join();
+    }
+    if (message.volumePolicy !== undefined) {
+      VolumePolicy.encode(message.volumePolicy, writer.uint32(50).fork()).join();
     }
     return writer;
   },
@@ -126,6 +146,14 @@ export const MsgCreateBid: MessageFns<MsgCreateBid, "akash.market.v1beta5.MsgCre
           message.reclamationWindow = Duration.decode(reader, reader.uint32());
           continue;
         }
+        case 6: {
+          if (tag !== 50) {
+            break;
+          }
+
+          message.volumePolicy = VolumePolicy.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -144,6 +172,7 @@ export const MsgCreateBid: MessageFns<MsgCreateBid, "akash.market.v1beta5.MsgCre
         ? object.resources_offer.map((e: any) => ResourceOffer.fromJSON(e))
         : [],
       reclamationWindow: isSet(object.reclamation_window) ? Duration.fromJSON(object.reclamation_window) : undefined,
+      volumePolicy: isSet(object.volume_policy) ? VolumePolicy.fromJSON(object.volume_policy) : undefined,
     };
   },
 
@@ -164,6 +193,9 @@ export const MsgCreateBid: MessageFns<MsgCreateBid, "akash.market.v1beta5.MsgCre
     if (message.reclamationWindow !== undefined) {
       obj.reclamation_window = Duration.toJSON(message.reclamationWindow);
     }
+    if (message.volumePolicy !== undefined) {
+      obj.volume_policy = VolumePolicy.toJSON(message.volumePolicy);
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<MsgCreateBid>): MsgCreateBid {
@@ -178,6 +210,9 @@ export const MsgCreateBid: MessageFns<MsgCreateBid, "akash.market.v1beta5.MsgCre
     message.resourcesOffer = object.resourcesOffer?.map((e) => ResourceOffer.fromPartial(e)) || [];
     message.reclamationWindow = (object.reclamationWindow !== undefined && object.reclamationWindow !== null)
       ? Duration.fromPartial(object.reclamationWindow)
+      : undefined;
+    message.volumePolicy = (object.volumePolicy !== undefined && object.volumePolicy !== null)
+      ? VolumePolicy.fromPartial(object.volumePolicy)
       : undefined;
     return message;
   },

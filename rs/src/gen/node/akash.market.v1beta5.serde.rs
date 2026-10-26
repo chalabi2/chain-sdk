@@ -1697,6 +1697,9 @@ impl serde::Serialize for MsgCreateBid {
         if self.reclamation_window.is_some() {
             len += 1;
         }
+        if self.volume_policy.is_some() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v1beta5.MsgCreateBid", len)?;
         if let Some(v) = self.id.as_ref() {
             struct_ser.serialize_field("id", v)?;
@@ -1712,6 +1715,9 @@ impl serde::Serialize for MsgCreateBid {
         }
         if let Some(v) = self.reclamation_window.as_ref() {
             struct_ser.serialize_field("reclamationWindow", v)?;
+        }
+        if let Some(v) = self.volume_policy.as_ref() {
+            struct_ser.serialize_field("volumePolicy", v)?;
         }
         struct_ser.end()
     }
@@ -1730,6 +1736,8 @@ impl<'de> serde::Deserialize<'de> for MsgCreateBid {
             "resourcesOffer",
             "reclamation_window",
             "reclamationWindow",
+            "volume_policy",
+            "volumePolicy",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -1739,6 +1747,7 @@ impl<'de> serde::Deserialize<'de> for MsgCreateBid {
             Deposit,
             ResourcesOffer,
             ReclamationWindow,
+            VolumePolicy,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -1765,6 +1774,7 @@ impl<'de> serde::Deserialize<'de> for MsgCreateBid {
                             "deposit" => Ok(GeneratedField::Deposit),
                             "resourcesOffer" | "resources_offer" => Ok(GeneratedField::ResourcesOffer),
                             "reclamationWindow" | "reclamation_window" => Ok(GeneratedField::ReclamationWindow),
+                            "volumePolicy" | "volume_policy" => Ok(GeneratedField::VolumePolicy),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -1789,6 +1799,7 @@ impl<'de> serde::Deserialize<'de> for MsgCreateBid {
                 let mut deposit__ = None;
                 let mut resources_offer__ = None;
                 let mut reclamation_window__ = None;
+                let mut volume_policy__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Id => {
@@ -1821,6 +1832,12 @@ impl<'de> serde::Deserialize<'de> for MsgCreateBid {
                             }
                             reclamation_window__ = map_.next_value()?;
                         }
+                        GeneratedField::VolumePolicy => {
+                            if volume_policy__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("volumePolicy"));
+                            }
+                            volume_policy__ = map_.next_value()?;
+                        }
                     }
                 }
                 Ok(MsgCreateBid {
@@ -1829,6 +1846,7 @@ impl<'de> serde::Deserialize<'de> for MsgCreateBid {
                     deposit: deposit__,
                     resources_offer: resources_offer__.unwrap_or_default(),
                     reclamation_window: reclamation_window__,
+                    volume_policy: volume_policy__,
                 })
             }
         }

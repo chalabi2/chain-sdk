@@ -82,11 +82,18 @@ func GetTxMarketBidCreateCmd() *cobra.Command {
 				return err
 			}
 
+			// a bid on a volume order must carry the order's volume policy
+			order, err := cl.Query().Market().Order(ctx, &mtypes.QueryOrderRequest{ID: id})
+			if err != nil {
+				return err
+			}
+
 			msg := &mtypes.MsgCreateBid{
 				ID:                mv1.MakeBidID(id, cctx.GetFromAddress()),
 				Price:             coin,
 				Deposit:           deposit,
 				ReclamationWindow: reclaimWindow,
+				VolumePolicy:      order.Order.Spec.Volume,
 			}
 
 			if err := msg.ValidateBasic(); err != nil {
