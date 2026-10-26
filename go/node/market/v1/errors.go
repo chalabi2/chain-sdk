@@ -47,6 +47,12 @@ const (
 	errReclamationWindowInvalid
 	errReclamationRequired
 	errReclamationWindowTooShort
+	errLeaseResizeDisabled
+	errLeaseResizePending
+	errLeaseResizeNotFound
+	errLeaseResizeExpired
+	errLeaseResizePriceTooHigh
+	errInvalidLeaseResize
 )
 
 var (
@@ -132,4 +138,16 @@ var (
 	ErrReclamationRequired = sdkerrors.RegisterWithGRPCCode(ModuleName, errReclamationRequired, codes.InvalidArgument, "order requires reclamation but bid does not offer it")
 	// ErrReclamationWindowTooShort is the error when provider's window is shorter than order minimum
 	ErrReclamationWindowTooShort = sdkerrors.RegisterWithGRPCCode(ModuleName, errReclamationWindowTooShort, codes.InvalidArgument, "reclamation window shorter than order minimum")
+	// ErrLeaseResizeDisabled is the error when lease resize is turned off by governance
+	ErrLeaseResizeDisabled = sdkerrors.RegisterWithGRPCCode(ModuleName, errLeaseResizeDisabled, codes.FailedPrecondition, "lease resize is disabled")
+	// ErrLeaseResizePending is the error when the deployment already has a pending lease resize
+	ErrLeaseResizePending = sdkerrors.RegisterWithGRPCCode(ModuleName, errLeaseResizePending, codes.FailedPrecondition, "deployment already has a pending lease resize")
+	// ErrLeaseResizeNotFound is the error when the lease has no pending resize
+	ErrLeaseResizeNotFound = sdkerrors.RegisterWithGRPCCode(ModuleName, errLeaseResizeNotFound, codes.NotFound, "no pending lease resize")
+	// ErrLeaseResizeExpired is the error when a pending resize is past its expiry
+	ErrLeaseResizeExpired = sdkerrors.RegisterWithGRPCCode(ModuleName, errLeaseResizeExpired, codes.FailedPrecondition, "lease resize request expired")
+	// ErrLeaseResizePriceTooHigh is the error when the accepted price is above the requested maximum
+	ErrLeaseResizePriceTooHigh = sdkerrors.RegisterWithGRPCCode(ModuleName, errLeaseResizePriceTooHigh, codes.InvalidArgument, "lease resize price above requested maximum")
+	// ErrInvalidLeaseResize is the error when a lease resize request is malformed or changes what it may not
+	ErrInvalidLeaseResize = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidLeaseResize, codes.InvalidArgument, "invalid lease resize")
 )

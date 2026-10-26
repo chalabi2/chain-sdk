@@ -27,6 +27,13 @@ var (
 	DefaultVolumeOrdersEnabled = false
 
 	DefaultMinVolumeReclamationWindow = 24 * time.Hour
+
+	// DefaultLeaseResizeEnabled ships in-place lease resize off; it is
+	// flipped by governance.
+	DefaultLeaseResizeEnabled = false
+
+	// DefaultLeaseResizeTTL is how long a resize request stays acceptable.
+	DefaultLeaseResizeTTL = 10 * time.Minute
 )
 
 const (
@@ -61,6 +68,8 @@ func DefaultParams() Params {
 		MaxReclamationWindow:       DefaultMaxReclamationWindow,
 		VolumeOrdersEnabled:        DefaultVolumeOrdersEnabled,
 		MinVolumeReclamationWindow: DefaultMinVolumeReclamationWindow,
+		LeaseResizeEnabled:         DefaultLeaseResizeEnabled,
+		LeaseResizeTTL:             DefaultLeaseResizeTTL,
 	}
 }
 
@@ -83,6 +92,10 @@ func (p Params) Validate() error {
 
 	if err := validateMinVolumeReclamationWindow(p.MinVolumeReclamationWindow); err != nil {
 		return err
+	}
+
+	if p.LeaseResizeTTL <= 0 {
+		return fmt.Errorf("%w: lease resize ttl must be > 0", v1.ErrInvalidParam)
 	}
 
 	return nil

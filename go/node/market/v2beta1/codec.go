@@ -31,6 +31,10 @@ func init() {
 	sdkutil.RegisterCustomSignerField(&MsgCloseBid{}, "id", "provider")
 	sdkutil.RegisterCustomSignerField(&MsgWithdrawLease{}, "id", "provider")
 	sdkutil.RegisterCustomSignerField(&MsgLeaseStartReclaim{}, "id", "provider")
+	sdkutil.RegisterCustomSignerField(&MsgResizeLease{}, "id", "owner")
+	sdkutil.RegisterCustomSignerField(&MsgAcceptLeaseResize{}, "id", "provider")
+	sdkutil.RegisterCustomSignerField(&MsgRejectLeaseResize{}, "id", "provider")
+	sdkutil.RegisterCustomSignerField(&MsgCancelLeaseResize{}, "id", "owner")
 }
 
 // RegisterLegacyAminoCodec registers the necessary x/market interfaces and concrete types
@@ -44,6 +48,10 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCloseLease{}, "akash-sdk/x/"+v1.ModuleName+"/"+(&MsgCloseLease{}).Type(), nil)
 	cdc.RegisterConcrete(&MsgWithdrawLease{}, "akash-sdk/x/"+v1.ModuleName+"/"+(&MsgWithdrawLease{}).Type(), nil)
 	cdc.RegisterConcrete(&MsgLeaseStartReclaim{}, "akash-sdk/x/"+v1.ModuleName+"/"+(&MsgLeaseStartReclaim{}).Type(), nil)
+	cdc.RegisterConcrete(&MsgResizeLease{}, "akash-sdk/x/"+v1.ModuleName+"/"+(&MsgResizeLease{}).Type(), nil)
+	cdc.RegisterConcrete(&MsgAcceptLeaseResize{}, "akash-sdk/x/"+v1.ModuleName+"/"+(&MsgAcceptLeaseResize{}).Type(), nil)
+	cdc.RegisterConcrete(&MsgRejectLeaseResize{}, "akash-sdk/x/"+v1.ModuleName+"/"+(&MsgRejectLeaseResize{}).Type(), nil)
+	cdc.RegisterConcrete(&MsgCancelLeaseResize{}, "akash-sdk/x/"+v1.ModuleName+"/"+(&MsgCancelLeaseResize{}).Type(), nil)
 }
 
 // RegisterInterfaces registers the x/market interfaces types with the interface registry
@@ -56,6 +64,10 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgWithdrawLease{},
 		&MsgUpdateParams{},
 		&MsgLeaseStartReclaim{},
+		&MsgResizeLease{},
+		&MsgAcceptLeaseResize{},
+		&MsgRejectLeaseResize{},
+		&MsgCancelLeaseResize{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

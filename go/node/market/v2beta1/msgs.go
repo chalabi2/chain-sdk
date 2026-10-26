@@ -7,6 +7,8 @@ import (
 	cerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	dv1 "pkg.akt.dev/go/node/deployment/v1"
+	dvbeta "pkg.akt.dev/go/node/deployment/v1beta5"
 	v1 "pkg.akt.dev/go/node/market/v1"
 	deposit "pkg.akt.dev/go/node/types/deposit/v1"
 )
@@ -19,6 +21,10 @@ var (
 	msgTypeWithdrawLease     = ""
 	msgTypeUpdateParams      = ""
 	msgTypeLeaseStartReclaim = ""
+	msgTypeResizeLease       = ""
+	msgTypeAcceptLeaseResize = ""
+	msgTypeRejectLeaseResize = ""
+	msgTypeCancelLeaseResize = ""
 )
 
 var (
@@ -31,6 +37,10 @@ var (
 	_ sdk.Msg            = &MsgCloseLease{}
 	_ sdk.Msg            = &MsgUpdateParams{}
 	_ sdk.Msg            = &MsgLeaseStartReclaim{}
+	_ sdk.Msg            = &MsgResizeLease{}
+	_ sdk.Msg            = &MsgAcceptLeaseResize{}
+	_ sdk.Msg            = &MsgRejectLeaseResize{}
+	_ sdk.Msg            = &MsgCancelLeaseResize{}
 )
 
 func init() {
@@ -41,6 +51,10 @@ func init() {
 	msgTypeWithdrawLease = reflect.TypeOf(&MsgWithdrawLease{}).Elem().Name()
 	msgTypeUpdateParams = reflect.TypeOf(&MsgUpdateParams{}).Elem().Name()
 	msgTypeLeaseStartReclaim = reflect.TypeOf(&MsgLeaseStartReclaim{}).Elem().Name()
+	msgTypeResizeLease = reflect.TypeOf(&MsgResizeLease{}).Elem().Name()
+	msgTypeAcceptLeaseResize = reflect.TypeOf(&MsgAcceptLeaseResize{}).Elem().Name()
+	msgTypeRejectLeaseResize = reflect.TypeOf(&MsgRejectLeaseResize{}).Elem().Name()
+	msgTypeCancelLeaseResize = reflect.TypeOf(&MsgCancelLeaseResize{}).Elem().Name()
 }
 
 // NewMsgCreateBid creates a new MsgCreateBid instance
@@ -269,6 +283,143 @@ func (msg *MsgLeaseStartReclaim) ValidateBasic() error {
 	return nil
 }
 
+// NewMsgResizeLease creates a new MsgResizeLease instance
+func NewMsgResizeLease(id v1.LeaseID, resources dvbeta.ResourceUnits, hash []byte) *MsgResizeLease {
+	return &MsgResizeLease{
+		ID:        id,
+		Resources: resources,
+		Hash:      hash,
+	}
+}
+
+// Type implements the sdk.Msg interface
+func (msg *MsgResizeLease) Type() string { return msgTypeResizeLease }
+
+// GetSigners defines whose signature is required
+func (msg *MsgResizeLease) GetSigners() []sdk.AccAddress {
+	owner, err := sdk.AccAddressFromBech32(msg.ID.Owner)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{owner}
+}
+
+// ValidateBasic method for MsgResizeLease. What the new resources may change
+// depends on the stored group, so the full check runs on chain.
+func (msg *MsgResizeLease) ValidateBasic() error {
+	if err := msg.ID.Validate(); err != nil {
+		return err
+	}
+
+	if len(msg.Resources) == 0 {
+		return cerrors.Wrap(v1.ErrInvalidLeaseResize, "no resources")
+	}
+
+	if len(msg.Hash) != 0 && len(msg.Hash) != dv1.HashLength {
+		return cerrors.Wrapf(v1.ErrInvalidLeaseResize, "hash must be %d bytes", dv1.HashLength)
+	}
+
+	return nil
+}
+
+// NewMsgAcceptLeaseResize creates a new MsgAcceptLeaseResize instance
+func NewMsgAcceptLeaseResize(id v1.LeaseID, price sdk.DecCoin) *MsgAcceptLeaseResize {
+	return &MsgAcceptLeaseResize{
+		ID:    id,
+		Price: price,
+	}
+}
+
+// Type implements the sdk.Msg interface
+func (msg *MsgAcceptLeaseResize) Type() string { return msgTypeAcceptLeaseResize }
+
+// GetSigners defines whose signature is required
+func (msg *MsgAcceptLeaseResize) GetSigners() []sdk.AccAddress {
+	provider, err := sdk.AccAddressFromBech32(msg.ID.Provider)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{provider}
+}
+
+// ValidateBasic method for MsgAcceptLeaseResize
+func (msg *MsgAcceptLeaseResize) ValidateBasic() error {
+	if err := msg.ID.Validate(); err != nil {
+		return err
+	}
+
+	if err := msg.Price.Validate(); err != nil {
+		return cerrors.Wrap(v1.ErrInvalidLeaseResize, err.Error())
+	}
+
+	if !msg.Price.IsPositive() {
+		return cerrors.Wrap(v1.ErrInvalidLeaseResize, "price must be positive")
+	}
+
+	return nil
+}
+
+// NewMsgRejectLeaseResize creates a new MsgRejectLeaseResize instance
+func NewMsgRejectLeaseResize(id v1.LeaseID, reason v1.LeaseResizeCancelReason) *MsgRejectLeaseResize {
+	return &MsgRejectLeaseResize{
+		ID:     id,
+		Reason: reason,
+	}
+}
+
+// Type implements the sdk.Msg interface
+func (msg *MsgRejectLeaseResize) Type() string { return msgTypeRejectLeaseResize }
+
+// GetSigners defines whose signature is required
+func (msg *MsgRejectLeaseResize) GetSigners() []sdk.AccAddress {
+	provider, err := sdk.AccAddressFromBech32(msg.ID.Provider)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{provider}
+}
+
+// ValidateBasic method for MsgRejectLeaseResize
+func (msg *MsgRejectLeaseResize) ValidateBasic() error {
+	if err := msg.ID.Validate(); err != nil {
+		return err
+	}
+
+	if !msg.Reason.IsProviderReject() {
+		return cerrors.Wrapf(v1.ErrInvalidLeaseResize, "reason %q is not a provider rejection", msg.Reason)
+	}
+
+	return nil
+}
+
+// NewMsgCancelLeaseResize creates a new MsgCancelLeaseResize instance
+func NewMsgCancelLeaseResize(id v1.LeaseID) *MsgCancelLeaseResize {
+	return &MsgCancelLeaseResize{
+		ID: id,
+	}
+}
+
+// Type implements the sdk.Msg interface
+func (msg *MsgCancelLeaseResize) Type() string { return msgTypeCancelLeaseResize }
+
+// GetSigners defines whose signature is required
+func (msg *MsgCancelLeaseResize) GetSigners() []sdk.AccAddress {
+	owner, err := sdk.AccAddressFromBech32(msg.ID.Owner)
+	if err != nil {
+		panic(err)
+	}
+
+	return []sdk.AccAddress{owner}
+}
+
+// ValidateBasic method for MsgCancelLeaseResize
+func (msg *MsgCancelLeaseResize) ValidateBasic() error {
+	return msg.ID.Validate()
+}
+
 // ============= GetSignBytes =============
 // ModuleCdc is defined in codec.go
 // TODO @troian to check if we need them at all
@@ -322,6 +473,34 @@ func (msg *MsgLeaseStartReclaim) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg)) // nolint: staticcheck
 }
 
+// GetSignBytes encodes the message for signing
+//
+// Deprecated: GetSignBytes is deprecated
+func (msg *MsgResizeLease) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg)) // nolint: staticcheck
+}
+
+// GetSignBytes encodes the message for signing
+//
+// Deprecated: GetSignBytes is deprecated
+func (msg *MsgAcceptLeaseResize) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg)) // nolint: staticcheck
+}
+
+// GetSignBytes encodes the message for signing
+//
+// Deprecated: GetSignBytes is deprecated
+func (msg *MsgRejectLeaseResize) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg)) // nolint: staticcheck
+}
+
+// GetSignBytes encodes the message for signing
+//
+// Deprecated: GetSignBytes is deprecated
+func (msg *MsgCancelLeaseResize) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg)) // nolint: staticcheck
+}
+
 // ============= Route =============
 // ModuleCdc is defined in codec.go
 // TODO @troian to check if we need them at all since sdk.Msg does not not have Route defined anymore
@@ -360,3 +539,23 @@ func (msg *MsgUpdateParams) Route() string { return v1.RouterKey }
 //
 // Deprecated: Route is deprecated
 func (msg *MsgLeaseStartReclaim) Route() string { return v1.RouterKey }
+
+// Route implements the sdk.Msg interface
+//
+// Deprecated: Route is deprecated
+func (msg *MsgResizeLease) Route() string { return v1.RouterKey }
+
+// Route implements the sdk.Msg interface
+//
+// Deprecated: Route is deprecated
+func (msg *MsgAcceptLeaseResize) Route() string { return v1.RouterKey }
+
+// Route implements the sdk.Msg interface
+//
+// Deprecated: Route is deprecated
+func (msg *MsgRejectLeaseResize) Route() string { return v1.RouterKey }
+
+// Route implements the sdk.Msg interface
+//
+// Deprecated: Route is deprecated
+func (msg *MsgCancelLeaseResize) Route() string { return v1.RouterKey }
