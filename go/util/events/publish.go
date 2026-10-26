@@ -568,6 +568,9 @@ var recognized = func() map[string]struct{} {
 		&mtypes.EventLeaseCreated{},
 		&mtypes.EventLeaseClosed{},
 		&mtypes.EventLeaseReclaimStarted{},
+		&mtypes.EventLeaseResizeRequested{},
+		&mtypes.EventLeaseResized{},
+		&mtypes.EventLeaseResizeCanceled{},
 	} {
 		m[proto.MessageName(msg)] = struct{}{}
 	}

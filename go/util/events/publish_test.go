@@ -17,8 +17,10 @@ import (
 	cmtypes "github.com/cometbft/cometbft/types"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	mtypes "pkg.akt.dev/go/node/market/v1"
 	"pkg.akt.dev/go/util/pubsub"
@@ -820,6 +822,25 @@ func TestProcessEventFiltersUnrecognized(t *testing.T) {
 	_, ok, err = processEvent(other)
 	require.NoError(t, err, "an event the service does not publish is not a decode failure")
 	require.False(t, ok, "a non-Akash event must be ignored")
+}
+
+func TestProcessEventDecodesLeaseResizeEvents(t *testing.T) {
+	id := mtypes.LeaseID{Owner: "akash1owner", DSeq: 7, GSeq: 1, OSeq: 1, Provider: "akash1provider"}
+	price := sdk.NewDecCoin("uact", sdkmath.NewInt(5))
+
+	for _, msg := range []proto.Message{
+		&mtypes.EventLeaseResizeRequested{ID: id, MaxPrice: price, ExpiresAt: 1700000000},
+		&mtypes.EventLeaseResized{ID: id, Price: price, PrevPrice: sdk.NewDecCoin("uact", sdkmath.NewInt(3))},
+		&mtypes.EventLeaseResizeCanceled{ID: id, Reason: mtypes.LeaseResizeRejectCapacity},
+	} {
+		ev, err := sdk.TypedEventToEvent(msg)
+		require.NoError(t, err)
+
+		decoded, ok, err := processEvent(abci.Event(ev))
+		require.NoError(t, err)
+		require.True(t, ok, "%s must be recognized", proto.MessageName(msg))
+		require.Equal(t, msg, decoded)
+	}
 }
 
 // The SDK appends bookkeeping attributes to the events it records: msg_index to every
