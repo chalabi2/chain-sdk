@@ -13,6 +13,7 @@ import { VolumeRef } from "../../deployment/v1/volume.ts";
 import { BidID } from "./bid.ts";
 import { LeaseID } from "./lease.ts";
 import { OrderID } from "./order.ts";
+import { LeaseResizeCancelReason, leaseResizeCancelReasonFromJSON, leaseResizeCancelReasonToJSON } from "./resize.ts";
 import { LeaseClosedReason, leaseClosedReasonFromJSON, leaseClosedReasonToJSON } from "./types.ts";
 
 /**
@@ -118,6 +119,59 @@ export interface EventVolumeDetached {
     | undefined;
   /** Reason is why the detach happened. */
   reason: LeaseClosedReason;
+}
+
+/**
+ * EventLeaseResizeRequested is triggered when a tenant asks the provider of an
+ * active lease to change the lease's resources in place.
+ */
+export interface EventLeaseResizeRequested {
+  /** Id is the unique identifier of the Lease. */
+  id:
+    | LeaseID
+    | undefined;
+  /**
+   * MaxPrice is the highest per-block price the tenant accepts for the new
+   * resources.
+   */
+  maxPrice:
+    | DecCoin
+    | undefined;
+  /**
+   * ExpiresAt is the unix timestamp after which the request can no longer be
+   * accepted.
+   */
+  expiresAt: bigint;
+}
+
+/**
+ * EventLeaseResized is triggered when the provider accepts a resize: the
+ * group's resources and the lease price changed in place.
+ */
+export interface EventLeaseResized {
+  /** Id is the unique identifier of the Lease. */
+  id:
+    | LeaseID
+    | undefined;
+  /** Price is the new per-block lease price. */
+  price:
+    | DecCoin
+    | undefined;
+  /** PrevPrice is the per-block lease price before the resize. */
+  prevPrice: DecCoin | undefined;
+}
+
+/**
+ * EventLeaseResizeCanceled is triggered when a pending resize is dropped
+ * without being applied.
+ */
+export interface EventLeaseResizeCanceled {
+  /** Id is the unique identifier of the Lease. */
+  id:
+    | LeaseID
+    | undefined;
+  /** Reason is why the resize was dropped. */
+  reason: LeaseResizeCancelReason;
 }
 
 function createBaseEventOrderCreated(): EventOrderCreated {
@@ -777,6 +831,275 @@ export const EventVolumeDetached: MessageFns<EventVolumeDetached, "akash.market.
     message.volume = (object.volume !== undefined && object.volume !== null)
       ? VolumeRef.fromPartial(object.volume)
       : undefined;
+    message.reason = object.reason ?? 0;
+    return message;
+  },
+};
+
+function createBaseEventLeaseResizeRequested(): EventLeaseResizeRequested {
+  return { id: undefined, maxPrice: undefined, expiresAt: 0n };
+}
+
+export const EventLeaseResizeRequested: MessageFns<
+  EventLeaseResizeRequested,
+  "akash.market.v1.EventLeaseResizeRequested"
+> = {
+  $type: "akash.market.v1.EventLeaseResizeRequested" as const,
+
+  encode(message: EventLeaseResizeRequested, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== undefined) {
+      LeaseID.encode(message.id, writer.uint32(10).fork()).join();
+    }
+    if (message.maxPrice !== undefined) {
+      DecCoin.encode(message.maxPrice, writer.uint32(18).fork()).join();
+    }
+    if (message.expiresAt !== 0n) {
+      if (BigInt.asIntN(64, message.expiresAt) !== message.expiresAt) {
+        throw new globalThis.Error("value provided for field message.expiresAt of type int64 too large");
+      }
+      writer.uint32(24).int64(message.expiresAt);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventLeaseResizeRequested {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventLeaseResizeRequested();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = LeaseID.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.maxPrice = DecCoin.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 24) {
+            break;
+          }
+
+          message.expiresAt = reader.int64() as bigint;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventLeaseResizeRequested {
+    return {
+      id: isSet(object.id) ? LeaseID.fromJSON(object.id) : undefined,
+      maxPrice: isSet(object.max_price) ? DecCoin.fromJSON(object.max_price) : undefined,
+      expiresAt: isSet(object.expires_at) ? BigInt(object.expires_at) : 0n,
+    };
+  },
+
+  toJSON(message: EventLeaseResizeRequested): unknown {
+    const obj: any = {};
+    if (message.id !== undefined) {
+      obj.id = LeaseID.toJSON(message.id);
+    }
+    if (message.maxPrice !== undefined) {
+      obj.max_price = DecCoin.toJSON(message.maxPrice);
+    }
+    if (message.expiresAt !== 0n) {
+      obj.expires_at = message.expiresAt.toString();
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<EventLeaseResizeRequested>): EventLeaseResizeRequested {
+    const message = createBaseEventLeaseResizeRequested();
+    message.id = (object.id !== undefined && object.id !== null) ? LeaseID.fromPartial(object.id) : undefined;
+    message.maxPrice = (object.maxPrice !== undefined && object.maxPrice !== null)
+      ? DecCoin.fromPartial(object.maxPrice)
+      : undefined;
+    message.expiresAt = (object.expiresAt !== undefined && object.expiresAt !== null) ? BigInt(object.expiresAt) : 0n;
+    return message;
+  },
+};
+
+function createBaseEventLeaseResized(): EventLeaseResized {
+  return { id: undefined, price: undefined, prevPrice: undefined };
+}
+
+export const EventLeaseResized: MessageFns<EventLeaseResized, "akash.market.v1.EventLeaseResized"> = {
+  $type: "akash.market.v1.EventLeaseResized" as const,
+
+  encode(message: EventLeaseResized, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== undefined) {
+      LeaseID.encode(message.id, writer.uint32(10).fork()).join();
+    }
+    if (message.price !== undefined) {
+      DecCoin.encode(message.price, writer.uint32(18).fork()).join();
+    }
+    if (message.prevPrice !== undefined) {
+      DecCoin.encode(message.prevPrice, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventLeaseResized {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventLeaseResized();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = LeaseID.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.price = DecCoin.decode(reader, reader.uint32());
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.prevPrice = DecCoin.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventLeaseResized {
+    return {
+      id: isSet(object.id) ? LeaseID.fromJSON(object.id) : undefined,
+      price: isSet(object.price) ? DecCoin.fromJSON(object.price) : undefined,
+      prevPrice: isSet(object.prev_price) ? DecCoin.fromJSON(object.prev_price) : undefined,
+    };
+  },
+
+  toJSON(message: EventLeaseResized): unknown {
+    const obj: any = {};
+    if (message.id !== undefined) {
+      obj.id = LeaseID.toJSON(message.id);
+    }
+    if (message.price !== undefined) {
+      obj.price = DecCoin.toJSON(message.price);
+    }
+    if (message.prevPrice !== undefined) {
+      obj.prev_price = DecCoin.toJSON(message.prevPrice);
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<EventLeaseResized>): EventLeaseResized {
+    const message = createBaseEventLeaseResized();
+    message.id = (object.id !== undefined && object.id !== null) ? LeaseID.fromPartial(object.id) : undefined;
+    message.price = (object.price !== undefined && object.price !== null)
+      ? DecCoin.fromPartial(object.price)
+      : undefined;
+    message.prevPrice = (object.prevPrice !== undefined && object.prevPrice !== null)
+      ? DecCoin.fromPartial(object.prevPrice)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseEventLeaseResizeCanceled(): EventLeaseResizeCanceled {
+  return { id: undefined, reason: 0 };
+}
+
+export const EventLeaseResizeCanceled: MessageFns<
+  EventLeaseResizeCanceled,
+  "akash.market.v1.EventLeaseResizeCanceled"
+> = {
+  $type: "akash.market.v1.EventLeaseResizeCanceled" as const,
+
+  encode(message: EventLeaseResizeCanceled, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.id !== undefined) {
+      LeaseID.encode(message.id, writer.uint32(10).fork()).join();
+    }
+    if (message.reason !== 0) {
+      writer.uint32(16).int32(message.reason);
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): EventLeaseResizeCanceled {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventLeaseResizeCanceled();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.id = LeaseID.decode(reader, reader.uint32());
+          continue;
+        }
+        case 2: {
+          if (tag !== 16) {
+            break;
+          }
+
+          message.reason = reader.int32() as any;
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventLeaseResizeCanceled {
+    return {
+      id: isSet(object.id) ? LeaseID.fromJSON(object.id) : undefined,
+      reason: isSet(object.reason) ? leaseResizeCancelReasonFromJSON(object.reason) : 0,
+    };
+  },
+
+  toJSON(message: EventLeaseResizeCanceled): unknown {
+    const obj: any = {};
+    if (message.id !== undefined) {
+      obj.id = LeaseID.toJSON(message.id);
+    }
+    if (message.reason !== 0) {
+      obj.reason = leaseResizeCancelReasonToJSON(message.reason);
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<EventLeaseResizeCanceled>): EventLeaseResizeCanceled {
+    const message = createBaseEventLeaseResizeCanceled();
+    message.id = (object.id !== undefined && object.id !== null) ? LeaseID.fromPartial(object.id) : undefined;
     message.reason = object.reason ?? 0;
     return message;
   },

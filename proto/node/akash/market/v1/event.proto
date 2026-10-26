@@ -10,6 +10,7 @@ import "akash/deployment/v1/volume.proto";
 import "akash/market/v1/bid.proto";
 import "akash/market/v1/order.proto";
 import "akash/market/v1/lease.proto";
+import "akash/market/v1/resize.proto";
 import "akash/market/v1/types.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v1";
@@ -186,6 +187,83 @@ message EventVolumeDetached {
 
   // Reason is why the detach happened.
   LeaseClosedReason reason = 3 [
+    (gogoproto.jsontag)  = "reason",
+    (gogoproto.moretags) = "yaml:\"reason\""
+  ];
+}
+
+// EventLeaseResizeRequested is triggered when a tenant asks the provider of an
+// active lease to change the lease's resources in place.
+message EventLeaseResizeRequested {
+  option (gogoproto.equal) = true;
+
+  // Id is the unique identifier of the Lease.
+  LeaseID id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "ID",
+    (gogoproto.jsontag)    = "id",
+    (gogoproto.moretags)   = "yaml:\"id\""
+  ];
+
+  // MaxPrice is the highest per-block price the tenant accepts for the new
+  // resources.
+  cosmos.base.v1beta1.DecCoin max_price = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "max_price",
+    (gogoproto.moretags) = "yaml:\"max_price\""
+  ];
+
+  // ExpiresAt is the unix timestamp after which the request can no longer be
+  // accepted.
+  int64 expires_at = 3 [
+    (gogoproto.jsontag)  = "expires_at",
+    (gogoproto.moretags) = "yaml:\"expires_at\""
+  ];
+}
+
+// EventLeaseResized is triggered when the provider accepts a resize: the
+// group's resources and the lease price changed in place.
+message EventLeaseResized {
+  option (gogoproto.equal) = true;
+
+  // Id is the unique identifier of the Lease.
+  LeaseID id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "ID",
+    (gogoproto.jsontag)    = "id",
+    (gogoproto.moretags)   = "yaml:\"id\""
+  ];
+
+  // Price is the new per-block lease price.
+  cosmos.base.v1beta1.DecCoin price = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "price",
+    (gogoproto.moretags) = "yaml:\"price\""
+  ];
+
+  // PrevPrice is the per-block lease price before the resize.
+  cosmos.base.v1beta1.DecCoin prev_price = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "prev_price",
+    (gogoproto.moretags) = "yaml:\"prev_price\""
+  ];
+}
+
+// EventLeaseResizeCanceled is triggered when a pending resize is dropped
+// without being applied.
+message EventLeaseResizeCanceled {
+  option (gogoproto.equal) = true;
+
+  // Id is the unique identifier of the Lease.
+  LeaseID id = 1 [
+    (gogoproto.nullable)   = false,
+    (gogoproto.customname) = "ID",
+    (gogoproto.jsontag)    = "id",
+    (gogoproto.moretags)   = "yaml:\"id\""
+  ];
+
+  // Reason is why the resize was dropped.
+  LeaseResizeCancelReason reason = 2 [
     (gogoproto.jsontag)  = "reason",
     (gogoproto.moretags) = "yaml:\"reason\""
   ];

@@ -29,6 +29,19 @@ service Msg {
   // LeaseStartReclaim initiates the reclamation window on an active lease.
   rpc LeaseStartReclaim(MsgLeaseStartReclaim) returns (MsgLeaseStartReclaimResponse);
 
+  // ResizeLease asks the provider of an active lease to change its resources
+  // in place.
+  rpc ResizeLease(MsgResizeLease) returns (MsgResizeLeaseResponse);
+
+  // AcceptLeaseResize applies a pending lease resize at the provider's price.
+  rpc AcceptLeaseResize(MsgAcceptLeaseResize) returns (MsgAcceptLeaseResizeResponse);
+
+  // RejectLeaseResize declines a pending lease resize.
+  rpc RejectLeaseResize(MsgRejectLeaseResize) returns (MsgRejectLeaseResizeResponse);
+
+  // CancelLeaseResize withdraws a pending lease resize.
+  rpc CancelLeaseResize(MsgCancelLeaseResize) returns (MsgCancelLeaseResizeResponse);
+
   // UpdateParams defines a governance operation for updating the x/market module
   // parameters. The authority is hard-coded to the x/gov module account.
   //

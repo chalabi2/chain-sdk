@@ -4,7 +4,8 @@ export { MsgCreateBid, MsgCreateBidResponse, MsgCloseBid, MsgCloseBidResponse } 
 export { BidFilters, OrderFilters } from "./akash/market/v2beta1/filters.ts";
 export { Params } from "./akash/market/v2beta1/params.ts";
 export { Order, Order_State } from "./akash/market/v2beta1/order.ts";
+export { LeaseResize } from "./akash/market/v2beta1/leaseresize.ts";
 export { GenesisState } from "./akash/market/v2beta1/genesis.ts";
-export { MsgCreateLease, MsgCreateLeaseResponse, MsgWithdrawLease, MsgWithdrawLeaseResponse, MsgCloseLease, MsgCloseLeaseResponse, MsgLeaseStartReclaim, MsgLeaseStartReclaimResponse } from "./akash/market/v2beta1/leasemsg.ts";
+export { MsgCreateLease, MsgCreateLeaseResponse, MsgWithdrawLease, MsgWithdrawLeaseResponse, MsgCloseLease, MsgCloseLeaseResponse, MsgLeaseStartReclaim, MsgLeaseStartReclaimResponse, MsgResizeLease, MsgResizeLeaseResponse, MsgAcceptLeaseResize, MsgAcceptLeaseResizeResponse, MsgRejectLeaseResize, MsgRejectLeaseResizeResponse, MsgCancelLeaseResize, MsgCancelLeaseResizeResponse } from "./akash/market/v2beta1/leasemsg.ts";
 export { MsgUpdateParams, MsgUpdateParamsResponse } from "./akash/market/v2beta1/paramsmsg.ts";
-export { QueryOrdersRequest, QueryOrdersResponse, QueryOrderRequest, QueryOrderResponse, QueryBidsRequest, QueryBidsResponse, QueryBidRequest, QueryBidResponse, QueryLeasesRequest, QueryLeasesResponse, QueryLeaseRequest, QueryLeaseResponse, QueryParamsRequest, QueryParamsResponse } from "./akash/market/v2beta1/query.ts";
+export { QueryOrdersRequest, QueryOrdersResponse, QueryOrderRequest, QueryOrderResponse, QueryBidsRequest, QueryBidsResponse, QueryBidRequest, QueryBidResponse, QueryLeasesRequest, QueryLeasesResponse, QueryLeaseRequest, QueryLeaseResponse, QueryParamsRequest, QueryParamsResponse, QueryLeaseResizesRequest, QueryLeaseResizesResponse } from "./akash/market/v2beta1/query.ts";

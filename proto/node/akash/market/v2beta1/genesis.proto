@@ -8,6 +8,7 @@ import "akash/market/v1/lease.proto";
 import "akash/market/v2beta1/params.proto";
 import "akash/market/v2beta1/bid.proto";
 import "akash/market/v2beta1/order.proto";
+import "akash/market/v2beta1/leaseresize.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v2beta1";
 
@@ -42,5 +43,12 @@ message GenesisState {
     (gogoproto.castrepeated) = "Bids",
     (gogoproto.jsontag)      = "bids",
     (gogoproto.moretags)     = "yaml:\"bids\""
+  ];
+
+  // LeaseResizes holds the pending lease resize requests.
+  repeated LeaseResize lease_resizes = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "lease_resizes",
+    (gogoproto.moretags) = "yaml:\"lease_resizes\""
   ];
 }

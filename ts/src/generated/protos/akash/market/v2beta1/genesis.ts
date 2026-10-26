@@ -10,6 +10,7 @@ import type { DeepPartial, MessageFns } from "../../../../../encoding/typeEncodi
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import { Lease } from "../v1/lease.ts";
 import { Bid } from "./bid.ts";
+import { LeaseResize } from "./leaseresize.ts";
 import { Order } from "./order.ts";
 import { Params } from "./params.ts";
 
@@ -25,10 +26,12 @@ export interface GenesisState {
   leases: Lease[];
   /** Bids is a list of bids in the genesis state. */
   bids: Bid[];
+  /** LeaseResizes holds the pending lease resize requests. */
+  leaseResizes: LeaseResize[];
 }
 
 function createBaseGenesisState(): GenesisState {
-  return { params: undefined, orders: [], leases: [], bids: [] };
+  return { params: undefined, orders: [], leases: [], bids: [], leaseResizes: [] };
 }
 
 export const GenesisState: MessageFns<GenesisState, "akash.market.v2beta1.GenesisState"> = {
@@ -46,6 +49,9 @@ export const GenesisState: MessageFns<GenesisState, "akash.market.v2beta1.Genesi
     }
     for (const v of message.bids) {
       Bid.encode(v!, writer.uint32(34).fork()).join();
+    }
+    for (const v of message.leaseResizes) {
+      LeaseResize.encode(v!, writer.uint32(42).fork()).join();
     }
     return writer;
   },
@@ -89,6 +95,14 @@ export const GenesisState: MessageFns<GenesisState, "akash.market.v2beta1.Genesi
           message.bids.push(Bid.decode(reader, reader.uint32()));
           continue;
         }
+        case 5: {
+          if (tag !== 42) {
+            break;
+          }
+
+          message.leaseResizes.push(LeaseResize.decode(reader, reader.uint32()));
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -104,6 +118,9 @@ export const GenesisState: MessageFns<GenesisState, "akash.market.v2beta1.Genesi
       orders: globalThis.Array.isArray(object?.orders) ? object.orders.map((e: any) => Order.fromJSON(e)) : [],
       leases: globalThis.Array.isArray(object?.leases) ? object.leases.map((e: any) => Lease.fromJSON(e)) : [],
       bids: globalThis.Array.isArray(object?.bids) ? object.bids.map((e: any) => Bid.fromJSON(e)) : [],
+      leaseResizes: globalThis.Array.isArray(object?.lease_resizes)
+        ? object.lease_resizes.map((e: any) => LeaseResize.fromJSON(e))
+        : [],
     };
   },
 
@@ -121,6 +138,9 @@ export const GenesisState: MessageFns<GenesisState, "akash.market.v2beta1.Genesi
     if (message.bids?.length) {
       obj.bids = message.bids.map((e) => Bid.toJSON(e));
     }
+    if (message.leaseResizes?.length) {
+      obj.lease_resizes = message.leaseResizes.map((e) => LeaseResize.toJSON(e));
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
@@ -131,6 +151,7 @@ export const GenesisState: MessageFns<GenesisState, "akash.market.v2beta1.Genesi
     message.orders = object.orders?.map((e) => Order.fromPartial(e)) || [];
     message.leases = object.leases?.map((e) => Lease.fromPartial(e)) || [];
     message.bids = object.bids?.map((e) => Bid.fromPartial(e)) || [];
+    message.leaseResizes = object.leaseResizes?.map((e) => LeaseResize.fromPartial(e)) || [];
     return message;
   },
 };

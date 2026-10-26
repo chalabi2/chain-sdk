@@ -614,6 +614,14 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
             return getClient(service).params(input, options);
           }, { path: [17, "params"], serviceLoader }),
           /**
+           * getLeaseResizes queries pending lease resize requests, optionally filtered
+           * by tenant or provider.
+           */
+          getLeaseResizes: withMetadata(async function getLeaseResizes(input: DeepPartial<akash_market_v2beta1_query.QueryLeaseResizesRequest>, options?: CallOptions) {
+            const service = await serviceLoader.loadAt(17);
+            return getClient(service).leaseResizes(input, options);
+          }, { path: [17, "leaseResizes"], serviceLoader }),
+          /**
            * createBid defines a method to create a bid given proper inputs.
            */
           createBid: withMetadata(async function createBid(input: DeepSimplify<akash_market_v2beta1_bidmsg.MsgCreateBid>, options?: TxCallOptions) {
@@ -655,6 +663,35 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
             const service = await serviceLoader.loadAt(18);
             return getMsgClient(service).leaseStartReclaim(input, options);
           }, { path: [18, "leaseStartReclaim"], serviceLoader }),
+          /**
+           * resizeLease asks the provider of an active lease to change its resources
+           * in place.
+           */
+          resizeLease: withMetadata(async function resizeLease(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgResizeLease>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(18);
+            return getMsgClient(service).resizeLease(input, options);
+          }, { path: [18, "resizeLease"], serviceLoader }),
+          /**
+           * acceptLeaseResize applies a pending lease resize at the provider's price.
+           */
+          acceptLeaseResize: withMetadata(async function acceptLeaseResize(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgAcceptLeaseResize>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(18);
+            return getMsgClient(service).acceptLeaseResize(input, options);
+          }, { path: [18, "acceptLeaseResize"], serviceLoader }),
+          /**
+           * rejectLeaseResize declines a pending lease resize.
+           */
+          rejectLeaseResize: withMetadata(async function rejectLeaseResize(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgRejectLeaseResize>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(18);
+            return getMsgClient(service).rejectLeaseResize(input, options);
+          }, { path: [18, "rejectLeaseResize"], serviceLoader }),
+          /**
+           * cancelLeaseResize withdraws a pending lease resize.
+           */
+          cancelLeaseResize: withMetadata(async function cancelLeaseResize(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgCancelLeaseResize>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(18);
+            return getMsgClient(service).cancelLeaseResize(input, options);
+          }, { path: [18, "cancelLeaseResize"], serviceLoader }),
           /**
            * updateParams defines a governance operation for updating the x/market module
            * parameters. The authority is hard-coded to the x/gov module account.

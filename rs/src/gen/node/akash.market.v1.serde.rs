@@ -733,6 +733,373 @@ impl<'de> serde::Deserialize<'de> for EventLeaseReclaimStarted {
         deserializer.deserialize_struct("akash.market.v1.EventLeaseReclaimStarted", FIELDS, GeneratedVisitor)
     }
 }
+impl serde::Serialize for EventLeaseResizeCanceled {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.id.is_some() {
+            len += 1;
+        }
+        if self.reason != 0 {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("akash.market.v1.EventLeaseResizeCanceled", len)?;
+        if let Some(v) = self.id.as_ref() {
+            struct_ser.serialize_field("id", v)?;
+        }
+        if self.reason != 0 {
+            let v = LeaseResizeCancelReason::try_from(self.reason)
+                .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", self.reason)))?;
+            struct_ser.serialize_field("reason", &v)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for EventLeaseResizeCanceled {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "id",
+            "reason",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Id,
+            Reason,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "id" => Ok(GeneratedField::Id),
+                            "reason" => Ok(GeneratedField::Reason),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = EventLeaseResizeCanceled;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct akash.market.v1.EventLeaseResizeCanceled")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<EventLeaseResizeCanceled, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut id__ = None;
+                let mut reason__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Id => {
+                            if id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("id"));
+                            }
+                            id__ = map_.next_value()?;
+                        }
+                        GeneratedField::Reason => {
+                            if reason__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("reason"));
+                            }
+                            reason__ = Some(map_.next_value::<LeaseResizeCancelReason>()? as i32);
+                        }
+                    }
+                }
+                Ok(EventLeaseResizeCanceled {
+                    id: id__,
+                    reason: reason__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("akash.market.v1.EventLeaseResizeCanceled", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for EventLeaseResizeRequested {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.id.is_some() {
+            len += 1;
+        }
+        if self.max_price.is_some() {
+            len += 1;
+        }
+        if self.expires_at != 0 {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("akash.market.v1.EventLeaseResizeRequested", len)?;
+        if let Some(v) = self.id.as_ref() {
+            struct_ser.serialize_field("id", v)?;
+        }
+        if let Some(v) = self.max_price.as_ref() {
+            struct_ser.serialize_field("maxPrice", v)?;
+        }
+        if self.expires_at != 0 {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("expiresAt", ToString::to_string(&self.expires_at).as_str())?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for EventLeaseResizeRequested {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "id",
+            "max_price",
+            "maxPrice",
+            "expires_at",
+            "expiresAt",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Id,
+            MaxPrice,
+            ExpiresAt,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "id" => Ok(GeneratedField::Id),
+                            "maxPrice" | "max_price" => Ok(GeneratedField::MaxPrice),
+                            "expiresAt" | "expires_at" => Ok(GeneratedField::ExpiresAt),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = EventLeaseResizeRequested;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct akash.market.v1.EventLeaseResizeRequested")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<EventLeaseResizeRequested, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut id__ = None;
+                let mut max_price__ = None;
+                let mut expires_at__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Id => {
+                            if id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("id"));
+                            }
+                            id__ = map_.next_value()?;
+                        }
+                        GeneratedField::MaxPrice => {
+                            if max_price__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("maxPrice"));
+                            }
+                            max_price__ = map_.next_value()?;
+                        }
+                        GeneratedField::ExpiresAt => {
+                            if expires_at__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("expiresAt"));
+                            }
+                            expires_at__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
+                    }
+                }
+                Ok(EventLeaseResizeRequested {
+                    id: id__,
+                    max_price: max_price__,
+                    expires_at: expires_at__.unwrap_or_default(),
+                })
+            }
+        }
+        deserializer.deserialize_struct("akash.market.v1.EventLeaseResizeRequested", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for EventLeaseResized {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::SerializeStruct;
+        let mut len = 0;
+        if self.id.is_some() {
+            len += 1;
+        }
+        if self.price.is_some() {
+            len += 1;
+        }
+        if self.prev_price.is_some() {
+            len += 1;
+        }
+        let mut struct_ser = serializer.serialize_struct("akash.market.v1.EventLeaseResized", len)?;
+        if let Some(v) = self.id.as_ref() {
+            struct_ser.serialize_field("id", v)?;
+        }
+        if let Some(v) = self.price.as_ref() {
+            struct_ser.serialize_field("price", v)?;
+        }
+        if let Some(v) = self.prev_price.as_ref() {
+            struct_ser.serialize_field("prevPrice", v)?;
+        }
+        struct_ser.end()
+    }
+}
+impl<'de> serde::Deserialize<'de> for EventLeaseResized {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "id",
+            "price",
+            "prev_price",
+            "prevPrice",
+        ];
+
+        #[allow(clippy::enum_variant_names)]
+        enum GeneratedField {
+            Id,
+            Price,
+            PrevPrice,
+        }
+        impl<'de> serde::Deserialize<'de> for GeneratedField {
+            fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                struct GeneratedVisitor;
+
+                impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+                    type Value = GeneratedField;
+
+                    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(formatter, "expected one of: {:?}", &FIELDS)
+                    }
+
+                    #[allow(unused_variables)]
+                    fn visit_str<E>(self, value: &str) -> std::result::Result<GeneratedField, E>
+                    where
+                        E: serde::de::Error,
+                    {
+                        match value {
+                            "id" => Ok(GeneratedField::Id),
+                            "price" => Ok(GeneratedField::Price),
+                            "prevPrice" | "prev_price" => Ok(GeneratedField::PrevPrice),
+                            _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+                deserializer.deserialize_identifier(GeneratedVisitor)
+            }
+        }
+        struct GeneratedVisitor;
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = EventLeaseResized;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("struct akash.market.v1.EventLeaseResized")
+            }
+
+            fn visit_map<V>(self, mut map_: V) -> std::result::Result<EventLeaseResized, V::Error>
+                where
+                    V: serde::de::MapAccess<'de>,
+            {
+                let mut id__ = None;
+                let mut price__ = None;
+                let mut prev_price__ = None;
+                while let Some(k) = map_.next_key()? {
+                    match k {
+                        GeneratedField::Id => {
+                            if id__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("id"));
+                            }
+                            id__ = map_.next_value()?;
+                        }
+                        GeneratedField::Price => {
+                            if price__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("price"));
+                            }
+                            price__ = map_.next_value()?;
+                        }
+                        GeneratedField::PrevPrice => {
+                            if prev_price__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("prevPrice"));
+                            }
+                            prev_price__ = map_.next_value()?;
+                        }
+                    }
+                }
+                Ok(EventLeaseResized {
+                    id: id__,
+                    price: price__,
+                    prev_price: prev_price__,
+                })
+            }
+        }
+        deserializer.deserialize_struct("akash.market.v1.EventLeaseResized", FIELDS, GeneratedVisitor)
+    }
+}
 impl serde::Serialize for EventOrderClosed {
     #[allow(deprecated)]
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
@@ -1949,6 +2316,92 @@ impl<'de> serde::Deserialize<'de> for LeaseId {
             }
         }
         deserializer.deserialize_struct("akash.market.v1.LeaseID", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for LeaseResizeCancelReason {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let variant = match self {
+            Self::LeaseResizeCancelInvalid => "lease_resize_cancel_invalid",
+            Self::LeaseResizeCancelOwner => "lease_resize_cancel_owner",
+            Self::LeaseResizeCancelLeaseClosed => "lease_resize_cancel_lease_closed",
+            Self::LeaseResizeRejectCapacity => "lease_resize_reject_capacity",
+            Self::LeaseResizeRejectPrice => "lease_resize_reject_price",
+            Self::LeaseResizeRejectUnsupported => "lease_resize_reject_unsupported",
+            Self::LeaseResizeRejectOther => "lease_resize_reject_other",
+        };
+        serializer.serialize_str(variant)
+    }
+}
+impl<'de> serde::Deserialize<'de> for LeaseResizeCancelReason {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "lease_resize_cancel_invalid",
+            "lease_resize_cancel_owner",
+            "lease_resize_cancel_lease_closed",
+            "lease_resize_reject_capacity",
+            "lease_resize_reject_price",
+            "lease_resize_reject_unsupported",
+            "lease_resize_reject_other",
+        ];
+
+        struct GeneratedVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = LeaseResizeCancelReason;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(formatter, "expected one of: {:?}", &FIELDS)
+            }
+
+            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+                    })
+            }
+
+            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+                    })
+            }
+
+            fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "lease_resize_cancel_invalid" => Ok(LeaseResizeCancelReason::LeaseResizeCancelInvalid),
+                    "lease_resize_cancel_owner" => Ok(LeaseResizeCancelReason::LeaseResizeCancelOwner),
+                    "lease_resize_cancel_lease_closed" => Ok(LeaseResizeCancelReason::LeaseResizeCancelLeaseClosed),
+                    "lease_resize_reject_capacity" => Ok(LeaseResizeCancelReason::LeaseResizeRejectCapacity),
+                    "lease_resize_reject_price" => Ok(LeaseResizeCancelReason::LeaseResizeRejectPrice),
+                    "lease_resize_reject_unsupported" => Ok(LeaseResizeCancelReason::LeaseResizeRejectUnsupported),
+                    "lease_resize_reject_other" => Ok(LeaseResizeCancelReason::LeaseResizeRejectOther),
+                    _ => Err(serde::de::Error::unknown_variant(value, FIELDS)),
+                }
+            }
+        }
+        deserializer.deserialize_any(GeneratedVisitor)
     }
 }
 impl serde::Serialize for OrderId {

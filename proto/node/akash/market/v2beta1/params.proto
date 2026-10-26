@@ -67,4 +67,21 @@ message Params {
     (gogoproto.jsontag)     = "min_volume_reclamation_window",
     (gogoproto.moretags)    = "yaml:\"min_volume_reclamation_window\""
   ];
+
+  // LeaseResizeEnabled is the feature flag for in-place lease resize. Default
+  // false; flipped by governance.
+  bool lease_resize_enabled = 8 [
+    (gogoproto.customname) = "LeaseResizeEnabled",
+    (gogoproto.jsontag)    = "lease_resize_enabled",
+    (gogoproto.moretags)   = "yaml:\"lease_resize_enabled\""
+  ];
+
+  // lease_resize_ttl is how long a resize request stays acceptable.
+  google.protobuf.Duration lease_resize_ttl = 9 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.customname)  = "LeaseResizeTTL",
+    (gogoproto.jsontag)     = "lease_resize_ttl",
+    (gogoproto.moretags)    = "yaml:\"lease_resize_ttl\""
+  ];
 }

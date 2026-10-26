@@ -1,5 +1,5 @@
 import { MsgCloseBid, MsgCloseBidResponse, MsgCreateBid, MsgCreateBidResponse } from "./bidmsg.ts";
-import { MsgCloseLease, MsgCloseLeaseResponse, MsgCreateLease, MsgCreateLeaseResponse, MsgLeaseStartReclaim, MsgLeaseStartReclaimResponse, MsgWithdrawLease, MsgWithdrawLeaseResponse } from "./leasemsg.ts";
+import { MsgAcceptLeaseResize, MsgAcceptLeaseResizeResponse, MsgCancelLeaseResize, MsgCancelLeaseResizeResponse, MsgCloseLease, MsgCloseLeaseResponse, MsgCreateLease, MsgCreateLeaseResponse, MsgLeaseStartReclaim, MsgLeaseStartReclaimResponse, MsgRejectLeaseResize, MsgRejectLeaseResizeResponse, MsgResizeLease, MsgResizeLeaseResponse, MsgWithdrawLease, MsgWithdrawLeaseResponse } from "./leasemsg.ts";
 import { MsgUpdateParams, MsgUpdateParamsResponse } from "./paramsmsg.ts";
 
 export const Msg = {
@@ -39,6 +39,30 @@ export const Msg = {
       name: "LeaseStartReclaim",
       input: MsgLeaseStartReclaim,
       output: MsgLeaseStartReclaimResponse,
+      get parent() { return Msg; },
+    },
+    resizeLease: {
+      name: "ResizeLease",
+      input: MsgResizeLease,
+      output: MsgResizeLeaseResponse,
+      get parent() { return Msg; },
+    },
+    acceptLeaseResize: {
+      name: "AcceptLeaseResize",
+      input: MsgAcceptLeaseResize,
+      output: MsgAcceptLeaseResizeResponse,
+      get parent() { return Msg; },
+    },
+    rejectLeaseResize: {
+      name: "RejectLeaseResize",
+      input: MsgRejectLeaseResize,
+      output: MsgRejectLeaseResizeResponse,
+      get parent() { return Msg; },
+    },
+    cancelLeaseResize: {
+      name: "CancelLeaseResize",
+      input: MsgCancelLeaseResize,
+      output: MsgCancelLeaseResizeResponse,
       get parent() { return Msg; },
     },
     updateParams: {

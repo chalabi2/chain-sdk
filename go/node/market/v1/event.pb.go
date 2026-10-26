@@ -518,6 +518,194 @@ func (m *EventVolumeDetached) GetReason() LeaseClosedReason {
 	return LeaseClosedReasonInvalid
 }
 
+// EventLeaseResizeRequested is triggered when a tenant asks the provider of an
+// active lease to change the lease's resources in place.
+type EventLeaseResizeRequested struct {
+	// Id is the unique identifier of the Lease.
+	ID LeaseID `protobuf:"bytes,1,opt,name=id,proto3" json:"id" yaml:"id"`
+	// MaxPrice is the highest per-block price the tenant accepts for the new
+	// resources.
+	MaxPrice types.DecCoin `protobuf:"bytes,2,opt,name=max_price,json=maxPrice,proto3" json:"max_price" yaml:"max_price"`
+	// ExpiresAt is the unix timestamp after which the request can no longer be
+	// accepted.
+	ExpiresAt int64 `protobuf:"varint,3,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at" yaml:"expires_at"`
+}
+
+func (m *EventLeaseResizeRequested) Reset()         { *m = EventLeaseResizeRequested{} }
+func (m *EventLeaseResizeRequested) String() string { return proto.CompactTextString(m) }
+func (*EventLeaseResizeRequested) ProtoMessage()    {}
+func (*EventLeaseResizeRequested) Descriptor() ([]byte, []int) {
+	return fileDescriptor_95cc31d2d9808e8a, []int{9}
+}
+func (m *EventLeaseResizeRequested) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventLeaseResizeRequested) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventLeaseResizeRequested.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventLeaseResizeRequested) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLeaseResizeRequested.Merge(m, src)
+}
+func (m *EventLeaseResizeRequested) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventLeaseResizeRequested) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLeaseResizeRequested.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventLeaseResizeRequested proto.InternalMessageInfo
+
+func (m *EventLeaseResizeRequested) GetID() LeaseID {
+	if m != nil {
+		return m.ID
+	}
+	return LeaseID{}
+}
+
+func (m *EventLeaseResizeRequested) GetMaxPrice() types.DecCoin {
+	if m != nil {
+		return m.MaxPrice
+	}
+	return types.DecCoin{}
+}
+
+func (m *EventLeaseResizeRequested) GetExpiresAt() int64 {
+	if m != nil {
+		return m.ExpiresAt
+	}
+	return 0
+}
+
+// EventLeaseResized is triggered when the provider accepts a resize: the
+// group's resources and the lease price changed in place.
+type EventLeaseResized struct {
+	// Id is the unique identifier of the Lease.
+	ID LeaseID `protobuf:"bytes,1,opt,name=id,proto3" json:"id" yaml:"id"`
+	// Price is the new per-block lease price.
+	Price types.DecCoin `protobuf:"bytes,2,opt,name=price,proto3" json:"price" yaml:"price"`
+	// PrevPrice is the per-block lease price before the resize.
+	PrevPrice types.DecCoin `protobuf:"bytes,3,opt,name=prev_price,json=prevPrice,proto3" json:"prev_price" yaml:"prev_price"`
+}
+
+func (m *EventLeaseResized) Reset()         { *m = EventLeaseResized{} }
+func (m *EventLeaseResized) String() string { return proto.CompactTextString(m) }
+func (*EventLeaseResized) ProtoMessage()    {}
+func (*EventLeaseResized) Descriptor() ([]byte, []int) {
+	return fileDescriptor_95cc31d2d9808e8a, []int{10}
+}
+func (m *EventLeaseResized) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventLeaseResized) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventLeaseResized.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventLeaseResized) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLeaseResized.Merge(m, src)
+}
+func (m *EventLeaseResized) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventLeaseResized) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLeaseResized.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventLeaseResized proto.InternalMessageInfo
+
+func (m *EventLeaseResized) GetID() LeaseID {
+	if m != nil {
+		return m.ID
+	}
+	return LeaseID{}
+}
+
+func (m *EventLeaseResized) GetPrice() types.DecCoin {
+	if m != nil {
+		return m.Price
+	}
+	return types.DecCoin{}
+}
+
+func (m *EventLeaseResized) GetPrevPrice() types.DecCoin {
+	if m != nil {
+		return m.PrevPrice
+	}
+	return types.DecCoin{}
+}
+
+// EventLeaseResizeCanceled is triggered when a pending resize is dropped
+// without being applied.
+type EventLeaseResizeCanceled struct {
+	// Id is the unique identifier of the Lease.
+	ID LeaseID `protobuf:"bytes,1,opt,name=id,proto3" json:"id" yaml:"id"`
+	// Reason is why the resize was dropped.
+	Reason LeaseResizeCancelReason `protobuf:"varint,2,opt,name=reason,proto3,enum=akash.market.v1.LeaseResizeCancelReason" json:"reason" yaml:"reason"`
+}
+
+func (m *EventLeaseResizeCanceled) Reset()         { *m = EventLeaseResizeCanceled{} }
+func (m *EventLeaseResizeCanceled) String() string { return proto.CompactTextString(m) }
+func (*EventLeaseResizeCanceled) ProtoMessage()    {}
+func (*EventLeaseResizeCanceled) Descriptor() ([]byte, []int) {
+	return fileDescriptor_95cc31d2d9808e8a, []int{11}
+}
+func (m *EventLeaseResizeCanceled) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventLeaseResizeCanceled) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventLeaseResizeCanceled.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventLeaseResizeCanceled) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventLeaseResizeCanceled.Merge(m, src)
+}
+func (m *EventLeaseResizeCanceled) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventLeaseResizeCanceled) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventLeaseResizeCanceled.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventLeaseResizeCanceled proto.InternalMessageInfo
+
+func (m *EventLeaseResizeCanceled) GetID() LeaseID {
+	if m != nil {
+		return m.ID
+	}
+	return LeaseID{}
+}
+
+func (m *EventLeaseResizeCanceled) GetReason() LeaseResizeCancelReason {
+	if m != nil {
+		return m.Reason
+	}
+	return LeaseResizeCancelReasonInvalid
+}
+
 func init() {
 	proto.RegisterType((*EventOrderCreated)(nil), "akash.market.v1.EventOrderCreated")
 	proto.RegisterType((*EventOrderClosed)(nil), "akash.market.v1.EventOrderClosed")
@@ -528,50 +716,63 @@ func init() {
 	proto.RegisterType((*EventLeaseReclaimStarted)(nil), "akash.market.v1.EventLeaseReclaimStarted")
 	proto.RegisterType((*EventVolumeAttached)(nil), "akash.market.v1.EventVolumeAttached")
 	proto.RegisterType((*EventVolumeDetached)(nil), "akash.market.v1.EventVolumeDetached")
+	proto.RegisterType((*EventLeaseResizeRequested)(nil), "akash.market.v1.EventLeaseResizeRequested")
+	proto.RegisterType((*EventLeaseResized)(nil), "akash.market.v1.EventLeaseResized")
+	proto.RegisterType((*EventLeaseResizeCanceled)(nil), "akash.market.v1.EventLeaseResizeCanceled")
 }
 
 func init() { proto.RegisterFile("akash/market/v1/event.proto", fileDescriptor_95cc31d2d9808e8a) }
 
 var fileDescriptor_95cc31d2d9808e8a = []byte{
-	// 605 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x55, 0x4f, 0x6b, 0x13, 0x4f,
-	0x18, 0xce, 0x6c, 0x7f, 0xbf, 0xb6, 0x4e, 0xb5, 0xd5, 0x28, 0x12, 0x5b, 0xbb, 0x13, 0xf6, 0xd4,
-	0xd3, 0x2c, 0x89, 0x07, 0xa1, 0x9e, 0xdc, 0xa6, 0x48, 0x40, 0x10, 0x57, 0x50, 0x10, 0x44, 0x26,
-	0x3b, 0xaf, 0xe9, 0x90, 0xdd, 0x9d, 0xb0, 0xbb, 0x2e, 0xe4, 0x5b, 0xf8, 0x11, 0xfc, 0x0a, 0x0a,
-	0x5e, 0xfc, 0x04, 0x3d, 0xf6, 0xa8, 0x97, 0x45, 0x92, 0x8b, 0xe4, 0x98, 0x2f, 0xa0, 0xec, 0xcc,
-	0xe4, 0x8f, 0xad, 0x85, 0x08, 0x15, 0xd1, 0xdb, 0xce, 0xfb, 0xbc, 0xef, 0xfb, 0x3c, 0xef, 0x9f,
-	0x9d, 0xc1, 0x3b, 0xac, 0xc7, 0xd2, 0x23, 0x37, 0x62, 0x49, 0x0f, 0x32, 0x37, 0x6f, 0xb8, 0x90,
-	0x43, 0x9c, 0xd1, 0x7e, 0x22, 0x33, 0x59, 0xdd, 0x52, 0x20, 0xd5, 0x20, 0xcd, 0x1b, 0xdb, 0x37,
-	0xba, 0xb2, 0x2b, 0x15, 0xe6, 0x96, 0x5f, 0xda, 0x6d, 0xdb, 0x0e, 0x64, 0x1a, 0xc9, 0xd4, 0xed,
-	0xb0, 0x14, 0xdc, 0xbc, 0xd1, 0x81, 0x8c, 0x35, 0xdc, 0x40, 0x8a, 0xd8, 0xe0, 0x75, 0xcd, 0xc1,
-	0xa1, 0x1f, 0xca, 0x41, 0x04, 0xb1, 0xe2, 0xc9, 0x65, 0xf8, 0x3a, 0x02, 0xe3, 0x71, 0xeb, 0xb4,
-	0x8a, 0x8e, 0xe0, 0x06, 0x3a, 0x23, 0x50, 0x26, 0x1c, 0x92, 0xf3, 0xc0, 0x10, 0x58, 0x0a, 0xe7,
-	0x81, 0xd9, 0xa0, 0x0f, 0xa9, 0x06, 0x9d, 0x0e, 0xbe, 0x76, 0x58, 0x56, 0xfa, 0xa8, 0xcc, 0x76,
-	0x90, 0x00, 0xcb, 0x80, 0x57, 0x1f, 0x60, 0x4b, 0xf0, 0x1a, 0xaa, 0xa3, 0xbd, 0x8d, 0x66, 0x8d,
-	0x9e, 0x2a, 0x9e, 0x2a, 0xd7, 0x76, 0xcb, 0xdb, 0x3d, 0x2e, 0x48, 0x65, 0x58, 0x10, 0xab, 0xdd,
-	0x1a, 0x17, 0xc4, 0x12, 0x7c, 0x52, 0x90, 0x4b, 0x03, 0x16, 0x85, 0xfb, 0x8e, 0xe0, 0x8e, 0x6f,
-	0x09, 0xbe, 0xff, 0xdf, 0xd7, 0xb7, 0x04, 0x39, 0x0c, 0x5f, 0x5d, 0xe0, 0x08, 0x65, 0x7a, 0xf1,
-	0x14, 0xef, 0x10, 0xde, 0x52, 0x1c, 0x9e, 0xe0, 0xd3, 0x2a, 0x0e, 0x17, 0x28, 0x6e, 0x9e, 0xa1,
-	0xf0, 0x04, 0x5f, 0x8a, 0xa0, 0xfa, 0x18, 0xff, 0xdf, 0x4f, 0x44, 0x00, 0xb5, 0x15, 0x95, 0xe9,
-	0x36, 0xd5, 0x53, 0xa6, 0xe5, 0x94, 0xa9, 0x99, 0x32, 0x6d, 0x41, 0x70, 0x20, 0x45, 0xac, 0xf3,
-	0x8d, 0x0b, 0xa2, 0x43, 0x26, 0x05, 0xb9, 0xac, 0x93, 0xa9, 0xa3, 0xe3, 0x6b, 0xb3, 0xd1, 0xfc,
-	0x02, 0x6f, 0xce, 0x24, 0xeb, 0xa6, 0x5c, 0x8c, 0x62, 0x93, 0xfe, 0x03, 0x32, 0xa3, 0x7d, 0x58,
-	0xee, 0xc2, 0x72, 0xa3, 0x55, 0xae, 0x7f, 0xb8, 0x2d, 0x1f, 0x91, 0x59, 0x17, 0xad, 0x7b, 0x99,
-	0x75, 0xf9, 0x05, 0xd9, 0xcf, 0xf0, 0x6a, 0x02, 0x2c, 0x95, 0x71, 0xcd, 0xaa, 0xa3, 0xbd, 0xcd,
-	0xa6, 0xf3, 0xf3, 0x64, 0x9a, 0xd6, 0x57, 0x9e, 0xde, 0xce, 0xb8, 0x20, 0x26, 0x6a, 0x52, 0x90,
-	0x2b, 0x3a, 0xa1, 0x3e, 0x3b, 0xbe, 0x01, 0x8c, 0xf8, 0x6f, 0x08, 0xd7, 0xe6, 0xe2, 0x7d, 0x08,
-	0x42, 0x26, 0xa2, 0x27, 0x19, 0x4b, 0xb2, 0xbf, 0xa1, 0x88, 0xea, 0x3d, 0xbc, 0xce, 0x81, 0xf1,
-	0x50, 0xc4, 0x7a, 0xae, 0x2b, 0x1e, 0x19, 0x17, 0x64, 0x66, 0x9b, 0x14, 0x64, 0x4b, 0x07, 0x4e,
-	0x2d, 0x8e, 0x3f, 0x03, 0x4d, 0x07, 0x3e, 0x23, 0x7c, 0x5d, 0x75, 0xe0, 0xa9, 0xba, 0xd8, 0xee,
-	0x67, 0x19, 0x0b, 0x8e, 0x80, 0x57, 0x03, 0xbc, 0xae, 0x2e, 0xa5, 0x97, 0x4b, 0xb4, 0x80, 0x9a,
-	0x16, 0xac, 0x19, 0x43, 0xa9, 0x61, 0x1a, 0x3c, 0xd7, 0x30, 0xb5, 0x38, 0xfe, 0x9a, 0xfa, 0x6c,
-	0xab, 0xc6, 0xe8, 0xfb, 0x54, 0x35, 0x66, 0xa3, 0x69, 0x1b, 0x8a, 0xf9, 0x95, 0x5b, 0xd2, 0x68,
-	0x65, 0x3e, 0xbc, 0xf2, 0x88, 0xd9, 0x4b, 0x13, 0x35, 0x6f, 0x8c, 0x3e, 0x3b, 0xbe, 0x01, 0x4c,
-	0x6d, 0xef, 0xad, 0x1f, 0x6a, 0x6b, 0xc1, 0xbf, 0x50, 0xdb, 0xc2, 0x36, 0xad, 0xfc, 0x86, 0x5f,
-	0xc2, 0xbb, 0x7b, 0x3c, 0xb4, 0xd1, 0xc9, 0xd0, 0x46, 0x5f, 0x86, 0x36, 0x7a, 0x33, 0xb2, 0x2b,
-	0x27, 0x23, 0xbb, 0xf2, 0x69, 0x64, 0x57, 0x9e, 0xef, 0xf6, 0x7b, 0x5d, 0xca, 0x7a, 0x19, 0xe5,
-	0x90, 0xbb, 0x5d, 0xe9, 0xc6, 0x92, 0xc3, 0xfc, 0x99, 0xea, 0xac, 0xaa, 0x17, 0xea, 0xce, 0xf7,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0xcb, 0x65, 0xc2, 0xad, 0x9b, 0x07, 0x00, 0x00,
+	// 765 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x56, 0xcd, 0x6e, 0xd3, 0x4a,
+	0x14, 0x8e, 0xdd, 0x7b, 0xdb, 0x66, 0x7a, 0x6f, 0x7f, 0x72, 0xaf, 0x50, 0xfa, 0xe7, 0xa9, 0x8c,
+	0x10, 0x5d, 0xd9, 0x4a, 0x59, 0x20, 0x95, 0x55, 0xdd, 0x54, 0xa8, 0x12, 0x12, 0xc5, 0x48, 0x20,
+	0x21, 0x55, 0x61, 0xe2, 0x39, 0xa4, 0x56, 0x6c, 0x4f, 0xb0, 0xdd, 0xa8, 0xe5, 0x29, 0xba, 0x67,
+	0xc3, 0x2b, 0x80, 0xc4, 0x86, 0x27, 0xe8, 0xb2, 0x4b, 0xd8, 0x58, 0x28, 0xdd, 0xa0, 0x2c, 0xf3,
+	0x02, 0x20, 0xcf, 0x4c, 0x62, 0x93, 0xb6, 0x52, 0x2a, 0xa5, 0x42, 0xb0, 0xf3, 0x9c, 0x33, 0xe7,
+	0x7c, 0xdf, 0x7c, 0x3e, 0xf3, 0xd9, 0x68, 0x99, 0x34, 0x49, 0x74, 0x60, 0xfa, 0x24, 0x6c, 0x42,
+	0x6c, 0xb6, 0x2b, 0x26, 0xb4, 0x21, 0x88, 0x8d, 0x56, 0xc8, 0x62, 0x56, 0x9a, 0xe3, 0x49, 0x43,
+	0x24, 0x8d, 0x76, 0x65, 0xe9, 0xff, 0x06, 0x6b, 0x30, 0x9e, 0x33, 0xd3, 0x27, 0xb1, 0x6d, 0x49,
+	0x73, 0x58, 0xe4, 0xb3, 0xc8, 0xac, 0x93, 0x08, 0xcc, 0x76, 0xa5, 0x0e, 0x31, 0xa9, 0x98, 0x0e,
+	0x73, 0x03, 0x99, 0x5f, 0x13, 0x18, 0x14, 0x5a, 0x1e, 0x3b, 0xf6, 0x21, 0xe0, 0x38, 0x6d, 0xe6,
+	0x1d, 0xfa, 0x20, 0x77, 0x2c, 0x0e, 0xb3, 0xa8, 0xbb, 0x54, 0xa6, 0x2e, 0x10, 0x64, 0x21, 0x85,
+	0xf0, 0xaa, 0xa4, 0x07, 0x24, 0xea, 0x37, 0x5d, 0x19, 0x4e, 0x86, 0x10, 0xb9, 0x6f, 0xe0, 0xaa,
+	0xd2, 0xf8, 0xb8, 0x05, 0x91, 0x48, 0xea, 0x75, 0xb4, 0xb0, 0x93, 0xea, 0xf0, 0x38, 0xc5, 0xda,
+	0x0e, 0x81, 0xc4, 0x40, 0x4b, 0x0f, 0x91, 0xea, 0xd2, 0xb2, 0xb2, 0xa6, 0xac, 0xcf, 0x6c, 0x94,
+	0x8d, 0x21, 0x69, 0x0c, 0xbe, 0x75, 0xb7, 0x6a, 0xad, 0x9e, 0x26, 0xb8, 0xd0, 0x49, 0xb0, 0xba,
+	0x5b, 0xed, 0x26, 0x58, 0x75, 0x69, 0x2f, 0xc1, 0xc5, 0x63, 0xe2, 0x7b, 0x9b, 0xba, 0x4b, 0x75,
+	0x5b, 0x75, 0xe9, 0xe6, 0x5f, 0xdf, 0xde, 0x61, 0x45, 0x27, 0x68, 0x3e, 0x87, 0xe1, 0xb1, 0x68,
+	0xfc, 0x10, 0xef, 0x15, 0x34, 0xc7, 0x31, 0x2c, 0x97, 0xf6, 0x4f, 0xb1, 0x93, 0x83, 0xb8, 0x75,
+	0x01, 0xc2, 0x72, 0xe9, 0x48, 0x00, 0xa5, 0x27, 0xe8, 0xef, 0x56, 0xe8, 0x3a, 0x50, 0x9e, 0xe0,
+	0x9d, 0x56, 0x0c, 0x31, 0x03, 0x46, 0x3a, 0x03, 0x86, 0x9c, 0x01, 0xa3, 0x0a, 0xce, 0x36, 0x73,
+	0x03, 0xd1, 0xaf, 0x9b, 0x60, 0x51, 0xd2, 0x4b, 0xf0, 0x3f, 0xa2, 0x19, 0x5f, 0xea, 0xb6, 0x08,
+	0x4b, 0xce, 0xfb, 0x68, 0x76, 0x40, 0x59, 0x88, 0x32, 0x1e, 0xc6, 0xb2, 0xfd, 0x47, 0x45, 0xbe,
+	0xda, 0x47, 0xe9, 0xa4, 0x8c, 0xf6, 0x6a, 0xf9, 0xd6, 0x5f, 0x2c, 0xcb, 0x27, 0x45, 0x8e, 0x8b,
+	0xe0, 0x3d, 0xca, 0xb8, 0x5c, 0x83, 0xf6, 0x73, 0x34, 0x19, 0x02, 0x89, 0x58, 0x50, 0x56, 0xd7,
+	0x94, 0xf5, 0xd9, 0x0d, 0xfd, 0xf2, 0x66, 0x02, 0xd6, 0xe6, 0x3b, 0xad, 0xe5, 0x6e, 0x82, 0x65,
+	0x55, 0x2f, 0xc1, 0xff, 0x8a, 0x86, 0x62, 0xad, 0xdb, 0x32, 0x21, 0xc9, 0x7f, 0x57, 0x50, 0x39,
+	0x23, 0x6f, 0x83, 0xe3, 0x11, 0xd7, 0x7f, 0x1a, 0x93, 0x30, 0xfe, 0x1d, 0x0e, 0x51, 0x7a, 0x80,
+	0xa6, 0x29, 0x10, 0xea, 0xb9, 0x81, 0x78, 0xaf, 0x13, 0x16, 0xee, 0x26, 0x78, 0x10, 0xeb, 0x25,
+	0x78, 0x4e, 0x14, 0xf6, 0x23, 0xba, 0x3d, 0x48, 0x4a, 0x05, 0xbe, 0x28, 0xe8, 0x3f, 0xae, 0xc0,
+	0x33, 0x6e, 0x7b, 0x5b, 0x71, 0x4c, 0x9c, 0x03, 0xa0, 0x25, 0x07, 0x4d, 0x73, 0xcb, 0xaa, 0x8d,
+	0x20, 0x81, 0x21, 0x25, 0x98, 0x92, 0x81, 0x94, 0x43, 0xbf, 0x38, 0xe3, 0xd0, 0x8f, 0xe8, 0xf6,
+	0x14, 0x7f, 0xdc, 0xe5, 0xc2, 0x08, 0xb7, 0xe5, 0xc2, 0xcc, 0x6c, 0x68, 0x12, 0x22, 0x33, 0xe4,
+	0x14, 0x46, 0x30, 0xb3, 0xe1, 0x95, 0x85, 0xe5, 0x5c, 0xca, 0xaa, 0x4c, 0x18, 0xb1, 0xd6, 0x6d,
+	0x99, 0x90, 0x67, 0xfb, 0xa0, 0xfe, 0x74, 0xb6, 0x2a, 0xfc, 0x09, 0x67, 0xcb, 0x4d, 0xd3, 0xc4,
+	0x4d, 0x5c, 0x89, 0x13, 0x15, 0x2d, 0xe6, 0xaf, 0x44, 0xfa, 0x65, 0xb2, 0xe1, 0xf5, 0x21, 0x44,
+	0x63, 0xbd, 0x13, 0x2f, 0x51, 0xd1, 0x27, 0x47, 0x35, 0xe1, 0x49, 0xea, 0x08, 0x9e, 0x74, 0x47,
+	0xea, 0x93, 0x95, 0xf5, 0x12, 0x3c, 0x2f, 0x9a, 0x0e, 0x42, 0xba, 0x3d, 0xed, 0x93, 0xa3, 0xbd,
+	0xf4, 0xb1, 0x64, 0x21, 0x04, 0x47, 0x2d, 0x37, 0x84, 0xa8, 0x46, 0x62, 0x79, 0x3d, 0x6e, 0x77,
+	0x13, 0x9c, 0x8b, 0xf6, 0x12, 0xbc, 0x20, 0x3a, 0x64, 0x31, 0xdd, 0x2e, 0xca, 0xc5, 0x56, 0x2c,
+	0x25, 0x79, 0xab, 0xe6, 0xad, 0x59, 0x48, 0x72, 0x13, 0xd6, 0xac, 0x8e, 0xcb, 0x9a, 0x4b, 0x14,
+	0xa1, 0x56, 0x08, 0xed, 0xda, 0xe8, 0x96, 0x7f, 0x57, 0xf6, 0xcd, 0xd5, 0x65, 0xea, 0x64, 0x31,
+	0xdd, 0x2e, 0xa6, 0x8b, 0xbd, 0xdc, 0x07, 0xe0, 0x74, 0xc8, 0x43, 0x53, 0x75, 0xb6, 0x49, 0xe0,
+	0x80, 0x37, 0x4e, 0x91, 0xf6, 0x87, 0x3c, 0x74, 0xfd, 0xf2, 0x66, 0x79, 0xf8, 0x6b, 0xcf, 0xbe,
+	0x75, 0xff, 0xb4, 0xa3, 0x29, 0x67, 0x1d, 0x4d, 0xf9, 0xda, 0xd1, 0x94, 0x93, 0x73, 0xad, 0x70,
+	0x76, 0xae, 0x15, 0x3e, 0x9f, 0x6b, 0x85, 0x17, 0xab, 0xad, 0x66, 0xc3, 0x20, 0xcd, 0xd8, 0xa0,
+	0xd0, 0x36, 0x1b, 0xcc, 0x0c, 0x18, 0x85, 0xec, 0x17, 0xad, 0x3e, 0xc9, 0xff, 0xce, 0xee, 0xfd,
+	0x08, 0x00, 0x00, 0xff, 0xff, 0xb8, 0x08, 0x61, 0x32, 0xb5, 0x0a, 0x00, 0x00,
 }
 
 func (this *EventOrderCreated) Equal(that interface{}) bool {
@@ -807,6 +1008,93 @@ func (this *EventVolumeDetached) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.Volume.Equal(&that1.Volume) {
+		return false
+	}
+	if this.Reason != that1.Reason {
+		return false
+	}
+	return true
+}
+func (this *EventLeaseResizeRequested) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventLeaseResizeRequested)
+	if !ok {
+		that2, ok := that.(EventLeaseResizeRequested)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.ID.Equal(&that1.ID) {
+		return false
+	}
+	if !this.MaxPrice.Equal(&that1.MaxPrice) {
+		return false
+	}
+	if this.ExpiresAt != that1.ExpiresAt {
+		return false
+	}
+	return true
+}
+func (this *EventLeaseResized) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventLeaseResized)
+	if !ok {
+		that2, ok := that.(EventLeaseResized)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.ID.Equal(&that1.ID) {
+		return false
+	}
+	if !this.Price.Equal(&that1.Price) {
+		return false
+	}
+	if !this.PrevPrice.Equal(&that1.PrevPrice) {
+		return false
+	}
+	return true
+}
+func (this *EventLeaseResizeCanceled) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EventLeaseResizeCanceled)
+	if !ok {
+		that2, ok := that.(EventLeaseResizeCanceled)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.ID.Equal(&that1.ID) {
 		return false
 	}
 	if this.Reason != that1.Reason {
@@ -1171,6 +1459,145 @@ func (m *EventVolumeDetached) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *EventLeaseResizeRequested) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventLeaseResizeRequested) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventLeaseResizeRequested) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ExpiresAt != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.ExpiresAt))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.MaxPrice.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.ID.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *EventLeaseResized) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventLeaseResized) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventLeaseResized) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.PrevPrice.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size, err := m.Price.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.ID.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *EventLeaseResizeCanceled) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventLeaseResizeCanceled) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventLeaseResizeCanceled) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Reason != 0 {
+		i = encodeVarintEvent(dAtA, i, uint64(m.Reason))
+		i--
+		dAtA[i] = 0x10
+	}
+	{
+		size, err := m.ID.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvent(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvent(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvent(v)
 	base := offset
@@ -1294,6 +1721,51 @@ func (m *EventVolumeDetached) Size() (n int) {
 	l = m.LeaseID.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	l = m.Volume.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	if m.Reason != 0 {
+		n += 1 + sovEvent(uint64(m.Reason))
+	}
+	return n
+}
+
+func (m *EventLeaseResizeRequested) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ID.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.MaxPrice.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	if m.ExpiresAt != 0 {
+		n += 1 + sovEvent(uint64(m.ExpiresAt))
+	}
+	return n
+}
+
+func (m *EventLeaseResized) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ID.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.Price.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	l = m.PrevPrice.Size()
+	n += 1 + l + sovEvent(uint64(l))
+	return n
+}
+
+func (m *EventLeaseResizeCanceled) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.ID.Size()
 	n += 1 + l + sovEvent(uint64(l))
 	if m.Reason != 0 {
 		n += 1 + sovEvent(uint64(m.Reason))
@@ -2237,6 +2709,392 @@ func (m *EventVolumeDetached) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Reason |= LeaseClosedReason(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventLeaseResizeRequested) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventLeaseResizeRequested: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventLeaseResizeRequested: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ID.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxPrice", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MaxPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExpiresAt", wireType)
+			}
+			m.ExpiresAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ExpiresAt |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventLeaseResized) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventLeaseResized: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventLeaseResized: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ID.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Price.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PrevPrice", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PrevPrice.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvent(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventLeaseResizeCanceled) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvent
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventLeaseResizeCanceled: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventLeaseResizeCanceled: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvent
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvent
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ID.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			m.Reason = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvent
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Reason |= LeaseResizeCancelReason(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

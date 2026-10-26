@@ -1,0 +1,50 @@
+syntax = "proto3";
+package akash.market.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "pkg.akt.dev/go/node/market/v1";
+
+// LeaseResizeCancelReason says why a pending lease resize was dropped
+// without being applied. Values from 100 up are provider rejections.
+enum LeaseResizeCancelReason {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // lease_resize_cancel_invalid is the zero value and is never emitted.
+  lease_resize_cancel_invalid = 0 [
+    (gogoproto.enumvalue_customname) = "LeaseResizeCancelReasonInvalid"
+  ];
+
+  // lease_resize_cancel_owner means the tenant withdrew the request.
+  lease_resize_cancel_owner = 1 [
+    (gogoproto.enumvalue_customname) = "LeaseResizeCancelReasonOwner"
+  ];
+
+  // lease_resize_cancel_lease_closed means the lease closed or entered
+  // reclamation while the request was pending.
+  lease_resize_cancel_lease_closed = 2 [
+    (gogoproto.enumvalue_customname) = "LeaseResizeCancelReasonLeaseClosed"
+  ];
+
+  // lease_resize_reject_capacity means the provider cannot fit the new size.
+  lease_resize_reject_capacity = 100 [
+    (gogoproto.enumvalue_customname) = "LeaseResizeRejectCapacity"
+  ];
+
+  // lease_resize_reject_price means the provider's price for the new size is
+  // above the requested ceiling.
+  lease_resize_reject_price = 101 [
+    (gogoproto.enumvalue_customname) = "LeaseResizeRejectPrice"
+  ];
+
+  // lease_resize_reject_unsupported means the provider does not support this
+  // kind of change (for example growing a storage class it cannot expand).
+  lease_resize_reject_unsupported = 102 [
+    (gogoproto.enumvalue_customname) = "LeaseResizeRejectUnsupported"
+  ];
+
+  // lease_resize_reject_other is any other provider rejection.
+  lease_resize_reject_other = 103 [
+    (gogoproto.enumvalue_customname) = "LeaseResizeRejectOther"
+  ];
+}
