@@ -225,6 +225,34 @@ func BidClosedReasonFromFlags(flags *pflag.FlagSet) (mv1.LeaseClosedReason, erro
 	return reason, nil
 }
 
+// leaseResizeRejectReasons maps the --reason names of resize-reject to their values.
+var leaseResizeRejectReasons = map[string]mv1.LeaseResizeCancelReason{
+	"capacity":    mv1.LeaseResizeRejectCapacity,
+	"price":       mv1.LeaseResizeRejectPrice,
+	"unsupported": mv1.LeaseResizeRejectUnsupported,
+	"other":       mv1.LeaseResizeRejectOther,
+}
+
+// AddLeaseResizeRejectReasonFlag adds the reason flag for a provider declining a lease resize
+func AddLeaseResizeRejectReasonFlag(flags *pflag.FlagSet) {
+	flags.String(FlagClosedReason, "other", "Why the resize is declined (capacity, price, unsupported, other)")
+}
+
+// LeaseResizeRejectReasonFromFlags returns the provider rejection reason from flags
+func LeaseResizeRejectReasonFromFlags(flags *pflag.FlagSet) (mv1.LeaseResizeCancelReason, error) {
+	val, err := flags.GetString(FlagClosedReason)
+	if err != nil {
+		return mv1.LeaseResizeCancelReasonInvalid, err
+	}
+
+	reason, valid := leaseResizeRejectReasons[val]
+	if !valid {
+		return mv1.LeaseResizeCancelReasonInvalid, fmt.Errorf("invalid --reason value %q. expected capacity, price, unsupported or other", val)
+	}
+
+	return reason, nil
+}
+
 // AddReclamationWindowFlag adds the optional reclamation window flag for bid creation.
 func AddReclamationWindowFlag(flags *pflag.FlagSet) {
 	flags.String(FlagReclamationWindow, "", "Reclamation window duration the provider offers (e.g. 24h, 720h). Optional.")

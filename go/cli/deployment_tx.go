@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -12,6 +13,8 @@ import (
 	cflags "pkg.akt.dev/go/cli/flags"
 	dv1 "pkg.akt.dev/go/node/deployment/v1"
 	dv1beta "pkg.akt.dev/go/node/deployment/v1beta5"
+	mv1 "pkg.akt.dev/go/node/market/v1"
+	mvbeta "pkg.akt.dev/go/node/market/v2beta1"
 	"pkg.akt.dev/go/node/types/constants"
 	"pkg.akt.dev/go/sdl"
 	cutils "pkg.akt.dev/go/util/tls"
@@ -19,7 +22,8 @@ import (
 
 var (
 	errDeploymentUpdate              = errors.New("deployment update failed")
-	errDeploymentUpdateGroupsChanged = fmt.Errorf("%w: groups are different than existing deployment, you cannot update groups", errDeploymentUpdate)
+	errDeploymentUpdateGroupsChanged = fmt.Errorf("%w: groups are different than existing deployment, you cannot update groups; use resize to change a group's resources", errDeploymentUpdate)
+	errDeploymentResize              = errors.New("deployment resize failed")
 )
 
 // GetTxDeploymentCmds returns the transaction commands for this module
@@ -33,6 +37,7 @@ func GetTxDeploymentCmds() *cobra.Command {
 	cmd.AddCommand(
 		GetTxDeploymentCreateCmd(),
 		GetTxDeploymentUpdateCmd(),
+		GetTxDeploymentResizeCmd(),
 		GetTxDeploymentCloseCmd(),
 		GetTxDeploymentGroupCmds(),
 	)
@@ -245,6 +250,139 @@ func GetTxDeploymentUpdateCmd() *cobra.Command {
 	cflags.AddDeploymentIDFlags(cmd.Flags())
 
 	return cmd
+}
+
+func GetTxDeploymentResizeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "resize [sdl-file]",
+		Short: "ask the provider to resize an active lease in place",
+		Long: `Compare the SDL with the deployment on chain and ask the provider of the one
+group whose resources changed to resize its lease in place. The provider
+accepts at a price within the group's new maximum price, or rejects. Once it
+accepts, send the updated manifest to the provider.`,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: TxPersistentPreRunE,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
+			cl := MustClientFromContext(ctx)
+			cctx := cl.ClientContext()
+
+			id, err := cflags.DeploymentIDFromFlags(cmd.Flags(), cflags.WithOwner(cctx.FromAddress))
+			if err != nil {
+				return err
+			}
+
+			sdlManifest, err := sdl.ReadFile(args[0], sdl.WithOwner(cctx.FromAddress.String()))
+			if err != nil {
+				return err
+			}
+
+			hash, err := sdlManifest.Version()
+			if err != nil {
+				return err
+			}
+
+			groups, err := sdlManifest.DeploymentGroups()
+			if err != nil {
+				return err
+			}
+
+			existing, err := dv1beta.NewQueryClient(cctx).Deployment(ctx, &dv1beta.QueryDeploymentRequest{
+				ID: id,
+			})
+			if err != nil {
+				return err
+			}
+
+			target, resources, err := resizeTarget(existing.GetGroups(), groups)
+			if err != nil {
+				return err
+			}
+
+			leases, err := mvbeta.NewQueryClient(cctx).Leases(ctx, &mvbeta.QueryLeasesRequest{
+				Filters: mv1.LeaseFilters{
+					Owner: id.Owner,
+					DSeq:  id.DSeq,
+					GSeq:  target.ID.GSeq,
+					State: mv1.LeaseActive.String(),
+				},
+			})
+			if err != nil {
+				return err
+			}
+
+			if len(leases.Leases) != 1 {
+				return fmt.Errorf("%w: group %d has no active lease", errDeploymentResize, target.ID.GSeq)
+			}
+
+			// a volume's size is not part of the manifest, and an unchanged
+			// hash needs no update
+			var msgHash []byte
+			if target.GroupSpec.Volume == nil && !bytes.Equal(hash, existing.Deployment.Hash) {
+				msgHash = hash
+			}
+
+			msg := mvbeta.NewMsgResizeLease(leases.Leases[0].Lease.ID, resources, msgHash)
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			resp, err := cl.Tx().BroadcastMsgs(ctx, []sdk.Msg{msg})
+			if err != nil {
+				return err
+			}
+
+			return cl.PrintMessage(resp)
+		},
+	}
+
+	cflags.AddTxFlagsToCmd(cmd)
+	cflags.AddDeploymentIDFlags(cmd.Flags())
+
+	return cmd
+}
+
+// resizeTarget finds the one group whose resources differ between the
+// deployment on chain and the SDL, and checks the change with the same rules
+// the chain applies.
+func resizeTarget(existing []dv1beta.Group, groups dv1beta.GroupSpecs) (dv1beta.Group, dv1beta.ResourceUnits, error) {
+	if len(existing) != len(groups) {
+		return dv1beta.Group{}, nil, fmt.Errorf("%w: groups cannot be added or removed", errDeploymentResize)
+	}
+
+	var target *dv1beta.Group
+	var resources dv1beta.ResourceUnits
+
+	for i := range existing {
+		cur := existing[i].GroupSpec
+		next := groups[i]
+
+		if cur.Equal(&next) {
+			continue
+		}
+
+		if next.Name != cur.Name || !next.Requirements.Equal(&cur.Requirements) || !next.Volume.Equal(cur.Volume) {
+			return dv1beta.Group{}, nil, fmt.Errorf("%w: group %q: only resources can change", errDeploymentResize, cur.Name)
+		}
+
+		if target != nil {
+			return dv1beta.Group{}, nil, fmt.Errorf("%w: more than one group changed; resize one group at a time", errDeploymentResize)
+		}
+
+		if _, err := cur.Resize(next.Resources); err != nil {
+			return dv1beta.Group{}, nil, err
+		}
+
+		target = &existing[i]
+		resources = next.Resources
+	}
+
+	if target == nil {
+		return dv1beta.Group{}, nil, fmt.Errorf("%w: no group changed", errDeploymentResize)
+	}
+
+	return *target, resources, nil
 }
 
 func GetTxDeploymentGroupCmds() *cobra.Command {

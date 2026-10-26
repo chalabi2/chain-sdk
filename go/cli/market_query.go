@@ -72,6 +72,7 @@ func GetQueryMarketLeaseCmds() *cobra.Command {
 	cmd.AddCommand(
 		GetQueryMarketLeasesCmd(),
 		GetQueryMarketLeaseCmd(),
+		GetQueryMarketLeaseResizesCmd(),
 	)
 
 	return cmd
@@ -287,6 +288,52 @@ func GetQueryMarketLeaseCmd() *cobra.Command {
 	cflags.AddQueryFlagsToCmd(cmd)
 	cflags.AddQueryBidIDFlags(cmd.Flags())
 	cflags.MarkReqBidIDFlags(cmd)
+
+	return cmd
+}
+
+func GetQueryMarketLeaseResizesCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "resizes",
+		Short:             "Query pending lease resize requests",
+		Args:              cobra.ExactArgs(0),
+		PersistentPreRunE: QueryPersistentPreRunE,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			cl := MustLightClientFromContext(ctx)
+
+			owner, err := cmd.Flags().GetString(cflags.FlagOwner)
+			if err != nil {
+				return err
+			}
+
+			provider, err := cmd.Flags().GetString(cflags.FlagProvider)
+			if err != nil {
+				return err
+			}
+
+			pageReq, err := ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			res, err := cl.Query().Market().LeaseResizes(ctx, &mvbeta.QueryLeaseResizesRequest{
+				Owner:      owner,
+				Provider:   provider,
+				Pagination: pageReq,
+			})
+			if err != nil {
+				return err
+			}
+
+			return cl.ClientContext().PrintProto(res)
+		},
+	}
+
+	cflags.AddQueryFlagsToCmd(cmd)
+	cflags.AddPaginationFlagsToCmd(cmd, "lease resizes")
+	cmd.Flags().String(cflags.FlagOwner, "", "tenant address to filter")
+	cmd.Flags().String(cflags.FlagProvider, "", "provider address to filter")
 
 	return cmd
 }

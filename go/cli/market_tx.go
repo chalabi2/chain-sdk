@@ -208,6 +208,9 @@ func GetTxMarketLeaseCmds() *cobra.Command {
 		GetTxMarketLeaseCreateCmd(),
 		GetTxMarketLeaseWithdrawCmd(),
 		GetTxMarketLeaseCloseCmd(),
+		GetTxMarketLeaseResizeAcceptCmd(),
+		GetTxMarketLeaseResizeRejectCmd(),
+		GetTxMarketLeaseResizeCancelCmd(),
 	)
 
 	return cmd
@@ -315,6 +318,139 @@ func GetTxMarketLeaseCloseCmd() *cobra.Command {
 				ID:     id,
 				Reason: mv1.LeaseClosedReasonOwner,
 			}
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			resp, err := cl.Tx().BroadcastMsgs(ctx, []sdk.Msg{msg})
+			if err != nil {
+				return err
+			}
+
+			return cl.PrintMessage(resp)
+		},
+	}
+
+	cflags.AddTxFlagsToCmd(cmd)
+	cflags.AddLeaseIDFlags(cmd.Flags())
+	cflags.MarkReqLeaseIDFlags(cmd, cflags.DeploymentIDOptionNoOwner(true))
+
+	return cmd
+}
+
+func GetTxMarketLeaseResizeAcceptCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "resize-accept",
+		Short:             "Apply a lease's pending resize at the given price (provider only)",
+		Args:              cobra.ExactArgs(0),
+		PersistentPreRunE: TxPersistentPreRunE,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			cl := MustClientFromContext(ctx)
+			cctx := cl.ClientContext()
+
+			id, err := cflags.LeaseIDFromFlags(cmd.Flags(), cflags.WithProvider(cctx.FromAddress))
+			if err != nil {
+				return err
+			}
+
+			price, err := cmd.Flags().GetString(cflags.FlagPrice)
+			if err != nil {
+				return err
+			}
+
+			coin, err := sdk.ParseDecCoin(price)
+			if err != nil {
+				return err
+			}
+
+			msg := mtypes.NewMsgAcceptLeaseResize(id, coin)
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			resp, err := cl.Tx().BroadcastMsgs(ctx, []sdk.Msg{msg})
+			if err != nil {
+				return err
+			}
+
+			return cl.PrintMessage(resp)
+		},
+	}
+
+	cflags.AddTxFlagsToCmd(cmd)
+	cflags.AddLeaseIDFlags(cmd.Flags())
+	cmd.Flags().String(cflags.FlagPrice, "", "New per-block lease price")
+
+	if err := cmd.MarkFlagRequired(cflags.FlagPrice); err != nil {
+		panic(err.Error())
+	}
+
+	return cmd
+}
+
+func GetTxMarketLeaseResizeRejectCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "resize-reject",
+		Short:             "Decline a lease's pending resize (provider only)",
+		Args:              cobra.ExactArgs(0),
+		PersistentPreRunE: TxPersistentPreRunE,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			cl := MustClientFromContext(ctx)
+			cctx := cl.ClientContext()
+
+			id, err := cflags.LeaseIDFromFlags(cmd.Flags(), cflags.WithProvider(cctx.FromAddress))
+			if err != nil {
+				return err
+			}
+
+			reason, err := cflags.LeaseResizeRejectReasonFromFlags(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			msg := mtypes.NewMsgRejectLeaseResize(id, reason)
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			resp, err := cl.Tx().BroadcastMsgs(ctx, []sdk.Msg{msg})
+			if err != nil {
+				return err
+			}
+
+			return cl.PrintMessage(resp)
+		},
+	}
+
+	cflags.AddTxFlagsToCmd(cmd)
+	cflags.AddLeaseIDFlags(cmd.Flags())
+	cflags.AddLeaseResizeRejectReasonFlag(cmd.Flags())
+
+	return cmd
+}
+
+func GetTxMarketLeaseResizeCancelCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "resize-cancel",
+		Short:             "Withdraw a lease's pending resize",
+		Args:              cobra.ExactArgs(0),
+		PersistentPreRunE: TxPersistentPreRunE,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			ctx := cmd.Context()
+			cl := MustClientFromContext(ctx)
+			cctx := cl.ClientContext()
+
+			id, err := cflags.LeaseIDFromFlags(cmd.Flags(), cflags.WithOwner(cctx.FromAddress))
+			if err != nil {
+				return err
+			}
+
+			msg := mtypes.NewMsgCancelLeaseResize(id)
 
 			if err := msg.ValidateBasic(); err != nil {
 				return err
