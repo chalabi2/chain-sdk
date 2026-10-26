@@ -245,6 +245,80 @@ func (_c *QueryClient_Lease_Call) RunAndReturn(run func(context.Context, *v2beta
 	return _c
 }
 
+// LeaseResizes provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) LeaseResizes(ctx context.Context, in *v2beta1.QueryLeaseResizesRequest, opts ...grpc.CallOption) (*v2beta1.QueryLeaseResizesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LeaseResizes")
+	}
+
+	var r0 *v2beta1.QueryLeaseResizesResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *v2beta1.QueryLeaseResizesRequest, ...grpc.CallOption) (*v2beta1.QueryLeaseResizesResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *v2beta1.QueryLeaseResizesRequest, ...grpc.CallOption) *v2beta1.QueryLeaseResizesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*v2beta1.QueryLeaseResizesResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *v2beta1.QueryLeaseResizesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// QueryClient_LeaseResizes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'LeaseResizes'
+type QueryClient_LeaseResizes_Call struct {
+	*mock.Call
+}
+
+// LeaseResizes is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *v2beta1.QueryLeaseResizesRequest
+//   - opts ...grpc.CallOption
+func (_e *QueryClient_Expecter) LeaseResizes(ctx interface{}, in interface{}, opts ...interface{}) *QueryClient_LeaseResizes_Call {
+	return &QueryClient_LeaseResizes_Call{Call: _e.mock.On("LeaseResizes",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *QueryClient_LeaseResizes_Call) Run(run func(ctx context.Context, in *v2beta1.QueryLeaseResizesRequest, opts ...grpc.CallOption)) *QueryClient_LeaseResizes_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*v2beta1.QueryLeaseResizesRequest), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *QueryClient_LeaseResizes_Call) Return(_a0 *v2beta1.QueryLeaseResizesResponse, _a1 error) *QueryClient_LeaseResizes_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *QueryClient_LeaseResizes_Call) RunAndReturn(run func(context.Context, *v2beta1.QueryLeaseResizesRequest, ...grpc.CallOption) (*v2beta1.QueryLeaseResizesResponse, error)) *QueryClient_LeaseResizes_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Leases provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) Leases(ctx context.Context, in *v2beta1.QueryLeasesRequest, opts ...grpc.CallOption) (*v2beta1.QueryLeasesResponse, error) {
 	_va := make([]interface{}, len(opts))
