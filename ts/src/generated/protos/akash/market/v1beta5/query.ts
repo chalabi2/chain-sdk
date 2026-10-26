@@ -139,7 +139,14 @@ export interface QueryLeaseResizesRequest {
   /** Provider, when set, limits the result to leases with this provider. */
   provider: string;
   /** Pagination is used to paginate the request. */
-  pagination: PageRequest | undefined;
+  pagination:
+    | PageRequest
+    | undefined;
+  /**
+   * Dseq, when set, limits the result to this deployment of Owner, which must
+   * be set with it. A deployment has at most one pending resize.
+   */
+  dseq: bigint;
 }
 
 /**
@@ -1093,7 +1100,7 @@ export const QueryParamsResponse: MessageFns<QueryParamsResponse, "akash.market.
 };
 
 function createBaseQueryLeaseResizesRequest(): QueryLeaseResizesRequest {
-  return { owner: "", provider: "", pagination: undefined };
+  return { owner: "", provider: "", pagination: undefined, dseq: 0n };
 }
 
 export const QueryLeaseResizesRequest: MessageFns<
@@ -1111,6 +1118,12 @@ export const QueryLeaseResizesRequest: MessageFns<
     }
     if (message.pagination !== undefined) {
       PageRequest.encode(message.pagination, writer.uint32(26).fork()).join();
+    }
+    if (message.dseq !== 0n) {
+      if (BigInt.asUintN(64, message.dseq) !== message.dseq) {
+        throw new globalThis.Error("value provided for field message.dseq of type uint64 too large");
+      }
+      writer.uint32(32).uint64(message.dseq);
     }
     return writer;
   },
@@ -1146,6 +1159,14 @@ export const QueryLeaseResizesRequest: MessageFns<
           message.pagination = PageRequest.decode(reader, reader.uint32());
           continue;
         }
+        case 4: {
+          if (tag !== 32) {
+            break;
+          }
+
+          message.dseq = reader.uint64() as bigint;
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -1160,6 +1181,7 @@ export const QueryLeaseResizesRequest: MessageFns<
       owner: isSet(object.owner) ? globalThis.String(object.owner) : "",
       provider: isSet(object.provider) ? globalThis.String(object.provider) : "",
       pagination: isSet(object.pagination) ? PageRequest.fromJSON(object.pagination) : undefined,
+      dseq: isSet(object.dseq) ? BigInt(object.dseq) : 0n,
     };
   },
 
@@ -1174,6 +1196,9 @@ export const QueryLeaseResizesRequest: MessageFns<
     if (message.pagination !== undefined) {
       obj.pagination = PageRequest.toJSON(message.pagination);
     }
+    if (message.dseq !== 0n) {
+      obj.dseq = message.dseq.toString();
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<QueryLeaseResizesRequest>): QueryLeaseResizesRequest {
@@ -1183,6 +1208,7 @@ export const QueryLeaseResizesRequest: MessageFns<
     message.pagination = (object.pagination !== undefined && object.pagination !== null)
       ? PageRequest.fromPartial(object.pagination)
       : undefined;
+    message.dseq = (object.dseq !== undefined && object.dseq !== null) ? BigInt(object.dseq) : 0n;
     return message;
   },
 };

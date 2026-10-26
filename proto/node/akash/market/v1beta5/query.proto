@@ -61,7 +61,7 @@ service Query {
   }
 
   // LeaseResizes queries pending lease resize requests, optionally filtered
-  // by tenant or provider.
+  // by tenant, deployment or provider.
   rpc LeaseResizes(QueryLeaseResizesRequest) returns (QueryLeaseResizesResponse) {
     option (google.api.http).get = "/akash/market/v1beta5/leases/resizes";
   }
@@ -222,6 +222,14 @@ message QueryLeaseResizesRequest {
 
   // Pagination is used to paginate the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
+
+  // Dseq, when set, limits the result to this deployment of Owner, which must
+  // be set with it. A deployment has at most one pending resize.
+  uint64 dseq = 4 [
+    (gogoproto.customname) = "DSeq",
+    (gogoproto.jsontag)    = "dseq",
+    (gogoproto.moretags)   = "yaml:\"dseq\""
+  ];
 }
 
 // QueryLeaseResizesResponse is the response type for the Query/LeaseResizes

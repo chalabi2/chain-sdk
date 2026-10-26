@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -9,7 +8,6 @@ import (
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkquery "github.com/cosmos/cosmos-sdk/types/query"
 
 	cflags "pkg.akt.dev/go/cli/flags"
 	mv1 "pkg.akt.dev/go/node/market/v1"
@@ -498,31 +496,19 @@ func GetTxMarketLeaseResizeCancelCmd() *cobra.Command {
 // which an accept or reject names so that it answers this request and no
 // other.
 func pendingLeaseResizeDigest(ctx context.Context, qc mtypes.QueryClient, id mv1.LeaseID) ([]byte, error) {
-	req := &mtypes.QueryLeaseResizesRequest{
-		Owner:    id.Owner,
-		Provider: id.Provider,
+	res, err := qc.LeaseResizes(ctx, &mtypes.QueryLeaseResizesRequest{
+		Owner: id.Owner,
+		DSeq:  id.DSeq,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	for {
-		res, err := qc.LeaseResizes(ctx, req)
-		if err != nil {
-			return nil, err
+	for _, resize := range res.LeaseResizes {
+		if resize.LeaseID.Equals(id) {
+			return resize.Digest, nil
 		}
-
-		for _, resize := range res.LeaseResizes {
-			if resize.LeaseID.Equals(id) {
-				return resize.Digest, nil
-			}
-		}
-
-		if res.Pagination == nil || len(res.Pagination.NextKey) == 0 {
-			return nil, fmt.Errorf("%w: lease %s", mv1.ErrLeaseResizeNotFound, id)
-		}
-
-		if req.Pagination != nil && bytes.Equal(req.Pagination.Key, res.Pagination.NextKey) {
-			return nil, fmt.Errorf("lease resizes pagination repeats key %x", res.Pagination.NextKey)
-		}
-
-		req.Pagination = &sdkquery.PageRequest{Key: res.Pagination.NextKey}
 	}
+
+	return nil, fmt.Errorf("%w: lease %s", mv1.ErrLeaseResizeNotFound, id)
 }

@@ -418,7 +418,7 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
           }, { path: [13, "params"], serviceLoader }),
           /**
            * getLeaseResizes queries pending lease resize requests, optionally filtered
-           * by tenant or provider.
+           * by tenant, deployment or provider.
            */
           getLeaseResizes: withMetadata(async function getLeaseResizes(input: DeepPartial<akash_market_v1beta5_query.QueryLeaseResizesRequest>, options?: CallOptions) {
             const service = await serviceLoader.loadAt(13);

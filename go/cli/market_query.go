@@ -307,6 +307,11 @@ func GetQueryMarketLeaseResizesCmd() *cobra.Command {
 				return err
 			}
 
+			dseq, err := cmd.Flags().GetUint64(cflags.FlagDSeq)
+			if err != nil {
+				return err
+			}
+
 			provider, err := cmd.Flags().GetString(cflags.FlagProvider)
 			if err != nil {
 				return err
@@ -319,6 +324,7 @@ func GetQueryMarketLeaseResizesCmd() *cobra.Command {
 
 			res, err := cl.Query().Market().LeaseResizes(ctx, &mvbeta.QueryLeaseResizesRequest{
 				Owner:      owner,
+				DSeq:       dseq,
 				Provider:   provider,
 				Pagination: pageReq,
 			})
@@ -333,6 +339,7 @@ func GetQueryMarketLeaseResizesCmd() *cobra.Command {
 	cflags.AddQueryFlagsToCmd(cmd)
 	cflags.AddPaginationFlagsToCmd(cmd, "lease resizes")
 	cmd.Flags().String(cflags.FlagOwner, "", "tenant address to filter")
+	cmd.Flags().Uint64(cflags.FlagDSeq, 0, "deployment sequence to filter; requires --owner")
 	cmd.Flags().String(cflags.FlagProvider, "", "provider address to filter")
 
 	return cmd

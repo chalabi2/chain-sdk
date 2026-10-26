@@ -4342,6 +4342,9 @@ impl serde::Serialize for QueryLeaseResizesRequest {
         if self.pagination.is_some() {
             len += 1;
         }
+        if self.dseq != 0 {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v1beta5.QueryLeaseResizesRequest", len)?;
         if !self.owner.is_empty() {
             struct_ser.serialize_field("owner", &self.owner)?;
@@ -4351,6 +4354,11 @@ impl serde::Serialize for QueryLeaseResizesRequest {
         }
         if let Some(v) = self.pagination.as_ref() {
             struct_ser.serialize_field("pagination", v)?;
+        }
+        if self.dseq != 0 {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("dseq", ToString::to_string(&self.dseq).as_str())?;
         }
         struct_ser.end()
     }
@@ -4365,6 +4373,7 @@ impl<'de> serde::Deserialize<'de> for QueryLeaseResizesRequest {
             "owner",
             "provider",
             "pagination",
+            "dseq",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -4372,6 +4381,7 @@ impl<'de> serde::Deserialize<'de> for QueryLeaseResizesRequest {
             Owner,
             Provider,
             Pagination,
+            Dseq,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -4396,6 +4406,7 @@ impl<'de> serde::Deserialize<'de> for QueryLeaseResizesRequest {
                             "owner" => Ok(GeneratedField::Owner),
                             "provider" => Ok(GeneratedField::Provider),
                             "pagination" => Ok(GeneratedField::Pagination),
+                            "dseq" => Ok(GeneratedField::Dseq),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -4418,6 +4429,7 @@ impl<'de> serde::Deserialize<'de> for QueryLeaseResizesRequest {
                 let mut owner__ = None;
                 let mut provider__ = None;
                 let mut pagination__ = None;
+                let mut dseq__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Owner => {
@@ -4438,12 +4450,21 @@ impl<'de> serde::Deserialize<'de> for QueryLeaseResizesRequest {
                             }
                             pagination__ = map_.next_value()?;
                         }
+                        GeneratedField::Dseq => {
+                            if dseq__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("dseq"));
+                            }
+                            dseq__ = 
+                                Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(QueryLeaseResizesRequest {
                     owner: owner__.unwrap_or_default(),
                     provider: provider__.unwrap_or_default(),
                     pagination: pagination__,
+                    dseq: dseq__.unwrap_or_default(),
                 })
             }
         }
