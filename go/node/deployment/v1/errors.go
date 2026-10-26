@@ -38,6 +38,7 @@ const (
 	errVolumeAttached
 	errInvalidVolumeAdoption
 	errInvalidVolumeReplica
+	errInvalidResize
 )
 
 var (
@@ -111,4 +112,7 @@ var (
 	// ErrInvalidVolumeReplica is the error when the replica_of reference
 	// fails stateful validation
 	ErrInvalidVolumeReplica = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidVolumeReplica, codes.InvalidArgument, "invalid volume replica")
+	// ErrInvalidResize is the error when new resources change something a
+	// lease resize may not change
+	ErrInvalidResize = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidResize, codes.InvalidArgument, "invalid resize")
 )
