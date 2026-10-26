@@ -5,8 +5,10 @@ package v1beta4
 import (
 	context "context"
 
-	mock "github.com/stretchr/testify/mock"
 	grpc "google.golang.org/grpc"
+
+	mock "github.com/stretchr/testify/mock"
+
 	v1beta4 "pkg.akt.dev/go/node/provider/v1beta4"
 )
 

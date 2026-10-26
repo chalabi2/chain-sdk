@@ -234,12 +234,14 @@ func TestManifestWithDuplicateGroupIsInvalid(t *testing.T) {
 	require.Regexp(t, "^.*duplicate group.*$", err)
 }
 
-func TestManifestWithNoServicesInvalid(t *testing.T) {
+func TestManifestWithNoServicesValidStandalone(t *testing.T) {
+	// A group with zero services is valid standalone -- it is only
+	// valid on-chain when paired with a volume group, which is enforced in
+	// CheckAgainstGSpecs (see volume_test.go).
 	m := simpleManifest(1)
 	m[0].Services = nil
 	err := m.Validate()
-	require.Error(t, err)
-	require.Regexp(t, "^.*contains no services.*$", err)
+	require.NoError(t, err)
 }
 
 func TestManifestWithEmptyServiceNameInvalid(t *testing.T) {

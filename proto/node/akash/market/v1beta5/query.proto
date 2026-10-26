@@ -18,6 +18,7 @@ import "akash/market/v1/filters.proto";
 import "akash/market/v1beta5/order.proto";
 import "akash/market/v1beta5/bid.proto";
 import "akash/market/v1beta5/filters.proto";
+import "akash/market/v1beta5/leaseresize.proto";
 import "akash/market/v1beta5/params.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v1beta5";
@@ -57,6 +58,12 @@ service Query {
   // Params returns the total set of market parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
       option (google.api.http).get = "/akash/market/v1beta5/params";
+  }
+
+  // LeaseResizes queries pending lease resize requests, optionally filtered
+  // by tenant or provider.
+  rpc LeaseResizes(QueryLeaseResizesRequest) returns (QueryLeaseResizesResponse) {
+    option (google.api.http).get = "/akash/market/v1beta5/leases/resizes";
   }
 }
 
@@ -196,4 +203,37 @@ message QueryParamsResponse {
         (gogoproto.nullable)   = false,
         (amino.dont_omitempty) = true
     ];
+}
+
+// QueryLeaseResizesRequest is the request type for the Query/LeaseResizes RPC
+// method.
+message QueryLeaseResizesRequest {
+  // Owner, when set, limits the result to this tenant's deployments.
+  string owner = 1 [
+    (gogoproto.jsontag)  = "owner",
+    (gogoproto.moretags) = "yaml:\"owner\""
+  ];
+
+  // Provider, when set, limits the result to leases with this provider.
+  string provider = 2 [
+    (gogoproto.jsontag)  = "provider",
+    (gogoproto.moretags) = "yaml:\"provider\""
+  ];
+
+  // Pagination is used to paginate the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryLeaseResizesResponse is the response type for the Query/LeaseResizes
+// RPC method.
+message QueryLeaseResizesResponse {
+  // LeaseResizes is the list of pending lease resize requests.
+  repeated LeaseResize lease_resizes = 1 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "lease_resizes",
+    (gogoproto.moretags) = "yaml:\"lease_resizes\""
+  ];
+
+  // Pagination contains the information about response pagination.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

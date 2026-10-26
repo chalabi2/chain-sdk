@@ -49,4 +49,39 @@ message Params {
     (gogoproto.jsontag)     = "max_reclamation_window",
     (gogoproto.moretags)    = "yaml:\"max_reclamation_window\""
   ];
+
+  // VolumeOrdersEnabled is the AEP-87 feature flag: it gates volume-group
+  // CreateDeployment and, defense-in-depth, CreateBid on volume orders.
+  // Default false; flipped by governance.
+  bool volume_orders_enabled = 6 [
+    (gogoproto.customname) = "VolumeOrdersEnabled",
+    (gogoproto.jsontag)    = "volume_orders_enabled",
+    (gogoproto.moretags)   = "yaml:\"volume_orders_enabled\""
+  ];
+
+  // min_volume_reclamation_window is the chain-guaranteed migration-window
+  // floor for volume leases.
+  google.protobuf.Duration min_volume_reclamation_window = 7 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag)     = "min_volume_reclamation_window",
+    (gogoproto.moretags)    = "yaml:\"min_volume_reclamation_window\""
+  ];
+
+  // LeaseResizeEnabled is the feature flag for in-place lease resize. Default
+  // false; flipped by governance.
+  bool lease_resize_enabled = 8 [
+    (gogoproto.customname) = "LeaseResizeEnabled",
+    (gogoproto.jsontag)    = "lease_resize_enabled",
+    (gogoproto.moretags)   = "yaml:\"lease_resize_enabled\""
+  ];
+
+  // lease_resize_ttl is how long a resize request stays acceptable.
+  google.protobuf.Duration lease_resize_ttl = 9 [
+    (gogoproto.nullable)    = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.customname)  = "LeaseResizeTTL",
+    (gogoproto.jsontag)     = "lease_resize_ttl",
+    (gogoproto.moretags)    = "yaml:\"lease_resize_ttl\""
+  ];
 }

@@ -16,6 +16,16 @@ export interface StorageParams {
   name: string;
   mount: string;
   readOnly: boolean;
+  /**
+   * volume mirrors the on-chain VolumeRef as "owner/dseq/gseq/name";
+   * empty for locally-provisioned (AEP-15) storage.
+   *
+   * JSON / YAML tags carry `omitempty`: the on-chain manifest `version`
+   * is a SHA hash of the JSON-serialized off-chain manifest, so a field
+   * that always serializes (even at zero value) would change the hash of
+   * every manifest that mounts no volume.
+   */
+  volume: string;
 }
 
 /**
@@ -93,7 +103,7 @@ export interface Service {
 }
 
 function createBaseStorageParams(): StorageParams {
-  return { name: "", mount: "", readOnly: false };
+  return { name: "", mount: "", readOnly: false, volume: "" };
 }
 
 export const StorageParams: MessageFns<StorageParams, "akash.manifest.v2beta3.StorageParams"> = {
@@ -108,6 +118,9 @@ export const StorageParams: MessageFns<StorageParams, "akash.manifest.v2beta3.St
     }
     if (message.readOnly !== false) {
       writer.uint32(24).bool(message.readOnly);
+    }
+    if (message.volume !== "") {
+      writer.uint32(34).string(message.volume);
     }
     return writer;
   },
@@ -143,6 +156,14 @@ export const StorageParams: MessageFns<StorageParams, "akash.manifest.v2beta3.St
           message.readOnly = reader.bool();
           continue;
         }
+        case 4: {
+          if (tag !== 34) {
+            break;
+          }
+
+          message.volume = reader.string();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -157,6 +178,7 @@ export const StorageParams: MessageFns<StorageParams, "akash.manifest.v2beta3.St
       name: isSet(object.name) ? globalThis.String(object.name) : "",
       mount: isSet(object.mount) ? globalThis.String(object.mount) : "",
       readOnly: isSet(object.read_only) ? globalThis.Boolean(object.read_only) : false,
+      volume: isSet(object.volume) ? globalThis.String(object.volume) : "",
     };
   },
 
@@ -171,6 +193,9 @@ export const StorageParams: MessageFns<StorageParams, "akash.manifest.v2beta3.St
     if (message.readOnly !== false) {
       obj.read_only = message.readOnly;
     }
+    if (message.volume !== "") {
+      obj.volume = message.volume;
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<StorageParams>): StorageParams {
@@ -178,6 +203,7 @@ export const StorageParams: MessageFns<StorageParams, "akash.manifest.v2beta3.St
     message.name = object.name ?? "";
     message.mount = object.mount ?? "";
     message.readOnly = object.readOnly ?? false;
+    message.volume = object.volume ?? "";
     return message;
   },
 };

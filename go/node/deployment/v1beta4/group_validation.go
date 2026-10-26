@@ -13,6 +13,13 @@ func ValidateDeploymentGroups(gspecs []GroupSpec) error {
 	names := make(map[string]int, len(gspecs)) // Used as set
 	denom := ""
 	for idx, group := range gspecs {
+		// a deployment containing a volume group contains only that group:
+		// the single-group invariant keeps gseq == 1 for every volume and
+		// makes the escrow account coterminous with the volume.
+		if group.Volume != nil && len(gspecs) != 1 {
+			return v1.ErrInvalidGroups.Wrapf("volume group %q must be the only group in a deployment", group.GetName())
+		}
+
 		// all must be the same denomination
 		if idx == 0 {
 			denom = group.Price().Denom

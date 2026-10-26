@@ -10,10 +10,6 @@ import type * as akash_deployment_v1beta4_query from "./protos/akash/deployment/
 import type * as akash_deployment_v1beta4_deploymentmsg from "./protos/akash/deployment/v1beta4/deploymentmsg.ts";
 import type * as akash_deployment_v1beta4_groupmsg from "./protos/akash/deployment/v1beta4/groupmsg.ts";
 import type * as akash_deployment_v1beta4_paramsmsg from "./protos/akash/deployment/v1beta4/paramsmsg.ts";
-import type * as akash_deployment_v1beta5_query from "./protos/akash/deployment/v1beta5/query.ts";
-import type * as akash_deployment_v1beta5_deploymentmsg from "./protos/akash/deployment/v1beta5/deploymentmsg.ts";
-import type * as akash_deployment_v1beta5_groupmsg from "./protos/akash/deployment/v1beta5/groupmsg.ts";
-import type * as akash_deployment_v1beta5_paramsmsg from "./protos/akash/deployment/v1beta5/paramsmsg.ts";
 import type * as akash_discovery_v1_service from "./protos/akash/discovery/v1/service.ts";
 import type * as akash_downtimedetector_v1beta1_query from "./protos/akash/downtimedetector/v1beta1/query.ts";
 import type * as akash_epochs_v1beta1_query from "./protos/akash/epochs/v1beta1/query.ts";
@@ -23,10 +19,6 @@ import type * as akash_market_v1beta5_query from "./protos/akash/market/v1beta5/
 import type * as akash_market_v1beta5_bidmsg from "./protos/akash/market/v1beta5/bidmsg.ts";
 import type * as akash_market_v1beta5_leasemsg from "./protos/akash/market/v1beta5/leasemsg.ts";
 import type * as akash_market_v1beta5_paramsmsg from "./protos/akash/market/v1beta5/paramsmsg.ts";
-import type * as akash_market_v2beta1_query from "./protos/akash/market/v2beta1/query.ts";
-import type * as akash_market_v2beta1_bidmsg from "./protos/akash/market/v2beta1/bidmsg.ts";
-import type * as akash_market_v2beta1_leasemsg from "./protos/akash/market/v2beta1/leasemsg.ts";
-import type * as akash_market_v2beta1_paramsmsg from "./protos/akash/market/v2beta1/paramsmsg.ts";
 import type * as akash_oracle_v1_prices from "./protos/akash/oracle/v1/prices.ts";
 import type * as akash_oracle_v1_query from "./protos/akash/oracle/v1/query.ts";
 import type * as akash_oracle_v1_msgs from "./protos/akash/oracle/v1/msgs.ts";
@@ -53,8 +45,6 @@ export const serviceLoader= createServiceLoader([
   () => import("./protos/akash/cert/v1/service_akash.ts").then(m => m.Msg),
   () => import("./protos/akash/deployment/v1beta4/query_akash.ts").then(m => m.Query),
   () => import("./protos/akash/deployment/v1beta4/service_akash.ts").then(m => m.Msg),
-  () => import("./protos/akash/deployment/v1beta5/query_akash.ts").then(m => m.Query),
-  () => import("./protos/akash/deployment/v1beta5/service_akash.ts").then(m => m.Msg),
   () => import("./protos/akash/discovery/v1/service_akash.ts").then(m => m.Discovery),
   () => import("./protos/akash/downtimedetector/v1beta1/query_akash.ts").then(m => m.Query),
   () => import("./protos/akash/epochs/v1beta1/query_akash.ts").then(m => m.Query),
@@ -62,8 +52,6 @@ export const serviceLoader= createServiceLoader([
   () => import("./protos/akash/escrow/v1/service_akash.ts").then(m => m.Msg),
   () => import("./protos/akash/market/v1beta5/query_akash.ts").then(m => m.Query),
   () => import("./protos/akash/market/v1beta5/service_akash.ts").then(m => m.Msg),
-  () => import("./protos/akash/market/v2beta1/query_akash.ts").then(m => m.Query),
-  () => import("./protos/akash/market/v2beta1/service_akash.ts").then(m => m.Msg),
   () => import("./protos/akash/oracle/v1/query_akash.ts").then(m => m.Query),
   () => import("./protos/akash/oracle/v1/service_akash.ts").then(m => m.Msg),
   () => import("./protos/akash/oracle/v2/query_akash.ts").then(m => m.Query),
@@ -309,88 +297,6 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
             const service = await serviceLoader.loadAt(7);
             return getMsgClient(service).updateParams(input, options);
           }, { path: [7, "updateParams"], serviceLoader })
-        },
-        v1beta5: {
-          /**
-           * getDeployments queries deployments.
-           */
-          getDeployments: withMetadata(async function getDeployments(input: DeepPartial<akash_deployment_v1beta5_query.QueryDeploymentsRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(8);
-            return getClient(service).deployments(input, options);
-          }, { path: [8, "deployments"], serviceLoader }),
-          /**
-           * getDeployment queries deployment details.
-           */
-          getDeployment: withMetadata(async function getDeployment(input: DeepPartial<akash_deployment_v1beta5_query.QueryDeploymentRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(8);
-            return getClient(service).deployment(input, options);
-          }, { path: [8, "deployment"], serviceLoader }),
-          /**
-           * getGroup queries group details.
-           */
-          getGroup: withMetadata(async function getGroup(input: DeepPartial<akash_deployment_v1beta5_query.QueryGroupRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(8);
-            return getClient(service).group(input, options);
-          }, { path: [8, "group"], serviceLoader }),
-          /**
-           * getParams returns the total set of deployment parameters.
-           */
-          getParams: withMetadata(async function getParams(input: DeepPartial<akash_deployment_v1beta5_query.QueryParamsRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(8);
-            return getClient(service).params(input, options);
-          }, { path: [8, "params"], serviceLoader }),
-          /**
-           * createDeployment defines a method to create new deployment given proper inputs.
-           */
-          createDeployment: withMetadata(async function createDeployment(input: DeepSimplify<akash_deployment_v1beta5_deploymentmsg.MsgCreateDeployment>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(9);
-            return getMsgClient(service).createDeployment(input, options);
-          }, { path: [9, "createDeployment"], serviceLoader }),
-          /**
-           * updateDeployment defines a method to update a deployment given proper inputs.
-           */
-          updateDeployment: withMetadata(async function updateDeployment(input: DeepSimplify<akash_deployment_v1beta5_deploymentmsg.MsgUpdateDeployment>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(9);
-            return getMsgClient(service).updateDeployment(input, options);
-          }, { path: [9, "updateDeployment"], serviceLoader }),
-          /**
-           * closeDeployment defines a method to close a deployment given proper inputs.
-           */
-          closeDeployment: withMetadata(async function closeDeployment(input: DeepSimplify<akash_deployment_v1beta5_deploymentmsg.MsgCloseDeployment>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(9);
-            return getMsgClient(service).closeDeployment(input, options);
-          }, { path: [9, "closeDeployment"], serviceLoader }),
-          /**
-           * closeGroup defines a method to close a group of a deployment given proper inputs.
-           */
-          closeGroup: withMetadata(async function closeGroup(input: DeepSimplify<akash_deployment_v1beta5_groupmsg.MsgCloseGroup>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(9);
-            return getMsgClient(service).closeGroup(input, options);
-          }, { path: [9, "closeGroup"], serviceLoader }),
-          /**
-           * pauseGroup defines a method to pause a group of a deployment given proper inputs.
-           */
-          pauseGroup: withMetadata(async function pauseGroup(input: DeepSimplify<akash_deployment_v1beta5_groupmsg.MsgPauseGroup>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(9);
-            return getMsgClient(service).pauseGroup(input, options);
-          }, { path: [9, "pauseGroup"], serviceLoader }),
-          /**
-           * startGroup defines a method to start a group of a deployment given proper inputs.
-           */
-          startGroup: withMetadata(async function startGroup(input: DeepSimplify<akash_deployment_v1beta5_groupmsg.MsgStartGroup>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(9);
-            return getMsgClient(service).startGroup(input, options);
-          }, { path: [9, "startGroup"], serviceLoader }),
-          /**
-           * updateParams defines a governance operation for updating the x/deployment module
-           * parameters. The authority is hard-coded to the x/gov module account.
-           *
-           * Since: akash v1.0.0
-           */
-          updateParams: withMetadata(async function updateParams(input: DeepSimplify<akash_deployment_v1beta5_paramsmsg.MsgUpdateParams>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(9);
-            return getMsgClient(service).updateParams(input, options);
-          }, { path: [9, "updateParams"], serviceLoader })
         }
       },
       discovery: {
@@ -399,9 +305,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getInfo returns the node's supported API versions and metadata.
            */
           getInfo: withMetadata(async function getInfo(input: DeepPartial<akash_discovery_v1_service.GetInfoRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(10);
+            const service = await serviceLoader.loadAt(8);
             return getClient(service).getInfo(input, options);
-          }, { path: [10, "getInfo"], serviceLoader })
+          }, { path: [8, "getInfo"], serviceLoader })
         }
       },
       downtimedetector: {
@@ -411,9 +317,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * since experiencing downtime of a given length
            */
           getRecoveredSinceDowntimeOfLength: withMetadata(async function getRecoveredSinceDowntimeOfLength(input: DeepPartial<akash_downtimedetector_v1beta1_query.RecoveredSinceDowntimeOfLengthRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(11);
+            const service = await serviceLoader.loadAt(9);
             return getClient(service).recoveredSinceDowntimeOfLength(input, options);
-          }, { path: [11, "recoveredSinceDowntimeOfLength"], serviceLoader })
+          }, { path: [9, "recoveredSinceDowntimeOfLength"], serviceLoader })
         }
       },
       epochs: {
@@ -422,16 +328,16 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getEpochInfos provide running epochInfos
            */
           getEpochInfos: withMetadata(async function getEpochInfos(input: DeepPartial<akash_epochs_v1beta1_query.QueryEpochInfosRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(12);
+            const service = await serviceLoader.loadAt(10);
             return getClient(service).epochInfos(input, options);
-          }, { path: [12, "epochInfos"], serviceLoader }),
+          }, { path: [10, "epochInfos"], serviceLoader }),
           /**
            * getCurrentEpoch provide current epoch of specified identifier
            */
           getCurrentEpoch: withMetadata(async function getCurrentEpoch(input: DeepPartial<akash_epochs_v1beta1_query.QueryCurrentEpochRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(12);
+            const service = await serviceLoader.loadAt(10);
             return getClient(service).currentEpoch(input, options);
-          }, { path: [12, "currentEpoch"], serviceLoader })
+          }, { path: [10, "currentEpoch"], serviceLoader })
         }
       },
       escrow: {
@@ -440,23 +346,23 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getAccounts queries all accounts.
            */
           getAccounts: withMetadata(async function getAccounts(input: DeepPartial<akash_escrow_v1_query.QueryAccountsRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(13);
+            const service = await serviceLoader.loadAt(11);
             return getClient(service).accounts(input, options);
-          }, { path: [13, "accounts"], serviceLoader }),
+          }, { path: [11, "accounts"], serviceLoader }),
           /**
            * getPayments queries all payments.
            */
           getPayments: withMetadata(async function getPayments(input: DeepPartial<akash_escrow_v1_query.QueryPaymentsRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(13);
+            const service = await serviceLoader.loadAt(11);
             return getClient(service).payments(input, options);
-          }, { path: [13, "payments"], serviceLoader }),
+          }, { path: [11, "payments"], serviceLoader }),
           /**
            * accountDeposit deposits more funds into the escrow account.
            */
           accountDeposit: withMetadata(async function accountDeposit(input: DeepSimplify<akash_escrow_v1_msg.MsgAccountDeposit>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(14);
+            const service = await serviceLoader.loadAt(12);
             return getMsgClient(service).accountDeposit(input, options);
-          }, { path: [14, "accountDeposit"], serviceLoader })
+          }, { path: [12, "accountDeposit"], serviceLoader })
         }
       },
       market: {
@@ -465,93 +371,130 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getOrders queries orders with filters.
            */
           getOrders: withMetadata(async function getOrders(input: DeepPartial<akash_market_v1beta5_query.QueryOrdersRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(15);
+            const service = await serviceLoader.loadAt(13);
             return getClient(service).orders(input, options);
-          }, { path: [15, "orders"], serviceLoader }),
+          }, { path: [13, "orders"], serviceLoader }),
           /**
            * getOrder queries order details.
            */
           getOrder: withMetadata(async function getOrder(input: DeepPartial<akash_market_v1beta5_query.QueryOrderRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(15);
+            const service = await serviceLoader.loadAt(13);
             return getClient(service).order(input, options);
-          }, { path: [15, "order"], serviceLoader }),
+          }, { path: [13, "order"], serviceLoader }),
           /**
            * getBids queries bids with filters.
            */
           getBids: withMetadata(async function getBids(input: DeepPartial<akash_market_v1beta5_query.QueryBidsRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(15);
+            const service = await serviceLoader.loadAt(13);
             return getClient(service).bids(input, options);
-          }, { path: [15, "bids"], serviceLoader }),
+          }, { path: [13, "bids"], serviceLoader }),
           /**
            * getBid queries bid details.
            */
           getBid: withMetadata(async function getBid(input: DeepPartial<akash_market_v1beta5_query.QueryBidRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(15);
+            const service = await serviceLoader.loadAt(13);
             return getClient(service).bid(input, options);
-          }, { path: [15, "bid"], serviceLoader }),
+          }, { path: [13, "bid"], serviceLoader }),
           /**
            * getLeases queries leases with filters.
            */
           getLeases: withMetadata(async function getLeases(input: DeepPartial<akash_market_v1beta5_query.QueryLeasesRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(15);
+            const service = await serviceLoader.loadAt(13);
             return getClient(service).leases(input, options);
-          }, { path: [15, "leases"], serviceLoader }),
+          }, { path: [13, "leases"], serviceLoader }),
           /**
            * getLease queries lease details.
            */
           getLease: withMetadata(async function getLease(input: DeepPartial<akash_market_v1beta5_query.QueryLeaseRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(15);
+            const service = await serviceLoader.loadAt(13);
             return getClient(service).lease(input, options);
-          }, { path: [15, "lease"], serviceLoader }),
+          }, { path: [13, "lease"], serviceLoader }),
           /**
            * getParams returns the total set of market parameters.
            */
           getParams: withMetadata(async function getParams(input: DeepPartial<akash_market_v1beta5_query.QueryParamsRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(15);
+            const service = await serviceLoader.loadAt(13);
             return getClient(service).params(input, options);
-          }, { path: [15, "params"], serviceLoader }),
+          }, { path: [13, "params"], serviceLoader }),
+          /**
+           * getLeaseResizes queries pending lease resize requests, optionally filtered
+           * by tenant or provider.
+           */
+          getLeaseResizes: withMetadata(async function getLeaseResizes(input: DeepPartial<akash_market_v1beta5_query.QueryLeaseResizesRequest>, options?: CallOptions) {
+            const service = await serviceLoader.loadAt(13);
+            return getClient(service).leaseResizes(input, options);
+          }, { path: [13, "leaseResizes"], serviceLoader }),
           /**
            * createBid defines a method to create a bid given proper inputs.
            */
           createBid: withMetadata(async function createBid(input: DeepSimplify<akash_market_v1beta5_bidmsg.MsgCreateBid>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(16);
+            const service = await serviceLoader.loadAt(14);
             return getMsgClient(service).createBid(input, options);
-          }, { path: [16, "createBid"], serviceLoader }),
+          }, { path: [14, "createBid"], serviceLoader }),
           /**
            * closeBid defines a method to close a bid given proper inputs.
            */
           closeBid: withMetadata(async function closeBid(input: DeepSimplify<akash_market_v1beta5_bidmsg.MsgCloseBid>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(16);
+            const service = await serviceLoader.loadAt(14);
             return getMsgClient(service).closeBid(input, options);
-          }, { path: [16, "closeBid"], serviceLoader }),
+          }, { path: [14, "closeBid"], serviceLoader }),
           /**
            * withdrawLease withdraws accrued funds from the lease payment
            */
           withdrawLease: withMetadata(async function withdrawLease(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgWithdrawLease>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(16);
+            const service = await serviceLoader.loadAt(14);
             return getMsgClient(service).withdrawLease(input, options);
-          }, { path: [16, "withdrawLease"], serviceLoader }),
+          }, { path: [14, "withdrawLease"], serviceLoader }),
           /**
            * createLease creates a new lease
            */
           createLease: withMetadata(async function createLease(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgCreateLease>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(16);
+            const service = await serviceLoader.loadAt(14);
             return getMsgClient(service).createLease(input, options);
-          }, { path: [16, "createLease"], serviceLoader }),
+          }, { path: [14, "createLease"], serviceLoader }),
           /**
            * closeLease defines a method to close an order given proper inputs.
            */
           closeLease: withMetadata(async function closeLease(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgCloseLease>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(16);
+            const service = await serviceLoader.loadAt(14);
             return getMsgClient(service).closeLease(input, options);
-          }, { path: [16, "closeLease"], serviceLoader }),
+          }, { path: [14, "closeLease"], serviceLoader }),
           /**
            * leaseStartReclaim initiates the reclamation window on an active lease.
            */
           leaseStartReclaim: withMetadata(async function leaseStartReclaim(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgLeaseStartReclaim>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(16);
+            const service = await serviceLoader.loadAt(14);
             return getMsgClient(service).leaseStartReclaim(input, options);
-          }, { path: [16, "leaseStartReclaim"], serviceLoader }),
+          }, { path: [14, "leaseStartReclaim"], serviceLoader }),
+          /**
+           * resizeLease asks the provider of an active lease to change its resources
+           * in place.
+           */
+          resizeLease: withMetadata(async function resizeLease(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgResizeLease>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(14);
+            return getMsgClient(service).resizeLease(input, options);
+          }, { path: [14, "resizeLease"], serviceLoader }),
+          /**
+           * acceptLeaseResize applies a pending lease resize at the provider's price.
+           */
+          acceptLeaseResize: withMetadata(async function acceptLeaseResize(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgAcceptLeaseResize>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(14);
+            return getMsgClient(service).acceptLeaseResize(input, options);
+          }, { path: [14, "acceptLeaseResize"], serviceLoader }),
+          /**
+           * rejectLeaseResize declines a pending lease resize.
+           */
+          rejectLeaseResize: withMetadata(async function rejectLeaseResize(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgRejectLeaseResize>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(14);
+            return getMsgClient(service).rejectLeaseResize(input, options);
+          }, { path: [14, "rejectLeaseResize"], serviceLoader }),
+          /**
+           * cancelLeaseResize withdraws a pending lease resize.
+           */
+          cancelLeaseResize: withMetadata(async function cancelLeaseResize(input: DeepSimplify<akash_market_v1beta5_leasemsg.MsgCancelLeaseResize>, options?: TxCallOptions) {
+            const service = await serviceLoader.loadAt(14);
+            return getMsgClient(service).cancelLeaseResize(input, options);
+          }, { path: [14, "cancelLeaseResize"], serviceLoader }),
           /**
            * updateParams defines a governance operation for updating the x/market module
            * parameters. The authority is hard-coded to the x/gov module account.
@@ -559,149 +502,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * Since: akash v1.0.0
            */
           updateParams: withMetadata(async function updateParams(input: DeepSimplify<akash_market_v1beta5_paramsmsg.MsgUpdateParams>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(16);
+            const service = await serviceLoader.loadAt(14);
             return getMsgClient(service).updateParams(input, options);
-          }, { path: [16, "updateParams"], serviceLoader })
-        },
-        v2beta1: {
-          /**
-           * getOrders queries orders with filters.
-           */
-          getOrders: withMetadata(async function getOrders(input: DeepPartial<akash_market_v2beta1_query.QueryOrdersRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).orders(input, options);
-          }, { path: [17, "orders"], serviceLoader }),
-          /**
-           * getOrder queries order details.
-           */
-          getOrder: withMetadata(async function getOrder(input: DeepPartial<akash_market_v2beta1_query.QueryOrderRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).order(input, options);
-          }, { path: [17, "order"], serviceLoader }),
-          /**
-           * getBids queries bids with filters.
-           */
-          getBids: withMetadata(async function getBids(input: DeepPartial<akash_market_v2beta1_query.QueryBidsRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).bids(input, options);
-          }, { path: [17, "bids"], serviceLoader }),
-          /**
-           * getBid queries bid details.
-           */
-          getBid: withMetadata(async function getBid(input: DeepPartial<akash_market_v2beta1_query.QueryBidRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).bid(input, options);
-          }, { path: [17, "bid"], serviceLoader }),
-          /**
-           * getLeases queries leases with filters.
-           */
-          getLeases: withMetadata(async function getLeases(input: DeepPartial<akash_market_v2beta1_query.QueryLeasesRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).leases(input, options);
-          }, { path: [17, "leases"], serviceLoader }),
-          /**
-           * getLease queries lease details.
-           */
-          getLease: withMetadata(async function getLease(input: DeepPartial<akash_market_v2beta1_query.QueryLeaseRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).lease(input, options);
-          }, { path: [17, "lease"], serviceLoader }),
-          /**
-           * getParams returns the total set of market parameters.
-           */
-          getParams: withMetadata(async function getParams(input: DeepPartial<akash_market_v2beta1_query.QueryParamsRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).params(input, options);
-          }, { path: [17, "params"], serviceLoader }),
-          /**
-           * getLeaseResizes queries pending lease resize requests, optionally filtered
-           * by tenant or provider.
-           */
-          getLeaseResizes: withMetadata(async function getLeaseResizes(input: DeepPartial<akash_market_v2beta1_query.QueryLeaseResizesRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(17);
-            return getClient(service).leaseResizes(input, options);
-          }, { path: [17, "leaseResizes"], serviceLoader }),
-          /**
-           * createBid defines a method to create a bid given proper inputs.
-           */
-          createBid: withMetadata(async function createBid(input: DeepSimplify<akash_market_v2beta1_bidmsg.MsgCreateBid>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).createBid(input, options);
-          }, { path: [18, "createBid"], serviceLoader }),
-          /**
-           * closeBid defines a method to close a bid given proper inputs.
-           */
-          closeBid: withMetadata(async function closeBid(input: DeepSimplify<akash_market_v2beta1_bidmsg.MsgCloseBid>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).closeBid(input, options);
-          }, { path: [18, "closeBid"], serviceLoader }),
-          /**
-           * withdrawLease withdraws accrued funds from the lease payment
-           */
-          withdrawLease: withMetadata(async function withdrawLease(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgWithdrawLease>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).withdrawLease(input, options);
-          }, { path: [18, "withdrawLease"], serviceLoader }),
-          /**
-           * createLease creates a new lease
-           */
-          createLease: withMetadata(async function createLease(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgCreateLease>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).createLease(input, options);
-          }, { path: [18, "createLease"], serviceLoader }),
-          /**
-           * closeLease defines a method to close an order given proper inputs.
-           */
-          closeLease: withMetadata(async function closeLease(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgCloseLease>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).closeLease(input, options);
-          }, { path: [18, "closeLease"], serviceLoader }),
-          /**
-           * leaseStartReclaim initiates the reclamation window on an active lease.
-           */
-          leaseStartReclaim: withMetadata(async function leaseStartReclaim(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgLeaseStartReclaim>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).leaseStartReclaim(input, options);
-          }, { path: [18, "leaseStartReclaim"], serviceLoader }),
-          /**
-           * resizeLease asks the provider of an active lease to change its resources
-           * in place.
-           */
-          resizeLease: withMetadata(async function resizeLease(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgResizeLease>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).resizeLease(input, options);
-          }, { path: [18, "resizeLease"], serviceLoader }),
-          /**
-           * acceptLeaseResize applies a pending lease resize at the provider's price.
-           */
-          acceptLeaseResize: withMetadata(async function acceptLeaseResize(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgAcceptLeaseResize>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).acceptLeaseResize(input, options);
-          }, { path: [18, "acceptLeaseResize"], serviceLoader }),
-          /**
-           * rejectLeaseResize declines a pending lease resize.
-           */
-          rejectLeaseResize: withMetadata(async function rejectLeaseResize(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgRejectLeaseResize>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).rejectLeaseResize(input, options);
-          }, { path: [18, "rejectLeaseResize"], serviceLoader }),
-          /**
-           * cancelLeaseResize withdraws a pending lease resize.
-           */
-          cancelLeaseResize: withMetadata(async function cancelLeaseResize(input: DeepSimplify<akash_market_v2beta1_leasemsg.MsgCancelLeaseResize>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).cancelLeaseResize(input, options);
-          }, { path: [18, "cancelLeaseResize"], serviceLoader }),
-          /**
-           * updateParams defines a governance operation for updating the x/market module
-           * parameters. The authority is hard-coded to the x/gov module account.
-           *
-           * Since: akash v1.0.0
-           */
-          updateParams: withMetadata(async function updateParams(input: DeepSimplify<akash_market_v2beta1_paramsmsg.MsgUpdateParams>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(18);
-            return getMsgClient(service).updateParams(input, options);
-          }, { path: [18, "updateParams"], serviceLoader })
+          }, { path: [14, "updateParams"], serviceLoader })
         }
       },
       oracle: {
@@ -710,30 +513,30 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getPrices query prices for specific denom
            */
           getPrices: withMetadata(async function getPrices(input: DeepPartial<akash_oracle_v1_prices.QueryPricesRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(19);
+            const service = await serviceLoader.loadAt(15);
             return getClient(service).prices(input, options);
-          }, { path: [19, "prices"], serviceLoader }),
+          }, { path: [15, "prices"], serviceLoader }),
           /**
            * getParams returns the total set of oracle parameters.
            */
           getParams: withMetadata(async function getParams(input: DeepPartial<akash_oracle_v1_query.QueryParamsRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(19);
+            const service = await serviceLoader.loadAt(15);
             return getClient(service).params(input, options);
-          }, { path: [19, "params"], serviceLoader }),
+          }, { path: [15, "params"], serviceLoader }),
           /**
            * getAggregatedPrice queries the aggregated price for a given denom.
            */
           getAggregatedPrice: withMetadata(async function getAggregatedPrice(input: DeepPartial<akash_oracle_v1_query.QueryAggregatedPriceRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(19);
+            const service = await serviceLoader.loadAt(15);
             return getClient(service).aggregatedPrice(input, options);
-          }, { path: [19, "aggregatedPrice"], serviceLoader }),
+          }, { path: [15, "aggregatedPrice"], serviceLoader }),
           /**
            * addPriceEntry adds a new price entry for a denomination from an authorized source
            */
           addPriceEntry: withMetadata(async function addPriceEntry(input: DeepSimplify<akash_oracle_v1_msgs.MsgAddPriceEntry>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(20);
+            const service = await serviceLoader.loadAt(16);
             return getMsgClient(service).addPriceEntry(input, options);
-          }, { path: [20, "addPriceEntry"], serviceLoader }),
+          }, { path: [16, "addPriceEntry"], serviceLoader }),
           /**
            * updateParams defines a governance operation for updating the x/wasm module
            * parameters. The authority is hard-coded to the x/gov module account.
@@ -741,39 +544,39 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * Since: akash v2.0.0
            */
           updateParams: withMetadata(async function updateParams(input: DeepSimplify<akash_oracle_v1_msgs.MsgUpdateParams>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(20);
+            const service = await serviceLoader.loadAt(16);
             return getMsgClient(service).updateParams(input, options);
-          }, { path: [20, "updateParams"], serviceLoader })
+          }, { path: [16, "updateParams"], serviceLoader })
         },
         v2: {
           /**
            * getPrices query prices for specific denom
            */
           getPrices: withMetadata(async function getPrices(input: DeepPartial<akash_oracle_v2_query.QueryPricesRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(21);
+            const service = await serviceLoader.loadAt(17);
             return getClient(service).prices(input, options);
-          }, { path: [21, "prices"], serviceLoader }),
+          }, { path: [17, "prices"], serviceLoader }),
           /**
            * getParams returns the total set of oracle parameters.
            */
           getParams: withMetadata(async function getParams(input: DeepPartial<akash_oracle_v2_query.QueryParamsRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(21);
+            const service = await serviceLoader.loadAt(17);
             return getClient(service).params(input, options);
-          }, { path: [21, "params"], serviceLoader }),
+          }, { path: [17, "params"], serviceLoader }),
           /**
            * getAggregatedPrice queries the aggregated price for a given denom.
            */
           getAggregatedPrice: withMetadata(async function getAggregatedPrice(input: DeepPartial<akash_oracle_v2_query.QueryAggregatedPriceRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(21);
+            const service = await serviceLoader.loadAt(17);
             return getClient(service).aggregatedPrice(input, options);
-          }, { path: [21, "aggregatedPrice"], serviceLoader }),
+          }, { path: [17, "aggregatedPrice"], serviceLoader }),
           /**
            * addPriceEntry adds a new price entry for a denomination from an authorized source
            */
           addPriceEntry: withMetadata(async function addPriceEntry(input: DeepSimplify<akash_oracle_v2_msgs.MsgAddPriceEntry>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(22);
+            const service = await serviceLoader.loadAt(18);
             return getMsgClient(service).addPriceEntry(input, options);
-          }, { path: [22, "addPriceEntry"], serviceLoader }),
+          }, { path: [18, "addPriceEntry"], serviceLoader }),
           /**
            * updateParams defines a governance operation for updating the x/oracle module
            * parameters. The authority is hard-coded to the x/gov module account.
@@ -781,9 +584,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * Since: akash v2.0.0
            */
           updateParams: withMetadata(async function updateParams(input: DeepSimplify<akash_oracle_v2_msgs.MsgUpdateParams>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(22);
+            const service = await serviceLoader.loadAt(18);
             return getMsgClient(service).updateParams(input, options);
-          }, { path: [22, "updateParams"], serviceLoader })
+          }, { path: [18, "updateParams"], serviceLoader })
         }
       },
       provider: {
@@ -792,37 +595,37 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getProviders queries providers
            */
           getProviders: withMetadata(async function getProviders(input: DeepPartial<akash_provider_v1beta4_query.QueryProvidersRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(23);
+            const service = await serviceLoader.loadAt(19);
             return getClient(service).providers(input, options);
-          }, { path: [23, "providers"], serviceLoader }),
+          }, { path: [19, "providers"], serviceLoader }),
           /**
            * getProvider queries provider details
            */
           getProvider: withMetadata(async function getProvider(input: DeepPartial<akash_provider_v1beta4_query.QueryProviderRequest>, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(23);
+            const service = await serviceLoader.loadAt(19);
             return getClient(service).provider(input, options);
-          }, { path: [23, "provider"], serviceLoader }),
+          }, { path: [19, "provider"], serviceLoader }),
           /**
            * createProvider defines a method that creates a provider given the proper inputs.
            */
           createProvider: withMetadata(async function createProvider(input: DeepSimplify<akash_provider_v1beta4_msg.MsgCreateProvider>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(24);
+            const service = await serviceLoader.loadAt(20);
             return getMsgClient(service).createProvider(input, options);
-          }, { path: [24, "createProvider"], serviceLoader }),
+          }, { path: [20, "createProvider"], serviceLoader }),
           /**
            * updateProvider defines a method that updates a provider given the proper inputs.
            */
           updateProvider: withMetadata(async function updateProvider(input: DeepSimplify<akash_provider_v1beta4_msg.MsgUpdateProvider>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(24);
+            const service = await serviceLoader.loadAt(20);
             return getMsgClient(service).updateProvider(input, options);
-          }, { path: [24, "updateProvider"], serviceLoader }),
+          }, { path: [20, "updateProvider"], serviceLoader }),
           /**
            * deleteProvider defines a method that deletes a provider given the proper inputs.
            */
           deleteProvider: withMetadata(async function deleteProvider(input: DeepSimplify<akash_provider_v1beta4_msg.MsgDeleteProvider>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(24);
+            const service = await serviceLoader.loadAt(20);
             return getMsgClient(service).deleteProvider(input, options);
-          }, { path: [24, "deleteProvider"], serviceLoader })
+          }, { path: [20, "deleteProvider"], serviceLoader })
         }
       },
       take: {
@@ -831,9 +634,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getParams returns the total set of take parameters.
            */
           getParams: withMetadata(async function getParams(input: DeepPartial<akash_take_v1_query.QueryParamsRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(25);
+            const service = await serviceLoader.loadAt(21);
             return getClient(service).params(input, options);
-          }, { path: [25, "params"], serviceLoader }),
+          }, { path: [21, "params"], serviceLoader }),
           /**
            * updateParams defines a governance operation for updating the x/market module
            * parameters. The authority is hard-coded to the x/gov module account.
@@ -841,9 +644,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * Since: akash v1.0.0
            */
           updateParams: withMetadata(async function updateParams(input: DeepSimplify<akash_take_v1_paramsmsg.MsgUpdateParams>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(26);
+            const service = await serviceLoader.loadAt(22);
             return getMsgClient(service).updateParams(input, options);
-          }, { path: [26, "updateParams"], serviceLoader })
+          }, { path: [22, "updateParams"], serviceLoader })
         }
       },
       wasm: {
@@ -852,9 +655,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * getParams returns the total set of wasm parameters.
            */
           getParams: withMetadata(async function getParams(input: DeepPartial<akash_wasm_v1_query.QueryParamsRequest> = {}, options?: CallOptions) {
-            const service = await serviceLoader.loadAt(27);
+            const service = await serviceLoader.loadAt(23);
             return getClient(service).params(input, options);
-          }, { path: [27, "params"], serviceLoader }),
+          }, { path: [23, "params"], serviceLoader }),
           /**
            * updateParams defines a governance operation for updating the x/wasm module
            * parameters. The authority is hard-coded to the x/gov module account.
@@ -862,9 +665,9 @@ export function createSDK(queryTransport: Transport, txTransport: Transport) {
            * Since: akash v2.0.0
            */
           updateParams: withMetadata(async function updateParams(input: DeepSimplify<akash_wasm_v1_paramsmsg.MsgUpdateParams>, options?: TxCallOptions) {
-            const service = await serviceLoader.loadAt(28);
+            const service = await serviceLoader.loadAt(24);
             return getMsgClient(service).updateParams(input, options);
-          }, { path: [28, "updateParams"], serviceLoader })
+          }, { path: [24, "updateParams"], serviceLoader })
         }
       }
     }

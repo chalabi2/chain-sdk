@@ -49,10 +49,9 @@ func (g Group) AllHostnames() []string {
 }
 
 func (g *Group) Validate(helper *validateManifestGroupsHelper) error {
-	if len(g.Services) == 0 {
-		return fmt.Errorf("%w: group %q contains no services", ErrInvalidManifest, g.GetName())
-	}
-
+	// A group with zero services is only valid when it pairs with an on-chain
+	// volume group; the pairing is enforced in CheckAgainstGSpecs, where the
+	// GroupSpecs are available.
 	if !sort.IsSorted(g.Services) {
 		return fmt.Errorf("%w: group %q services is not sorted", ErrInvalidManifest, g.GetName())
 	}

@@ -25,6 +25,17 @@ message StorageParams {
       (gogoproto.jsontag)  = "readOnly",
       (gogoproto.moretags) = "yaml:\"readOnly\""
     ];
+    // volume mirrors the on-chain VolumeRef as "owner/dseq/gseq/name";
+    // empty for locally-provisioned (AEP-15) storage.
+    //
+    // JSON / YAML tags carry `omitempty`: the on-chain manifest `version`
+    // is a SHA hash of the JSON-serialized off-chain manifest, so a field
+    // that always serializes (even at zero value) would change the hash of
+    // every manifest that mounts no volume.
+    string volume = 4 [
+      (gogoproto.jsontag)  = "volume,omitempty",
+      (gogoproto.moretags) = "yaml:\"volume,omitempty\""
+    ];
 }
 
 // ServicePermissions defines resource access permissions for the service.

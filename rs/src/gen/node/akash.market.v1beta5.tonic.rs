@@ -259,6 +259,31 @@ pub mod query_client {
                 .insert(GrpcMethod::new("akash.market.v1beta5.Query", "Params"));
             self.inner.unary(req, path, codec).await
         }
+        pub async fn lease_resizes(
+            &mut self,
+            request: impl tonic::IntoRequest<super::QueryLeaseResizesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::QueryLeaseResizesResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/akash.market.v1beta5.Query/LeaseResizes",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("akash.market.v1beta5.Query", "LeaseResizes"));
+            self.inner.unary(req, path, codec).await
+        }
     }
 }
 /// Generated server implementations.
@@ -315,6 +340,13 @@ pub mod query_server {
             request: tonic::Request<super::QueryParamsRequest>,
         ) -> std::result::Result<
             tonic::Response<super::QueryParamsResponse>,
+            tonic::Status,
+        >;
+        async fn lease_resizes(
+            &self,
+            request: tonic::Request<super::QueryLeaseResizesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::QueryLeaseResizesResponse>,
             tonic::Status,
         >;
     }
@@ -695,6 +727,51 @@ pub mod query_server {
                     };
                     Box::pin(fut)
                 }
+                "/akash.market.v1beta5.Query/LeaseResizes" => {
+                    #[allow(non_camel_case_types)]
+                    struct LeaseResizesSvc<T: Query>(pub Arc<T>);
+                    impl<
+                        T: Query,
+                    > tonic::server::UnaryService<super::QueryLeaseResizesRequest>
+                    for LeaseResizesSvc<T> {
+                        type Response = super::QueryLeaseResizesResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::QueryLeaseResizesRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Query>::lease_resizes(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = LeaseResizesSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
                 _ => {
                     Box::pin(async move {
                         Ok(
@@ -814,8 +891,6 @@ pub mod msg_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        /** CreateBid defines a method to create a bid given proper inputs.
-*/
         pub async fn create_bid(
             &mut self,
             request: impl tonic::IntoRequest<super::MsgCreateBid>,
@@ -978,6 +1053,121 @@ pub mod msg_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+        /** ResizeLease asks the provider of an active lease to change its resources
+ in place.
+*/
+        pub async fn resize_lease(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgResizeLease>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgResizeLeaseResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/akash.market.v1beta5.Msg/ResizeLease",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("akash.market.v1beta5.Msg", "ResizeLease"));
+            self.inner.unary(req, path, codec).await
+        }
+        /** AcceptLeaseResize applies a pending lease resize at the provider's price.
+*/
+        pub async fn accept_lease_resize(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgAcceptLeaseResize>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgAcceptLeaseResizeResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/akash.market.v1beta5.Msg/AcceptLeaseResize",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("akash.market.v1beta5.Msg", "AcceptLeaseResize"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /** RejectLeaseResize declines a pending lease resize.
+*/
+        pub async fn reject_lease_resize(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgRejectLeaseResize>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgRejectLeaseResizeResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/akash.market.v1beta5.Msg/RejectLeaseResize",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("akash.market.v1beta5.Msg", "RejectLeaseResize"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /** CancelLeaseResize withdraws a pending lease resize.
+*/
+        pub async fn cancel_lease_resize(
+            &mut self,
+            request: impl tonic::IntoRequest<super::MsgCancelLeaseResize>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgCancelLeaseResizeResponse>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/akash.market.v1beta5.Msg/CancelLeaseResize",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("akash.market.v1beta5.Msg", "CancelLeaseResize"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
         /** UpdateParams defines a governance operation for updating the x/market module
  parameters. The authority is hard-coded to the x/gov module account.
 
@@ -1017,8 +1207,6 @@ pub mod msg_server {
     /// Generated trait containing gRPC methods that should be implemented for use with MsgServer.
     #[async_trait]
     pub trait Msg: Send + Sync + 'static {
-        /** CreateBid defines a method to create a bid given proper inputs.
-*/
         async fn create_bid(
             &self,
             request: tonic::Request<super::MsgCreateBid>,
@@ -1069,6 +1257,43 @@ pub mod msg_server {
             request: tonic::Request<super::MsgLeaseStartReclaim>,
         ) -> std::result::Result<
             tonic::Response<super::MsgLeaseStartReclaimResponse>,
+            tonic::Status,
+        >;
+        /** ResizeLease asks the provider of an active lease to change its resources
+ in place.
+*/
+        async fn resize_lease(
+            &self,
+            request: tonic::Request<super::MsgResizeLease>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgResizeLeaseResponse>,
+            tonic::Status,
+        >;
+        /** AcceptLeaseResize applies a pending lease resize at the provider's price.
+*/
+        async fn accept_lease_resize(
+            &self,
+            request: tonic::Request<super::MsgAcceptLeaseResize>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgAcceptLeaseResizeResponse>,
+            tonic::Status,
+        >;
+        /** RejectLeaseResize declines a pending lease resize.
+*/
+        async fn reject_lease_resize(
+            &self,
+            request: tonic::Request<super::MsgRejectLeaseResize>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgRejectLeaseResizeResponse>,
+            tonic::Status,
+        >;
+        /** CancelLeaseResize withdraws a pending lease resize.
+*/
+        async fn cancel_lease_resize(
+            &self,
+            request: tonic::Request<super::MsgCancelLeaseResize>,
+        ) -> std::result::Result<
+            tonic::Response<super::MsgCancelLeaseResizeResponse>,
             tonic::Status,
         >;
         /** UpdateParams defines a governance operation for updating the x/market module
@@ -1403,6 +1628,178 @@ pub mod msg_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = LeaseStartReclaimSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/akash.market.v1beta5.Msg/ResizeLease" => {
+                    #[allow(non_camel_case_types)]
+                    struct ResizeLeaseSvc<T: Msg>(pub Arc<T>);
+                    impl<T: Msg> tonic::server::UnaryService<super::MsgResizeLease>
+                    for ResizeLeaseSvc<T> {
+                        type Response = super::MsgResizeLeaseResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::MsgResizeLease>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Msg>::resize_lease(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = ResizeLeaseSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/akash.market.v1beta5.Msg/AcceptLeaseResize" => {
+                    #[allow(non_camel_case_types)]
+                    struct AcceptLeaseResizeSvc<T: Msg>(pub Arc<T>);
+                    impl<T: Msg> tonic::server::UnaryService<super::MsgAcceptLeaseResize>
+                    for AcceptLeaseResizeSvc<T> {
+                        type Response = super::MsgAcceptLeaseResizeResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::MsgAcceptLeaseResize>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Msg>::accept_lease_resize(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = AcceptLeaseResizeSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/akash.market.v1beta5.Msg/RejectLeaseResize" => {
+                    #[allow(non_camel_case_types)]
+                    struct RejectLeaseResizeSvc<T: Msg>(pub Arc<T>);
+                    impl<T: Msg> tonic::server::UnaryService<super::MsgRejectLeaseResize>
+                    for RejectLeaseResizeSvc<T> {
+                        type Response = super::MsgRejectLeaseResizeResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::MsgRejectLeaseResize>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Msg>::reject_lease_resize(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = RejectLeaseResizeSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/akash.market.v1beta5.Msg/CancelLeaseResize" => {
+                    #[allow(non_camel_case_types)]
+                    struct CancelLeaseResizeSvc<T: Msg>(pub Arc<T>);
+                    impl<T: Msg> tonic::server::UnaryService<super::MsgCancelLeaseResize>
+                    for CancelLeaseResizeSvc<T> {
+                        type Response = super::MsgCancelLeaseResizeResponse;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::Response>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::MsgCancelLeaseResize>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as Msg>::cancel_lease_resize(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = CancelLeaseResizeSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	cflags "pkg.akt.dev/go/cli/flags"
-	dv1beta "pkg.akt.dev/go/node/deployment/v1beta5"
+	dv1beta "pkg.akt.dev/go/node/deployment/v1beta4"
 	mv1 "pkg.akt.dev/go/node/market/v1"
-	mv2beta "pkg.akt.dev/go/node/market/v2beta1"
+	mvbeta "pkg.akt.dev/go/node/market/v1beta5"
 )
 
 // GetQueryVolumeCmds returns the query commands for volumes — storage-only
@@ -66,9 +66,7 @@ func GetQueryVolumesCmd() *cobra.Command {
 				Pagination: pageReq,
 			}
 
-			// volume groups exist only on the v1beta5 surface; the composite
-			// client still exposes v1beta4, so query it directly
-			res, err := dv1beta.NewQueryClient(cctx).Deployments(ctx, params)
+			res, err := cl.Query().Deployment().Deployments(ctx, params)
 			if err != nil {
 				return err
 			}
@@ -111,7 +109,7 @@ func GetQueryVolumeStatusCmd() *cobra.Command {
 				return err
 			}
 
-			dres, err := dv1beta.NewQueryClient(cctx).Deployment(ctx, &dv1beta.QueryDeploymentRequest{ID: id})
+			dres, err := cl.Query().Deployment().Deployment(ctx, &dv1beta.QueryDeploymentRequest{ID: id})
 			if err != nil {
 				return err
 			}
@@ -120,7 +118,7 @@ func GetQueryVolumeStatusCmd() *cobra.Command {
 				return fmt.Errorf("deployment %s has no volume group; use \"query deployment get\" for compute deployments", id)
 			}
 
-			lres, err := mv2beta.NewQueryClient(cctx).Leases(ctx, &mv2beta.QueryLeasesRequest{
+			lres, err := cl.Query().Market().Leases(ctx, &mvbeta.QueryLeasesRequest{
 				Filters: mv1.LeaseFilters{
 					Owner: id.Owner,
 					DSeq:  id.DSeq,
@@ -134,7 +132,7 @@ func GetQueryVolumeStatusCmd() *cobra.Command {
 			// and the post-close retention deadline once the node work lands.
 			out := struct {
 				Deployment dv1beta.QueryDeploymentResponse `json:"deployment"`
-				Leases     []mv2beta.QueryLeaseResponse    `json:"leases"`
+				Leases     []mvbeta.QueryLeaseResponse    `json:"leases"`
 			}{
 				Deployment: *dres,
 				Leases:     lres.Leases,

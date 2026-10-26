@@ -17,6 +17,7 @@ import { Lease, LeaseID } from "../v1/lease.ts";
 import { OrderID } from "../v1/order.ts";
 import { Bid } from "./bid.ts";
 import { BidFilters, OrderFilters } from "./filters.ts";
+import { LeaseResize } from "./leaseresize.ts";
 import { Order } from "./order.ts";
 import { Params } from "./params.ts";
 
@@ -126,6 +127,30 @@ export interface QueryParamsRequest {
 export interface QueryParamsResponse {
   /** params defines the parameters of the module. */
   params: Params | undefined;
+}
+
+/**
+ * QueryLeaseResizesRequest is the request type for the Query/LeaseResizes RPC
+ * method.
+ */
+export interface QueryLeaseResizesRequest {
+  /** Owner, when set, limits the result to this tenant's deployments. */
+  owner: string;
+  /** Provider, when set, limits the result to leases with this provider. */
+  provider: string;
+  /** Pagination is used to paginate the request. */
+  pagination: PageRequest | undefined;
+}
+
+/**
+ * QueryLeaseResizesResponse is the response type for the Query/LeaseResizes
+ * RPC method.
+ */
+export interface QueryLeaseResizesResponse {
+  /** LeaseResizes is the list of pending lease resize requests. */
+  leaseResizes: LeaseResize[];
+  /** Pagination contains the information about response pagination. */
+  pagination: PageResponse | undefined;
 }
 
 function createBaseQueryOrdersRequest(): QueryOrdersRequest {
@@ -1062,6 +1087,182 @@ export const QueryParamsResponse: MessageFns<QueryParamsResponse, "akash.market.
     const message = createBaseQueryParamsResponse();
     message.params = (object.params !== undefined && object.params !== null)
       ? Params.fromPartial(object.params)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseQueryLeaseResizesRequest(): QueryLeaseResizesRequest {
+  return { owner: "", provider: "", pagination: undefined };
+}
+
+export const QueryLeaseResizesRequest: MessageFns<
+  QueryLeaseResizesRequest,
+  "akash.market.v1beta5.QueryLeaseResizesRequest"
+> = {
+  $type: "akash.market.v1beta5.QueryLeaseResizesRequest" as const,
+
+  encode(message: QueryLeaseResizesRequest, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    if (message.owner !== "") {
+      writer.uint32(10).string(message.owner);
+    }
+    if (message.provider !== "") {
+      writer.uint32(18).string(message.provider);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(26).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): QueryLeaseResizesRequest {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLeaseResizesRequest();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.owner = reader.string();
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.provider = reader.string();
+          continue;
+        }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryLeaseResizesRequest {
+    return {
+      owner: isSet(object.owner) ? globalThis.String(object.owner) : "",
+      provider: isSet(object.provider) ? globalThis.String(object.provider) : "",
+      pagination: isSet(object.pagination) ? PageRequest.fromJSON(object.pagination) : undefined,
+    };
+  },
+
+  toJSON(message: QueryLeaseResizesRequest): unknown {
+    const obj: any = {};
+    if (message.owner !== "") {
+      obj.owner = message.owner;
+    }
+    if (message.provider !== "") {
+      obj.provider = message.provider;
+    }
+    if (message.pagination !== undefined) {
+      obj.pagination = PageRequest.toJSON(message.pagination);
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<QueryLeaseResizesRequest>): QueryLeaseResizesRequest {
+    const message = createBaseQueryLeaseResizesRequest();
+    message.owner = object.owner ?? "";
+    message.provider = object.provider ?? "";
+    message.pagination = (object.pagination !== undefined && object.pagination !== null)
+      ? PageRequest.fromPartial(object.pagination)
+      : undefined;
+    return message;
+  },
+};
+
+function createBaseQueryLeaseResizesResponse(): QueryLeaseResizesResponse {
+  return { leaseResizes: [], pagination: undefined };
+}
+
+export const QueryLeaseResizesResponse: MessageFns<
+  QueryLeaseResizesResponse,
+  "akash.market.v1beta5.QueryLeaseResizesResponse"
+> = {
+  $type: "akash.market.v1beta5.QueryLeaseResizesResponse" as const,
+
+  encode(message: QueryLeaseResizesResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+    for (const v of message.leaseResizes) {
+      LeaseResize.encode(v!, writer.uint32(10).fork()).join();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(message.pagination, writer.uint32(18).fork()).join();
+    }
+    return writer;
+  },
+
+  decode(input: BinaryReader | Uint8Array, length?: number): QueryLeaseResizesResponse {
+    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+    const end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLeaseResizesResponse();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1: {
+          if (tag !== 10) {
+            break;
+          }
+
+          message.leaseResizes.push(LeaseResize.decode(reader, reader.uint32()));
+          continue;
+        }
+        case 2: {
+          if (tag !== 18) {
+            break;
+          }
+
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          continue;
+        }
+      }
+      if ((tag & 7) === 4 || tag === 0) {
+        break;
+      }
+      reader.skip(tag & 7);
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryLeaseResizesResponse {
+    return {
+      leaseResizes: globalThis.Array.isArray(object?.lease_resizes)
+        ? object.lease_resizes.map((e: any) => LeaseResize.fromJSON(e))
+        : [],
+      pagination: isSet(object.pagination) ? PageResponse.fromJSON(object.pagination) : undefined,
+    };
+  },
+
+  toJSON(message: QueryLeaseResizesResponse): unknown {
+    const obj: any = {};
+    if (message.leaseResizes?.length) {
+      obj.lease_resizes = message.leaseResizes.map((e) => LeaseResize.toJSON(e));
+    }
+    if (message.pagination !== undefined) {
+      obj.pagination = PageResponse.toJSON(message.pagination);
+    }
+    return obj;
+  },
+  fromPartial(object: DeepPartial<QueryLeaseResizesResponse>): QueryLeaseResizesResponse {
+    const message = createBaseQueryLeaseResizesResponse();
+    message.leaseResizes = object.leaseResizes?.map((e) => LeaseResize.fromPartial(e)) || [];
+    message.pagination = (object.pagination !== undefined && object.pagination !== null)
+      ? PageResponse.fromPartial(object.pagination)
       : undefined;
     return message;
   },

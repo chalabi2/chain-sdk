@@ -10,15 +10,10 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "akash/escrow/types/v1/account.proto";
 import "akash/escrow/types/v1/payment.proto";
 
-import "akash/market/v1/order.proto";
-import "akash/market/v1/bid.proto";
-import "akash/market/v1/lease.proto";
-import "akash/market/v1/filters.proto";
-
 import "akash/market/v2beta1/order.proto";
 import "akash/market/v2beta1/bid.proto";
+import "akash/market/v2beta1/lease.proto";
 import "akash/market/v2beta1/filters.proto";
-import "akash/market/v2beta1/leaseresize.proto";
 import "akash/market/v2beta1/params.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v2beta1";
@@ -59,18 +54,12 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
       option (google.api.http).get = "/akash/market/v2beta1/params";
   }
-
-  // LeaseResizes queries pending lease resize requests, optionally filtered
-  // by tenant or provider.
-  rpc LeaseResizes(QueryLeaseResizesRequest) returns (QueryLeaseResizesResponse) {
-    option (google.api.http).get = "/akash/market/v2beta1/leases/resizes";
-  }
 }
 
 // QueryOrdersRequest is request type for the Query/Orders RPC method.
 message QueryOrdersRequest {
   // Filters holds the fields to filter orders.
-  akash.market.v2beta1.OrderFilters filters = 1 [
+  OrderFilters filters = 1 [
     (gogoproto.nullable) = false
   ];
 
@@ -93,7 +82,7 @@ message QueryOrdersResponse {
 // QueryOrderRequest is request type for the Query/Order RPC method.
 message QueryOrderRequest {
   // Id is the unique identifier of the Order.
-  akash.market.v1.OrderID id = 1 [
+  OrderID id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "ID"
   ];
@@ -110,7 +99,7 @@ message QueryOrderResponse {
 // QueryBidsRequest is request type for the Query/Bids RPC method.
 message QueryBidsRequest {
   // Filters holds the fields to filter bids.
-  akash.market.v2beta1.BidFilters filters = 1 [
+  BidFilters filters = 1 [
     (gogoproto.nullable) = false
   ];
 
@@ -132,7 +121,7 @@ message QueryBidsResponse {
 // QueryBidRequest is request type for the Query/Bid RPC method.
 message QueryBidRequest {
   // Id is the unique identifier for the Bid.
-  akash.market.v1.BidID id = 1 [
+  BidID id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "ID"
   ];
@@ -153,7 +142,7 @@ message QueryBidResponse {
 // QueryLeasesRequest is request type for the Query/Leases RPC method.
 message QueryLeasesRequest {
   // Filters holds the fields to filter leases.
-  akash.market.v1.LeaseFilters filters = 1 [
+  LeaseFilters filters = 1 [
     (gogoproto.nullable) = false
   ];
 
@@ -175,7 +164,7 @@ message QueryLeasesResponse {
 // QueryLeaseRequest is request type for the Query/Lease RPC method.
 message QueryLeaseRequest {
   // Id is the unique identifier of the Lease.
-  akash.market.v1.LeaseID id = 1 [
+  LeaseID id = 1 [
     (gogoproto.nullable)   = false,
     (gogoproto.customname) = "ID"
   ];
@@ -184,7 +173,7 @@ message QueryLeaseRequest {
 // QueryLeaseResponse is response type for the Query/Lease RPC method
 message QueryLeaseResponse {
   // Lease holds the lease for a deployment.
-  akash.market.v1.Lease lease = 1 [
+  Lease lease = 1 [
     (gogoproto.nullable) = false
   ];
   // EscrowPayment holds information about the Lease's fractional payment.
@@ -203,37 +192,4 @@ message QueryParamsResponse {
         (gogoproto.nullable)   = false,
         (amino.dont_omitempty) = true
     ];
-}
-
-// QueryLeaseResizesRequest is the request type for the Query/LeaseResizes RPC
-// method.
-message QueryLeaseResizesRequest {
-  // Owner, when set, limits the result to this tenant's deployments.
-  string owner = 1 [
-    (gogoproto.jsontag)  = "owner",
-    (gogoproto.moretags) = "yaml:\"owner\""
-  ];
-
-  // Provider, when set, limits the result to leases with this provider.
-  string provider = 2 [
-    (gogoproto.jsontag)  = "provider",
-    (gogoproto.moretags) = "yaml:\"provider\""
-  ];
-
-  // Pagination is used to paginate the request.
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
-}
-
-// QueryLeaseResizesResponse is the response type for the Query/LeaseResizes
-// RPC method.
-message QueryLeaseResizesResponse {
-  // LeaseResizes is the list of pending lease resize requests.
-  repeated LeaseResize lease_resizes = 1 [
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "lease_resizes",
-    (gogoproto.moretags) = "yaml:\"lease_resizes\""
-  ];
-
-  // Pagination contains the information about response pagination.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

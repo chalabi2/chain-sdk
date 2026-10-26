@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	cflags "pkg.akt.dev/go/cli/flags"
-	dv1beta "pkg.akt.dev/go/node/deployment/v1beta5"
+	dv1beta "pkg.akt.dev/go/node/deployment/v1beta4"
 	"pkg.akt.dev/go/sdl"
 )
 

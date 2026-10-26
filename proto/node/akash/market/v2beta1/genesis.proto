@@ -3,12 +3,10 @@ package akash.market.v2beta1;
 
 import "gogoproto/gogo.proto";
 
-import "akash/market/v1/lease.proto";
-
+import "akash/market/v2beta1/lease.proto";
 import "akash/market/v2beta1/params.proto";
 import "akash/market/v2beta1/bid.proto";
 import "akash/market/v2beta1/order.proto";
-import "akash/market/v2beta1/leaseresize.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v2beta1";
 
@@ -30,9 +28,9 @@ message GenesisState {
   ];
 
   // Leases is a list of leases in the genesis state.
-  repeated akash.market.v1.Lease leases = 3 [
+  repeated Lease leases = 3 [
     (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "pkg.akt.dev/go/node/market/v1.Leases",
+    (gogoproto.castrepeated) = "Leases",
     (gogoproto.jsontag)      = "leases",
     (gogoproto.moretags)     = "yaml:\"leases\""
   ];
@@ -43,12 +41,5 @@ message GenesisState {
     (gogoproto.castrepeated) = "Bids",
     (gogoproto.jsontag)      = "bids",
     (gogoproto.moretags)     = "yaml:\"bids\""
-  ];
-
-  // LeaseResizes holds the pending lease resize requests.
-  repeated LeaseResize lease_resizes = 5 [
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "lease_resizes",
-    (gogoproto.moretags) = "yaml:\"lease_resizes\""
   ];
 }

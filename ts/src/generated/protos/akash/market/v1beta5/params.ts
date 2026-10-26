@@ -29,7 +29,29 @@ export interface Params {
     | Duration
     | undefined;
   /** max_reclamation_window is the maximum reclamation window duration allowed. */
-  maxReclamationWindow: Duration | undefined;
+  maxReclamationWindow:
+    | Duration
+    | undefined;
+  /**
+   * VolumeOrdersEnabled is the AEP-87 feature flag: it gates volume-group
+   * CreateDeployment and, defense-in-depth, CreateBid on volume orders.
+   * Default false; flipped by governance.
+   */
+  volumeOrdersEnabled: boolean;
+  /**
+   * min_volume_reclamation_window is the chain-guaranteed migration-window
+   * floor for volume leases.
+   */
+  minVolumeReclamationWindow:
+    | Duration
+    | undefined;
+  /**
+   * LeaseResizeEnabled is the feature flag for in-place lease resize. Default
+   * false; flipped by governance.
+   */
+  leaseResizeEnabled: boolean;
+  /** lease_resize_ttl is how long a resize request stays acceptable. */
+  leaseResizeTtl: Duration | undefined;
 }
 
 function createBaseParams(): Params {
@@ -39,6 +61,10 @@ function createBaseParams(): Params {
     bidMinDeposits: [],
     minReclamationWindow: undefined,
     maxReclamationWindow: undefined,
+    volumeOrdersEnabled: false,
+    minVolumeReclamationWindow: undefined,
+    leaseResizeEnabled: false,
+    leaseResizeTtl: undefined,
   };
 }
 
@@ -60,6 +86,18 @@ export const Params: MessageFns<Params, "akash.market.v1beta5.Params"> = {
     }
     if (message.maxReclamationWindow !== undefined) {
       Duration.encode(message.maxReclamationWindow, writer.uint32(42).fork()).join();
+    }
+    if (message.volumeOrdersEnabled !== false) {
+      writer.uint32(48).bool(message.volumeOrdersEnabled);
+    }
+    if (message.minVolumeReclamationWindow !== undefined) {
+      Duration.encode(message.minVolumeReclamationWindow, writer.uint32(58).fork()).join();
+    }
+    if (message.leaseResizeEnabled !== false) {
+      writer.uint32(64).bool(message.leaseResizeEnabled);
+    }
+    if (message.leaseResizeTtl !== undefined) {
+      Duration.encode(message.leaseResizeTtl, writer.uint32(74).fork()).join();
     }
     return writer;
   },
@@ -111,6 +149,38 @@ export const Params: MessageFns<Params, "akash.market.v1beta5.Params"> = {
           message.maxReclamationWindow = Duration.decode(reader, reader.uint32());
           continue;
         }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.volumeOrdersEnabled = reader.bool();
+          continue;
+        }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.minVolumeReclamationWindow = Duration.decode(reader, reader.uint32());
+          continue;
+        }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.leaseResizeEnabled = reader.bool();
+          continue;
+        }
+        case 9: {
+          if (tag !== 74) {
+            break;
+          }
+
+          message.leaseResizeTtl = Duration.decode(reader, reader.uint32());
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -133,6 +203,14 @@ export const Params: MessageFns<Params, "akash.market.v1beta5.Params"> = {
       maxReclamationWindow: isSet(object.max_reclamation_window)
         ? Duration.fromJSON(object.max_reclamation_window)
         : undefined,
+      volumeOrdersEnabled: isSet(object.volume_orders_enabled)
+        ? globalThis.Boolean(object.volume_orders_enabled)
+        : false,
+      minVolumeReclamationWindow: isSet(object.min_volume_reclamation_window)
+        ? Duration.fromJSON(object.min_volume_reclamation_window)
+        : undefined,
+      leaseResizeEnabled: isSet(object.lease_resize_enabled) ? globalThis.Boolean(object.lease_resize_enabled) : false,
+      leaseResizeTtl: isSet(object.lease_resize_ttl) ? Duration.fromJSON(object.lease_resize_ttl) : undefined,
     };
   },
 
@@ -153,6 +231,18 @@ export const Params: MessageFns<Params, "akash.market.v1beta5.Params"> = {
     if (message.maxReclamationWindow !== undefined) {
       obj.max_reclamation_window = Duration.toJSON(message.maxReclamationWindow);
     }
+    if (message.volumeOrdersEnabled !== false) {
+      obj.volume_orders_enabled = message.volumeOrdersEnabled;
+    }
+    if (message.minVolumeReclamationWindow !== undefined) {
+      obj.min_volume_reclamation_window = Duration.toJSON(message.minVolumeReclamationWindow);
+    }
+    if (message.leaseResizeEnabled !== false) {
+      obj.lease_resize_enabled = message.leaseResizeEnabled;
+    }
+    if (message.leaseResizeTtl !== undefined) {
+      obj.lease_resize_ttl = Duration.toJSON(message.leaseResizeTtl);
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<Params>): Params {
@@ -167,6 +257,15 @@ export const Params: MessageFns<Params, "akash.market.v1beta5.Params"> = {
       : undefined;
     message.maxReclamationWindow = (object.maxReclamationWindow !== undefined && object.maxReclamationWindow !== null)
       ? Duration.fromPartial(object.maxReclamationWindow)
+      : undefined;
+    message.volumeOrdersEnabled = object.volumeOrdersEnabled ?? false;
+    message.minVolumeReclamationWindow =
+      (object.minVolumeReclamationWindow !== undefined && object.minVolumeReclamationWindow !== null)
+        ? Duration.fromPartial(object.minVolumeReclamationWindow)
+        : undefined;
+    message.leaseResizeEnabled = object.leaseResizeEnabled ?? false;
+    message.leaseResizeTtl = (object.leaseResizeTtl !== undefined && object.leaseResizeTtl !== null)
+      ? Duration.fromPartial(object.leaseResizeTtl)
       : undefined;
     return message;
   },

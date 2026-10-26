@@ -12,9 +12,9 @@ import (
 
 	cflags "pkg.akt.dev/go/cli/flags"
 	dv1 "pkg.akt.dev/go/node/deployment/v1"
-	dv1beta "pkg.akt.dev/go/node/deployment/v1beta5"
+	dv1beta "pkg.akt.dev/go/node/deployment/v1beta4"
 	mv1 "pkg.akt.dev/go/node/market/v1"
-	mvbeta "pkg.akt.dev/go/node/market/v2beta1"
+	mvbeta "pkg.akt.dev/go/node/market/v1beta5"
 	"pkg.akt.dev/go/node/types/constants"
 	"pkg.akt.dev/go/sdl"
 	cutils "pkg.akt.dev/go/util/tls"
@@ -206,11 +206,8 @@ func GetTxDeploymentUpdateCmd() *cobra.Command {
 				return err
 			}
 
-			// Query the RPC node to make sure the existing groups are identical.
-			// The SDL compiles to deployment/v1beta5 group specs, so the
-			// comparison must read the deployment through the v1beta5 query
-			// surface (the composite client still exposes v1beta4).
-			existingDeployment, err := dv1beta.NewQueryClient(cctx).Deployment(ctx, &dv1beta.QueryDeploymentRequest{
+			// Query the RPC node to make sure the existing groups are identical
+			existingDeployment, err := cl.Query().Deployment().Deployment(ctx, &dv1beta.QueryDeploymentRequest{
 				ID: id,
 			})
 			if err != nil {
@@ -287,7 +284,7 @@ accepts, send the updated manifest to the provider.`,
 				return err
 			}
 
-			existing, err := dv1beta.NewQueryClient(cctx).Deployment(ctx, &dv1beta.QueryDeploymentRequest{
+			existing, err := cl.Query().Deployment().Deployment(ctx, &dv1beta.QueryDeploymentRequest{
 				ID: id,
 			})
 			if err != nil {
@@ -299,7 +296,7 @@ accepts, send the updated manifest to the provider.`,
 				return err
 			}
 
-			leases, err := mvbeta.NewQueryClient(cctx).Leases(ctx, &mvbeta.QueryLeasesRequest{
+			leases, err := cl.Query().Market().Leases(ctx, &mvbeta.QueryLeasesRequest{
 				Filters: mv1.LeaseFilters{
 					Owner: id.Owner,
 					DSeq:  id.DSeq,

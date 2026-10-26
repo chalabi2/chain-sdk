@@ -5,8 +5,10 @@ package v1
 import (
 	context "context"
 
-	mock "github.com/stretchr/testify/mock"
 	grpc "google.golang.org/grpc"
+
+	mock "github.com/stretchr/testify/mock"
+
 	v1 "pkg.akt.dev/go/node/audit/v1"
 )
 

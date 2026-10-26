@@ -8,9 +8,9 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	manifest "pkg.akt.dev/go/manifest/v2beta4"
+	manifest "pkg.akt.dev/go/manifest/v2beta3"
 	dv1 "pkg.akt.dev/go/node/deployment/v1"
-	dtypes "pkg.akt.dev/go/node/deployment/v1beta5"
+	dtypes "pkg.akt.dev/go/node/deployment/v1beta4"
 	types "pkg.akt.dev/go/node/types/attributes/v1"
 )
 

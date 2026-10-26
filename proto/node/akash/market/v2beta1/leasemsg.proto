@@ -2,13 +2,10 @@ syntax = "proto3";
 package akash.market.v2beta1;
 
 import "gogoproto/gogo.proto";
-import "cosmos/base/v1beta1/coin.proto";
 
-import "akash/deployment/v1beta5/resourceunit.proto";
-import "akash/market/v1/bid.proto";
-import "akash/market/v1/lease.proto";
-import "akash/market/v1/resize.proto";
-import "akash/market/v1/types.proto";
+import "akash/market/v2beta1/bid.proto";
+import "akash/market/v2beta1/lease.proto";
+import "akash/market/v2beta1/types.proto";
 
 option go_package = "pkg.akt.dev/go/node/market/v2beta1";
 
@@ -17,7 +14,7 @@ message MsgCreateLease {
   option (gogoproto.equal)      = false;
 
   // BidId is the unique identifier of the Bid.
-  akash.market.v1.BidID bid_id = 1 [
+  BidID bid_id = 1 [
     (gogoproto.customname) = "BidID",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "id",
@@ -33,7 +30,7 @@ message MsgWithdrawLease {
   option (gogoproto.equal) = false;
 
   // BidId is the unique identifier of the Bid.
-  akash.market.v1.LeaseID id = 1 [
+  LeaseID id = 1 [
     (gogoproto.customname) = "ID",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "id",
@@ -49,14 +46,14 @@ message MsgCloseLease {
   option (gogoproto.equal) = false;
 
   // LeaseID is the unique identifier of the Lease.
-  akash.market.v1.LeaseID id = 1 [
+  LeaseID id = 1 [
     (gogoproto.customname) = "ID",
     (gogoproto.nullable)   = false,
     (gogoproto.jsontag)    = "id",
     (gogoproto.moretags)   = "yaml:\"id\""
   ];
 
-  akash.market.v1.LeaseClosedReason reason = 2 [
+  LeaseClosedReason reason = 2 [
     (gogoproto.jsontag)  = "reason",
     (gogoproto.moretags) = "yaml:\"reason\""
   ];
@@ -64,137 +61,3 @@ message MsgCloseLease {
 
 // MsgCloseLeaseResponse defines the Msg/CloseLease response type.
 message MsgCloseLeaseResponse {}
-
-// MsgLeaseStartReclaim is sent by the provider to initiate reclamation on an active lease.
-message MsgLeaseStartReclaim {
-  option (gogoproto.equal) = false;
-
-  // Id is the unique identifier of the Lease.
-  akash.market.v1.LeaseID id = 1 [
-    (gogoproto.customname) = "ID",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "id",
-    (gogoproto.moretags)   = "yaml:\"id\""
-  ];
-
-  // reason is the provider's stated reason for initiating reclamation.
-  akash.market.v1.LeaseClosedReason reason = 2 [
-    (gogoproto.jsontag)  = "reason",
-    (gogoproto.moretags) = "yaml:\"reason\""
-  ];
-}
-
-// MsgLeaseStartReclaimResponse is the response from starting lease reclamation.
-message MsgLeaseStartReclaimResponse {}
-
-// MsgResizeLease is sent by the tenant to ask the lease's provider to change
-// the lease's resources in place. It records a pending LeaseResize that the
-// provider accepts or rejects.
-message MsgResizeLease {
-  option (gogoproto.equal) = false;
-
-  // Id is the unique identifier of the Lease.
-  akash.market.v1.LeaseID id = 1 [
-    (gogoproto.customname) = "ID",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "id",
-    (gogoproto.moretags)   = "yaml:\"id\""
-  ];
-
-  // Resources is the complete new resource unit list for the lease's group.
-  repeated akash.deployment.v1beta5.ResourceUnit resources = 2 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "pkg.akt.dev/go/node/deployment/v1beta5.ResourceUnits",
-    (gogoproto.jsontag)      = "resources",
-    (gogoproto.moretags)     = "yaml:\"resources\""
-  ];
-
-  // Hash is the manifest version for the new resources. Required for compute
-  // groups, empty for volume groups.
-  bytes hash = 3 [
-    (gogoproto.jsontag)  = "hash",
-    (gogoproto.moretags) = "yaml:\"hash\""
-  ];
-}
-
-// MsgResizeLeaseResponse is the response from requesting a lease resize.
-message MsgResizeLeaseResponse {}
-
-// MsgAcceptLeaseResize is sent by the provider to apply the pending resize of
-// a lease at the given per-block price.
-message MsgAcceptLeaseResize {
-  option (gogoproto.equal) = false;
-
-  // Id is the unique identifier of the Lease.
-  akash.market.v1.LeaseID id = 1 [
-    (gogoproto.customname) = "ID",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "id",
-    (gogoproto.moretags)   = "yaml:\"id\""
-  ];
-
-  // Price is the new per-block lease price. It must not exceed the request's
-  // max price.
-  cosmos.base.v1beta1.DecCoin price = 2 [
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)  = "price",
-    (gogoproto.moretags) = "yaml:\"price\""
-  ];
-
-  // Digest is the digest of the pending request being accepted. The accept
-  // fails if the lease's pending request is a different one.
-  bytes digest = 3 [
-    (gogoproto.jsontag)  = "digest",
-    (gogoproto.moretags) = "yaml:\"digest\""
-  ];
-}
-
-// MsgAcceptLeaseResizeResponse is the response from accepting a lease resize.
-message MsgAcceptLeaseResizeResponse {}
-
-// MsgRejectLeaseResize is sent by the provider to decline the pending resize
-// of a lease.
-message MsgRejectLeaseResize {
-  option (gogoproto.equal) = false;
-
-  // Id is the unique identifier of the Lease.
-  akash.market.v1.LeaseID id = 1 [
-    (gogoproto.customname) = "ID",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "id",
-    (gogoproto.moretags)   = "yaml:\"id\""
-  ];
-
-  // Reason is why the provider declined; it must be a provider rejection.
-  akash.market.v1.LeaseResizeCancelReason reason = 2 [
-    (gogoproto.jsontag)  = "reason",
-    (gogoproto.moretags) = "yaml:\"reason\""
-  ];
-
-  // Digest is the digest of the pending request being declined. The reject
-  // fails if the lease's pending request is a different one.
-  bytes digest = 3 [
-    (gogoproto.jsontag)  = "digest",
-    (gogoproto.moretags) = "yaml:\"digest\""
-  ];
-}
-
-// MsgRejectLeaseResizeResponse is the response from rejecting a lease resize.
-message MsgRejectLeaseResizeResponse {}
-
-// MsgCancelLeaseResize is sent by the tenant to withdraw the pending resize of
-// a lease.
-message MsgCancelLeaseResize {
-  option (gogoproto.equal) = false;
-
-  // Id is the unique identifier of the Lease.
-  akash.market.v1.LeaseID id = 1 [
-    (gogoproto.customname) = "ID",
-    (gogoproto.nullable)   = false,
-    (gogoproto.jsontag)    = "id",
-    (gogoproto.moretags)   = "yaml:\"id\""
-  ];
-}
-
-// MsgCancelLeaseResizeResponse is the response from canceling a lease resize.
-message MsgCancelLeaseResizeResponse {}
