@@ -61,4 +61,13 @@ message LeaseResize {
     (gogoproto.jsontag)  = "expires_at",
     (gogoproto.moretags) = "yaml:\"expires_at\""
   ];
+
+  // Digest identifies the request: the SHA-256 of its encoding with the
+  // digest left empty, set by the chain when the request is made. A
+  // provider's accept or reject names it, so an answer can only apply to the
+  // request it was decided on, never to one that replaced it.
+  bytes digest = 7 [
+    (gogoproto.jsontag)  = "digest",
+    (gogoproto.moretags) = "yaml:\"digest\""
+  ];
 }

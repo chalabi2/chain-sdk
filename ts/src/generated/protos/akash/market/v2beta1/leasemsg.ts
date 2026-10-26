@@ -100,7 +100,14 @@ export interface MsgAcceptLeaseResize {
    * Price is the new per-block lease price. It must not exceed the request's
    * max price.
    */
-  price: DecCoin | undefined;
+  price:
+    | DecCoin
+    | undefined;
+  /**
+   * Digest is the digest of the pending request being accepted. The accept
+   * fails if the lease's pending request is a different one.
+   */
+  digest: Uint8Array;
 }
 
 /** MsgAcceptLeaseResizeResponse is the response from accepting a lease resize. */
@@ -118,6 +125,11 @@ export interface MsgRejectLeaseResize {
     | undefined;
   /** Reason is why the provider declined; it must be a provider rejection. */
   reason: LeaseResizeCancelReason;
+  /**
+   * Digest is the digest of the pending request being declined. The reject
+   * fails if the lease's pending request is a different one.
+   */
+  digest: Uint8Array;
 }
 
 /** MsgRejectLeaseResizeResponse is the response from rejecting a lease resize. */
@@ -703,7 +715,7 @@ export const MsgResizeLeaseResponse: MessageFns<MsgResizeLeaseResponse, "akash.m
   };
 
 function createBaseMsgAcceptLeaseResize(): MsgAcceptLeaseResize {
-  return { id: undefined, price: undefined };
+  return { id: undefined, price: undefined, digest: new Uint8Array(0) };
 }
 
 export const MsgAcceptLeaseResize: MessageFns<MsgAcceptLeaseResize, "akash.market.v2beta1.MsgAcceptLeaseResize"> = {
@@ -715,6 +727,9 @@ export const MsgAcceptLeaseResize: MessageFns<MsgAcceptLeaseResize, "akash.marke
     }
     if (message.price !== undefined) {
       DecCoin.encode(message.price, writer.uint32(18).fork()).join();
+    }
+    if (message.digest.length !== 0) {
+      writer.uint32(26).bytes(message.digest);
     }
     return writer;
   },
@@ -742,6 +757,14 @@ export const MsgAcceptLeaseResize: MessageFns<MsgAcceptLeaseResize, "akash.marke
           message.price = DecCoin.decode(reader, reader.uint32());
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.digest = reader.bytes();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -755,6 +778,7 @@ export const MsgAcceptLeaseResize: MessageFns<MsgAcceptLeaseResize, "akash.marke
     return {
       id: isSet(object.id) ? LeaseID.fromJSON(object.id) : undefined,
       price: isSet(object.price) ? DecCoin.fromJSON(object.price) : undefined,
+      digest: isSet(object.digest) ? bytesFromBase64(object.digest) : new Uint8Array(0),
     };
   },
 
@@ -766,6 +790,9 @@ export const MsgAcceptLeaseResize: MessageFns<MsgAcceptLeaseResize, "akash.marke
     if (message.price !== undefined) {
       obj.price = DecCoin.toJSON(message.price);
     }
+    if (message.digest.length !== 0) {
+      obj.digest = base64FromBytes(message.digest);
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<MsgAcceptLeaseResize>): MsgAcceptLeaseResize {
@@ -774,6 +801,7 @@ export const MsgAcceptLeaseResize: MessageFns<MsgAcceptLeaseResize, "akash.marke
     message.price = (object.price !== undefined && object.price !== null)
       ? DecCoin.fromPartial(object.price)
       : undefined;
+    message.digest = object.digest ?? new Uint8Array(0);
     return message;
   },
 };
@@ -823,7 +851,7 @@ export const MsgAcceptLeaseResizeResponse: MessageFns<
 };
 
 function createBaseMsgRejectLeaseResize(): MsgRejectLeaseResize {
-  return { id: undefined, reason: 0 };
+  return { id: undefined, reason: 0, digest: new Uint8Array(0) };
 }
 
 export const MsgRejectLeaseResize: MessageFns<MsgRejectLeaseResize, "akash.market.v2beta1.MsgRejectLeaseResize"> = {
@@ -835,6 +863,9 @@ export const MsgRejectLeaseResize: MessageFns<MsgRejectLeaseResize, "akash.marke
     }
     if (message.reason !== 0) {
       writer.uint32(16).int32(message.reason);
+    }
+    if (message.digest.length !== 0) {
+      writer.uint32(26).bytes(message.digest);
     }
     return writer;
   },
@@ -862,6 +893,14 @@ export const MsgRejectLeaseResize: MessageFns<MsgRejectLeaseResize, "akash.marke
           message.reason = reader.int32() as any;
           continue;
         }
+        case 3: {
+          if (tag !== 26) {
+            break;
+          }
+
+          message.digest = reader.bytes();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -875,6 +914,7 @@ export const MsgRejectLeaseResize: MessageFns<MsgRejectLeaseResize, "akash.marke
     return {
       id: isSet(object.id) ? LeaseID.fromJSON(object.id) : undefined,
       reason: isSet(object.reason) ? leaseResizeCancelReasonFromJSON(object.reason) : 0,
+      digest: isSet(object.digest) ? bytesFromBase64(object.digest) : new Uint8Array(0),
     };
   },
 
@@ -886,12 +926,16 @@ export const MsgRejectLeaseResize: MessageFns<MsgRejectLeaseResize, "akash.marke
     if (message.reason !== 0) {
       obj.reason = leaseResizeCancelReasonToJSON(message.reason);
     }
+    if (message.digest.length !== 0) {
+      obj.digest = base64FromBytes(message.digest);
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<MsgRejectLeaseResize>): MsgRejectLeaseResize {
     const message = createBaseMsgRejectLeaseResize();
     message.id = (object.id !== undefined && object.id !== null) ? LeaseID.fromPartial(object.id) : undefined;
     message.reason = object.reason ?? 0;
+    message.digest = object.digest ?? new Uint8Array(0);
     return message;
   },
 };

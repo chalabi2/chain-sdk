@@ -324,10 +324,11 @@ func (msg *MsgResizeLease) ValidateBasic() error {
 }
 
 // NewMsgAcceptLeaseResize creates a new MsgAcceptLeaseResize instance
-func NewMsgAcceptLeaseResize(id v1.LeaseID, price sdk.DecCoin) *MsgAcceptLeaseResize {
+func NewMsgAcceptLeaseResize(id v1.LeaseID, price sdk.DecCoin, digest []byte) *MsgAcceptLeaseResize {
 	return &MsgAcceptLeaseResize{
-		ID:    id,
-		Price: price,
+		ID:     id,
+		Price:  price,
+		Digest: digest,
 	}
 }
 
@@ -358,14 +359,15 @@ func (msg *MsgAcceptLeaseResize) ValidateBasic() error {
 		return cerrors.Wrap(v1.ErrInvalidLeaseResize, "price must be positive")
 	}
 
-	return nil
+	return validateLeaseResizeDigest(msg.Digest)
 }
 
 // NewMsgRejectLeaseResize creates a new MsgRejectLeaseResize instance
-func NewMsgRejectLeaseResize(id v1.LeaseID, reason v1.LeaseResizeCancelReason) *MsgRejectLeaseResize {
+func NewMsgRejectLeaseResize(id v1.LeaseID, reason v1.LeaseResizeCancelReason, digest []byte) *MsgRejectLeaseResize {
 	return &MsgRejectLeaseResize{
 		ID:     id,
 		Reason: reason,
+		Digest: digest,
 	}
 }
 
@@ -390,6 +392,16 @@ func (msg *MsgRejectLeaseResize) ValidateBasic() error {
 
 	if !msg.Reason.IsProviderReject() {
 		return cerrors.Wrapf(v1.ErrInvalidLeaseResize, "reason %q is not a provider rejection", msg.Reason)
+	}
+
+	return validateLeaseResizeDigest(msg.Digest)
+}
+
+// validateLeaseResizeDigest checks that an answer names the request it
+// answers.
+func validateLeaseResizeDigest(digest []byte) error {
+	if len(digest) != LeaseResizeDigestSize {
+		return cerrors.Wrapf(v1.ErrInvalidLeaseResize, "digest must be %d bytes, got %d", LeaseResizeDigestSize, len(digest))
 	}
 
 	return nil

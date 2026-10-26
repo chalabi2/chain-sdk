@@ -53,6 +53,7 @@ const (
 	errLeaseResizeExpired
 	errLeaseResizePriceTooHigh
 	errInvalidLeaseResize
+	errLeaseResizeChanged
 )
 
 var (
@@ -150,4 +151,6 @@ var (
 	ErrLeaseResizePriceTooHigh = sdkerrors.RegisterWithGRPCCode(ModuleName, errLeaseResizePriceTooHigh, codes.InvalidArgument, "lease resize price above requested maximum")
 	// ErrInvalidLeaseResize is the error when a lease resize request is malformed or changes what it may not
 	ErrInvalidLeaseResize = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidLeaseResize, codes.InvalidArgument, "invalid lease resize")
+	// ErrLeaseResizeChanged is the error when an answer names a request other than the lease's pending one
+	ErrLeaseResizeChanged = sdkerrors.RegisterWithGRPCCode(ModuleName, errLeaseResizeChanged, codes.FailedPrecondition, "pending lease resize is a different request")
 )

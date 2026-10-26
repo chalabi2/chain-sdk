@@ -46,6 +46,13 @@ export interface LeaseResize {
    * accepted.
    */
   expiresAt: bigint;
+  /**
+   * Digest identifies the request: the SHA-256 of its encoding with the
+   * digest left empty, set by the chain when the request is made. A
+   * provider's accept or reject names it, so an answer can only apply to the
+   * request it was decided on, never to one that replaced it.
+   */
+  digest: Uint8Array;
 }
 
 function createBaseLeaseResize(): LeaseResize {
@@ -56,6 +63,7 @@ function createBaseLeaseResize(): LeaseResize {
     maxPrice: undefined,
     requestedAt: 0n,
     expiresAt: 0n,
+    digest: new Uint8Array(0),
   };
 }
 
@@ -86,6 +94,9 @@ export const LeaseResize: MessageFns<LeaseResize, "akash.market.v2beta1.LeaseRes
         throw new globalThis.Error("value provided for field message.expiresAt of type int64 too large");
       }
       writer.uint32(48).int64(message.expiresAt);
+    }
+    if (message.digest.length !== 0) {
+      writer.uint32(58).bytes(message.digest);
     }
     return writer;
   },
@@ -145,6 +156,14 @@ export const LeaseResize: MessageFns<LeaseResize, "akash.market.v2beta1.LeaseRes
           message.expiresAt = reader.int64() as bigint;
           continue;
         }
+        case 7: {
+          if (tag !== 58) {
+            break;
+          }
+
+          message.digest = reader.bytes();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -164,6 +183,7 @@ export const LeaseResize: MessageFns<LeaseResize, "akash.market.v2beta1.LeaseRes
       maxPrice: isSet(object.max_price) ? DecCoin.fromJSON(object.max_price) : undefined,
       requestedAt: isSet(object.requested_at) ? BigInt(object.requested_at) : 0n,
       expiresAt: isSet(object.expires_at) ? BigInt(object.expires_at) : 0n,
+      digest: isSet(object.digest) ? bytesFromBase64(object.digest) : new Uint8Array(0),
     };
   },
 
@@ -187,6 +207,9 @@ export const LeaseResize: MessageFns<LeaseResize, "akash.market.v2beta1.LeaseRes
     if (message.expiresAt !== 0n) {
       obj.expires_at = message.expiresAt.toString();
     }
+    if (message.digest.length !== 0) {
+      obj.digest = base64FromBytes(message.digest);
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<LeaseResize>): LeaseResize {
@@ -203,6 +226,7 @@ export const LeaseResize: MessageFns<LeaseResize, "akash.market.v2beta1.LeaseRes
       ? BigInt(object.requestedAt)
       : 0n;
     message.expiresAt = (object.expiresAt !== undefined && object.expiresAt !== null) ? BigInt(object.expiresAt) : 0n;
+    message.digest = object.digest ?? new Uint8Array(0);
     return message;
   },
 };

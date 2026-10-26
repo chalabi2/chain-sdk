@@ -140,6 +140,13 @@ message MsgAcceptLeaseResize {
     (gogoproto.jsontag)  = "price",
     (gogoproto.moretags) = "yaml:\"price\""
   ];
+
+  // Digest is the digest of the pending request being accepted. The accept
+  // fails if the lease's pending request is a different one.
+  bytes digest = 3 [
+    (gogoproto.jsontag)  = "digest",
+    (gogoproto.moretags) = "yaml:\"digest\""
+  ];
 }
 
 // MsgAcceptLeaseResizeResponse is the response from accepting a lease resize.
@@ -162,6 +169,13 @@ message MsgRejectLeaseResize {
   akash.market.v1.LeaseResizeCancelReason reason = 2 [
     (gogoproto.jsontag)  = "reason",
     (gogoproto.moretags) = "yaml:\"reason\""
+  ];
+
+  // Digest is the digest of the pending request being declined. The reject
+  // fails if the lease's pending request is a different one.
+  bytes digest = 3 [
+    (gogoproto.jsontag)  = "digest",
+    (gogoproto.moretags) = "yaml:\"digest\""
   ];
 }
 

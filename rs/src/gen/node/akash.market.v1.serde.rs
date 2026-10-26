@@ -747,6 +747,9 @@ impl serde::Serialize for EventLeaseResizeCanceled {
         if self.reason != 0 {
             len += 1;
         }
+        if !self.digest.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v1.EventLeaseResizeCanceled", len)?;
         if let Some(v) = self.id.as_ref() {
             struct_ser.serialize_field("id", v)?;
@@ -755,6 +758,11 @@ impl serde::Serialize for EventLeaseResizeCanceled {
             let v = LeaseResizeCancelReason::try_from(self.reason)
                 .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", self.reason)))?;
             struct_ser.serialize_field("reason", &v)?;
+        }
+        if !self.digest.is_empty() {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("digest", pbjson::private::base64::encode(&self.digest).as_str())?;
         }
         struct_ser.end()
     }
@@ -768,12 +776,14 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeCanceled {
         const FIELDS: &[&str] = &[
             "id",
             "reason",
+            "digest",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Id,
             Reason,
+            Digest,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -797,6 +807,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeCanceled {
                         match value {
                             "id" => Ok(GeneratedField::Id),
                             "reason" => Ok(GeneratedField::Reason),
+                            "digest" => Ok(GeneratedField::Digest),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -818,6 +829,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeCanceled {
             {
                 let mut id__ = None;
                 let mut reason__ = None;
+                let mut digest__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Id => {
@@ -832,11 +844,20 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeCanceled {
                             }
                             reason__ = Some(map_.next_value::<LeaseResizeCancelReason>()? as i32);
                         }
+                        GeneratedField::Digest => {
+                            if digest__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("digest"));
+                            }
+                            digest__ = 
+                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(EventLeaseResizeCanceled {
                     id: id__,
                     reason: reason__.unwrap_or_default(),
+                    digest: digest__.unwrap_or_default(),
                 })
             }
         }
@@ -860,6 +881,9 @@ impl serde::Serialize for EventLeaseResizeRequested {
         if self.expires_at != 0 {
             len += 1;
         }
+        if !self.digest.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v1.EventLeaseResizeRequested", len)?;
         if let Some(v) = self.id.as_ref() {
             struct_ser.serialize_field("id", v)?;
@@ -871,6 +895,11 @@ impl serde::Serialize for EventLeaseResizeRequested {
             #[allow(clippy::needless_borrow)]
             #[allow(clippy::needless_borrows_for_generic_args)]
             struct_ser.serialize_field("expiresAt", ToString::to_string(&self.expires_at).as_str())?;
+        }
+        if !self.digest.is_empty() {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("digest", pbjson::private::base64::encode(&self.digest).as_str())?;
         }
         struct_ser.end()
     }
@@ -887,6 +916,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeRequested {
             "maxPrice",
             "expires_at",
             "expiresAt",
+            "digest",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -894,6 +924,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeRequested {
             Id,
             MaxPrice,
             ExpiresAt,
+            Digest,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -918,6 +949,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeRequested {
                             "id" => Ok(GeneratedField::Id),
                             "maxPrice" | "max_price" => Ok(GeneratedField::MaxPrice),
                             "expiresAt" | "expires_at" => Ok(GeneratedField::ExpiresAt),
+                            "digest" => Ok(GeneratedField::Digest),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -940,6 +972,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeRequested {
                 let mut id__ = None;
                 let mut max_price__ = None;
                 let mut expires_at__ = None;
+                let mut digest__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Id => {
@@ -962,12 +995,21 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResizeRequested {
                                 Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
                             ;
                         }
+                        GeneratedField::Digest => {
+                            if digest__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("digest"));
+                            }
+                            digest__ = 
+                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(EventLeaseResizeRequested {
                     id: id__,
                     max_price: max_price__,
                     expires_at: expires_at__.unwrap_or_default(),
+                    digest: digest__.unwrap_or_default(),
                 })
             }
         }
@@ -991,6 +1033,9 @@ impl serde::Serialize for EventLeaseResized {
         if self.prev_price.is_some() {
             len += 1;
         }
+        if !self.digest.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v1.EventLeaseResized", len)?;
         if let Some(v) = self.id.as_ref() {
             struct_ser.serialize_field("id", v)?;
@@ -1000,6 +1045,11 @@ impl serde::Serialize for EventLeaseResized {
         }
         if let Some(v) = self.prev_price.as_ref() {
             struct_ser.serialize_field("prevPrice", v)?;
+        }
+        if !self.digest.is_empty() {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("digest", pbjson::private::base64::encode(&self.digest).as_str())?;
         }
         struct_ser.end()
     }
@@ -1015,6 +1065,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResized {
             "price",
             "prev_price",
             "prevPrice",
+            "digest",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -1022,6 +1073,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResized {
             Id,
             Price,
             PrevPrice,
+            Digest,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -1046,6 +1098,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResized {
                             "id" => Ok(GeneratedField::Id),
                             "price" => Ok(GeneratedField::Price),
                             "prevPrice" | "prev_price" => Ok(GeneratedField::PrevPrice),
+                            "digest" => Ok(GeneratedField::Digest),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -1068,6 +1121,7 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResized {
                 let mut id__ = None;
                 let mut price__ = None;
                 let mut prev_price__ = None;
+                let mut digest__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Id => {
@@ -1088,12 +1142,21 @@ impl<'de> serde::Deserialize<'de> for EventLeaseResized {
                             }
                             prev_price__ = map_.next_value()?;
                         }
+                        GeneratedField::Digest => {
+                            if digest__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("digest"));
+                            }
+                            digest__ = 
+                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(EventLeaseResized {
                     id: id__,
                     price: price__,
                     prev_price: prev_price__,
+                    digest: digest__.unwrap_or_default(),
                 })
             }
         }

@@ -763,6 +763,9 @@ impl serde::Serialize for LeaseResize {
         if self.expires_at != 0 {
             len += 1;
         }
+        if !self.digest.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v2beta1.LeaseResize", len)?;
         if let Some(v) = self.lease_id.as_ref() {
             struct_ser.serialize_field("leaseId", v)?;
@@ -788,6 +791,11 @@ impl serde::Serialize for LeaseResize {
             #[allow(clippy::needless_borrows_for_generic_args)]
             struct_ser.serialize_field("expiresAt", ToString::to_string(&self.expires_at).as_str())?;
         }
+        if !self.digest.is_empty() {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("digest", pbjson::private::base64::encode(&self.digest).as_str())?;
+        }
         struct_ser.end()
     }
 }
@@ -808,6 +816,7 @@ impl<'de> serde::Deserialize<'de> for LeaseResize {
             "requestedAt",
             "expires_at",
             "expiresAt",
+            "digest",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -818,6 +827,7 @@ impl<'de> serde::Deserialize<'de> for LeaseResize {
             MaxPrice,
             RequestedAt,
             ExpiresAt,
+            Digest,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -845,6 +855,7 @@ impl<'de> serde::Deserialize<'de> for LeaseResize {
                             "maxPrice" | "max_price" => Ok(GeneratedField::MaxPrice),
                             "requestedAt" | "requested_at" => Ok(GeneratedField::RequestedAt),
                             "expiresAt" | "expires_at" => Ok(GeneratedField::ExpiresAt),
+                            "digest" => Ok(GeneratedField::Digest),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -870,6 +881,7 @@ impl<'de> serde::Deserialize<'de> for LeaseResize {
                 let mut max_price__ = None;
                 let mut requested_at__ = None;
                 let mut expires_at__ = None;
+                let mut digest__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::LeaseId => {
@@ -914,6 +926,14 @@ impl<'de> serde::Deserialize<'de> for LeaseResize {
                                 Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
                             ;
                         }
+                        GeneratedField::Digest => {
+                            if digest__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("digest"));
+                            }
+                            digest__ = 
+                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(LeaseResize {
@@ -923,6 +943,7 @@ impl<'de> serde::Deserialize<'de> for LeaseResize {
                     max_price: max_price__,
                     requested_at: requested_at__.unwrap_or_default(),
                     expires_at: expires_at__.unwrap_or_default(),
+                    digest: digest__.unwrap_or_default(),
                 })
             }
         }
@@ -943,12 +964,20 @@ impl serde::Serialize for MsgAcceptLeaseResize {
         if self.price.is_some() {
             len += 1;
         }
+        if !self.digest.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v2beta1.MsgAcceptLeaseResize", len)?;
         if let Some(v) = self.id.as_ref() {
             struct_ser.serialize_field("id", v)?;
         }
         if let Some(v) = self.price.as_ref() {
             struct_ser.serialize_field("price", v)?;
+        }
+        if !self.digest.is_empty() {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("digest", pbjson::private::base64::encode(&self.digest).as_str())?;
         }
         struct_ser.end()
     }
@@ -962,12 +991,14 @@ impl<'de> serde::Deserialize<'de> for MsgAcceptLeaseResize {
         const FIELDS: &[&str] = &[
             "id",
             "price",
+            "digest",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Id,
             Price,
+            Digest,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -991,6 +1022,7 @@ impl<'de> serde::Deserialize<'de> for MsgAcceptLeaseResize {
                         match value {
                             "id" => Ok(GeneratedField::Id),
                             "price" => Ok(GeneratedField::Price),
+                            "digest" => Ok(GeneratedField::Digest),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -1012,6 +1044,7 @@ impl<'de> serde::Deserialize<'de> for MsgAcceptLeaseResize {
             {
                 let mut id__ = None;
                 let mut price__ = None;
+                let mut digest__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Id => {
@@ -1026,11 +1059,20 @@ impl<'de> serde::Deserialize<'de> for MsgAcceptLeaseResize {
                             }
                             price__ = map_.next_value()?;
                         }
+                        GeneratedField::Digest => {
+                            if digest__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("digest"));
+                            }
+                            digest__ = 
+                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(MsgAcceptLeaseResize {
                     id: id__,
                     price: price__,
+                    digest: digest__.unwrap_or_default(),
                 })
             }
         }
@@ -2222,6 +2264,9 @@ impl serde::Serialize for MsgRejectLeaseResize {
         if self.reason != 0 {
             len += 1;
         }
+        if !self.digest.is_empty() {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.market.v2beta1.MsgRejectLeaseResize", len)?;
         if let Some(v) = self.id.as_ref() {
             struct_ser.serialize_field("id", v)?;
@@ -2230,6 +2275,11 @@ impl serde::Serialize for MsgRejectLeaseResize {
             let v = super::v1::LeaseResizeCancelReason::try_from(self.reason)
                 .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", self.reason)))?;
             struct_ser.serialize_field("reason", &v)?;
+        }
+        if !self.digest.is_empty() {
+            #[allow(clippy::needless_borrow)]
+            #[allow(clippy::needless_borrows_for_generic_args)]
+            struct_ser.serialize_field("digest", pbjson::private::base64::encode(&self.digest).as_str())?;
         }
         struct_ser.end()
     }
@@ -2243,12 +2293,14 @@ impl<'de> serde::Deserialize<'de> for MsgRejectLeaseResize {
         const FIELDS: &[&str] = &[
             "id",
             "reason",
+            "digest",
         ];
 
         #[allow(clippy::enum_variant_names)]
         enum GeneratedField {
             Id,
             Reason,
+            Digest,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -2272,6 +2324,7 @@ impl<'de> serde::Deserialize<'de> for MsgRejectLeaseResize {
                         match value {
                             "id" => Ok(GeneratedField::Id),
                             "reason" => Ok(GeneratedField::Reason),
+                            "digest" => Ok(GeneratedField::Digest),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -2293,6 +2346,7 @@ impl<'de> serde::Deserialize<'de> for MsgRejectLeaseResize {
             {
                 let mut id__ = None;
                 let mut reason__ = None;
+                let mut digest__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Id => {
@@ -2307,11 +2361,20 @@ impl<'de> serde::Deserialize<'de> for MsgRejectLeaseResize {
                             }
                             reason__ = Some(map_.next_value::<super::v1::LeaseResizeCancelReason>()? as i32);
                         }
+                        GeneratedField::Digest => {
+                            if digest__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("digest"));
+                            }
+                            digest__ = 
+                                Some(map_.next_value::<::pbjson::private::BytesDeserialize<_>>()?.0)
+                            ;
+                        }
                     }
                 }
                 Ok(MsgRejectLeaseResize {
                     id: id__,
                     reason: reason__.unwrap_or_default(),
+                    digest: digest__.unwrap_or_default(),
                 })
             }
         }

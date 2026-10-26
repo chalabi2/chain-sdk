@@ -219,6 +219,13 @@ message EventLeaseResizeRequested {
     (gogoproto.jsontag)  = "expires_at",
     (gogoproto.moretags) = "yaml:\"expires_at\""
   ];
+
+  // Digest identifies the request. The provider names it when it accepts or
+  // rejects the request.
+  bytes digest = 4 [
+    (gogoproto.jsontag)  = "digest",
+    (gogoproto.moretags) = "yaml:\"digest\""
+  ];
 }
 
 // EventLeaseResized is triggered when the provider accepts a resize: the
@@ -247,6 +254,12 @@ message EventLeaseResized {
     (gogoproto.jsontag)  = "prev_price",
     (gogoproto.moretags) = "yaml:\"prev_price\""
   ];
+
+  // Digest identifies the request that was applied.
+  bytes digest = 4 [
+    (gogoproto.jsontag)  = "digest",
+    (gogoproto.moretags) = "yaml:\"digest\""
+  ];
 }
 
 // EventLeaseResizeCanceled is triggered when a pending resize is dropped
@@ -266,5 +279,11 @@ message EventLeaseResizeCanceled {
   LeaseResizeCancelReason reason = 2 [
     (gogoproto.jsontag)  = "reason",
     (gogoproto.moretags) = "yaml:\"reason\""
+  ];
+
+  // Digest identifies the request that was dropped.
+  bytes digest = 3 [
+    (gogoproto.jsontag)  = "digest",
+    (gogoproto.moretags) = "yaml:\"digest\""
   ];
 }

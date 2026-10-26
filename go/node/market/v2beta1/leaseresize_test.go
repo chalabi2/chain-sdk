@@ -53,19 +53,27 @@ func TestMsgResizeLeaseValidateBasic(t *testing.T) {
 func TestMsgAcceptLeaseResizeValidateBasic(t *testing.T) {
 	id := testutil.LeaseID(t)
 
-	msg := v2beta1.NewMsgAcceptLeaseResize(id, sdk.NewDecCoin("uact", sdkmath.NewInt(7)))
+	digest := make([]byte, v2beta1.LeaseResizeDigestSize)
+
+	msg := v2beta1.NewMsgAcceptLeaseResize(id, sdk.NewDecCoin("uact", sdkmath.NewInt(7)), digest)
 	require.NoError(t, msg.ValidateBasic())
 	require.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(id.Provider)}, msg.GetSigners())
 
-	err := v2beta1.NewMsgAcceptLeaseResize(id, sdk.NewDecCoin("uact", sdkmath.ZeroInt())).ValidateBasic()
+	err := v2beta1.NewMsgAcceptLeaseResize(id, sdk.NewDecCoin("uact", sdkmath.ZeroInt()), digest).ValidateBasic()
 	require.ErrorIs(t, err, v1.ErrInvalidLeaseResize)
 
-	err = v2beta1.NewMsgAcceptLeaseResize(id, sdk.DecCoin{Denom: "", Amount: sdkmath.LegacyNewDec(1)}).ValidateBasic()
+	err = v2beta1.NewMsgAcceptLeaseResize(id, sdk.DecCoin{Denom: "", Amount: sdkmath.LegacyNewDec(1)}, digest).ValidateBasic()
 	require.ErrorIs(t, err, v1.ErrInvalidLeaseResize)
+
+	for _, bad := range [][]byte{nil, make([]byte, v2beta1.LeaseResizeDigestSize-1)} {
+		err = v2beta1.NewMsgAcceptLeaseResize(id, sdk.NewDecCoin("uact", sdkmath.NewInt(7)), bad).ValidateBasic()
+		require.ErrorIs(t, err, v1.ErrInvalidLeaseResize, "an accept must name the request it answers")
+	}
 }
 
 func TestMsgRejectLeaseResizeValidateBasic(t *testing.T) {
 	id := testutil.LeaseID(t)
+	digest := make([]byte, v2beta1.LeaseResizeDigestSize)
 
 	for _, reason := range []v1.LeaseResizeCancelReason{
 		v1.LeaseResizeRejectCapacity,
@@ -73,7 +81,7 @@ func TestMsgRejectLeaseResizeValidateBasic(t *testing.T) {
 		v1.LeaseResizeRejectUnsupported,
 		v1.LeaseResizeRejectOther,
 	} {
-		msg := v2beta1.NewMsgRejectLeaseResize(id, reason)
+		msg := v2beta1.NewMsgRejectLeaseResize(id, reason, digest)
 		require.NoError(t, msg.ValidateBasic(), reason.String())
 		require.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(id.Provider)}, msg.GetSigners())
 	}
@@ -84,9 +92,12 @@ func TestMsgRejectLeaseResizeValidateBasic(t *testing.T) {
 		v1.LeaseResizeCancelReasonLeaseClosed,
 		v1.LeaseResizeCancelReason(150),
 	} {
-		err := v2beta1.NewMsgRejectLeaseResize(id, reason).ValidateBasic()
+		err := v2beta1.NewMsgRejectLeaseResize(id, reason, digest).ValidateBasic()
 		require.ErrorIs(t, err, v1.ErrInvalidLeaseResize, reason.String())
 	}
+
+	err := v2beta1.NewMsgRejectLeaseResize(id, v1.LeaseResizeRejectCapacity, nil).ValidateBasic()
+	require.ErrorIs(t, err, v1.ErrInvalidLeaseResize, "a reject must name the request it answers")
 }
 
 func TestMsgCancelLeaseResizeValidateBasic(t *testing.T) {
@@ -117,4 +128,33 @@ func TestLeaseResizeExpired(t *testing.T) {
 
 	require.False(t, resize.Expired(now), "the request is still acceptable at its expiry second")
 	require.True(t, resize.Expired(now.Add(time.Second)))
+}
+
+func TestLeaseResizeDigest(t *testing.T) {
+	resize := v2beta1.LeaseResize{
+		LeaseID:     testutil.LeaseID(t),
+		Resources:   resizeResources(),
+		Hash:        make([]byte, 32),
+		MaxPrice:    sdk.NewDecCoin("uact", sdkmath.NewInt(1)),
+		RequestedAt: 10,
+		ExpiresAt:   1_700_000_600,
+	}
+
+	digest, err := resize.ComputeDigest()
+	require.NoError(t, err)
+	require.Len(t, digest, v2beta1.LeaseResizeDigestSize)
+
+	stored := resize
+	stored.Digest = digest
+	again, err := stored.ComputeDigest()
+	require.NoError(t, err)
+	require.Equal(t, digest, again, "the digest leaves the stored digest out")
+
+	// a request made in the same block with other resources is a different request
+	other := resize
+	other.Resources = resizeResources()
+	other.Resources[0].Count = 2
+	otherDigest, err := other.ComputeDigest()
+	require.NoError(t, err)
+	require.NotEqual(t, digest, otherDigest)
 }
