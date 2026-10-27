@@ -3,6 +3,7 @@ package sdl
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -26,6 +27,35 @@ const (
 // it for MsgCreateDeployment.Hash and the provider re-derives it — and MUST
 // NOT change across client versions.
 const canonicalVolumeManifestVersion = "74066c155b207484e1e3671548c44e5c9dff4d2fbd1293f61fd4f7f466a24e0e"
+
+const sdlV2_2BucketDeployment = `
+version: "2.2"
+
+volumes:
+  media:
+    size: 50Gi
+    class: beta3
+    access: bucket
+    lifecycle:
+      reclaim: retain
+      retention: 168h
+
+profiles:
+  placement:
+    us-west:
+      attributes:
+        region: us-west
+      pricing:
+        media:
+          denom: uakt
+          amount: 150
+
+deployment:
+  media:
+    us-west:
+      profile: media
+      count: 1
+`
 
 const sdlV2_2VolumeDeployment = `
 version: "2.2"
@@ -228,6 +258,52 @@ func TestV2_2_VolumeDeployment(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, manifest.Manifest{{Name: "us-west"}}, m)
 	require.NoError(t, m.CheckAgainstGSpecs(groups))
+}
+
+// A bucket is a volume whose data is reached over the network: it is never
+// attached and matches only providers that serve buckets.
+func TestV2_2_BucketDeployment(t *testing.T) {
+	obj, err := Read([]byte(sdlV2_2BucketDeployment))
+	require.NoError(t, err)
+
+	groups, err := obj.DeploymentGroups()
+	require.NoError(t, err)
+	require.Len(t, groups, 1)
+
+	group := groups[0]
+	require.Equal(t, dv1.VolumePolicy{
+		Vid:            "media",
+		Reclaim:        dv1.VolumeReclaimRetain,
+		Retention:      168 * time.Hour,
+		MaxAttachments: 0,
+		Access:         dv1.VolumeAccessBucket,
+	}, *group.Volume)
+	require.NoError(t, group.ValidateBasic())
+
+	require.Equal(t, atypes.Attributes{
+		{Key: StorageCapabilityBuckets, Value: "true"},
+		{Key: "region", Value: "us-west"},
+	}, group.Requirements.Attributes)
+
+	// a bucket deployment carries the same canonical empty manifest as a disk
+	m, err := obj.Manifest()
+	require.NoError(t, err)
+	require.Equal(t, manifest.Manifest{{Name: "us-west"}}, m)
+
+	version, err := obj.Version()
+	require.NoError(t, err)
+	require.Equal(t, canonicalVolumeManifestVersion, hex.EncodeToString(version))
+}
+
+func TestV2_2_ExplicitMountAccessIsADisk(t *testing.T) {
+	obj, err := Read([]byte(strings.Replace(sdlV2_2BucketDeployment, "access: bucket", "access: mount", 1)))
+	require.NoError(t, err)
+
+	groups, err := obj.DeploymentGroups()
+	require.NoError(t, err)
+	require.Equal(t, dv1.VolumeAccessMount, groups[0].Volume.Access)
+	require.Equal(t, uint32(1), groups[0].Volume.MaxAttachments)
+	require.Contains(t, groups[0].Requirements.Attributes, atypes.Attribute{Key: StorageCapabilityVolumes, Value: "true"})
 }
 
 // TestV2_2_CanonicalVolumeManifestVersion pins the canonical empty-manifest
@@ -1078,6 +1154,26 @@ deployment:
       count: 1
 `,
 			expErr: "single service (RWO)",
+		},
+		{
+			name:   "unknown access",
+			sdl:    strings.Replace(sdlV2_2BucketDeployment, "access: bucket", "access: nfs", 1),
+			expErr: "access",
+		},
+		{
+			name:   "bucket with replicas",
+			sdl:    strings.Replace(sdlV2_2BucketDeployment, "access: bucket", "access: bucket\n    max-replicas: 1", 1),
+			expErr: "a bucket has no replicas",
+		},
+		{
+			name:   "bucket as a replica",
+			sdl:    strings.Replace(sdlV2_2BucketDeployment, "access: bucket", "access: bucket\n    replica-of:\n      dseq: 9", 1),
+			expErr: "a bucket has no replicas",
+		},
+		{
+			name: "external reference with access",
+			sdl: fmt.Sprintf(strings.Replace(sdlV2_2AttachFmt, "external:", "access: bucket\n    external:", 1), "dseq: 1234567"),
+			expErr: "must not carry declaration fields",
 		},
 	}
 

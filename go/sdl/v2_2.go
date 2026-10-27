@@ -21,8 +21,15 @@ const (
 	// into the decoupled storage market match the order.
 	StorageCapabilityVolumes = "capabilities/storage/volumes"
 
+	// StorageCapabilityBuckets is the placement capability a bucket group
+	// injects instead, so only providers that serve S3 buckets match the order.
+	StorageCapabilityBuckets = "capabilities/storage/buckets"
+
 	volumeReclaimRetain = "retain"
 	volumeReclaimDelete = "delete"
+
+	volumeAccessMount  = "mount"
+	volumeAccessBucket = "bucket"
 )
 
 var _ SDL = (*v2_2)(nil)
@@ -59,6 +66,7 @@ type v2_2Volume struct {
 	MaxReplicas uint32               `yaml:"max-replicas,omitempty"`
 	Adopt       *v2_2VolumePolicyRef `yaml:"adopt,omitempty"`
 	ReplicaOf   *v2_2VolumePolicyRef `yaml:"replica-of,omitempty"`
+	Access      string               `yaml:"access,omitempty"` // mount (default) | bucket
 }
 
 func (v *v2_2Volume) isExternal() bool {
@@ -80,6 +88,19 @@ func (v *v2_2Volume) reclaim() (dv1.VolumePolicy_ReclaimPolicy, error) {
 	default:
 		return dv1.VolumeReclaimInvalid, fmt.Errorf("%w: invalid volume lifecycle reclaim %q, expected %q or %q",
 			errSDLInvalid, reclaim, volumeReclaimRetain, volumeReclaimDelete)
+	}
+}
+
+// access maps the SDL access string onto the on-chain policy.
+func (v *v2_2Volume) access() (dv1.VolumePolicy_Access, error) {
+	switch v.Access {
+	case "", volumeAccessMount:
+		return dv1.VolumeAccessMount, nil
+	case volumeAccessBucket:
+		return dv1.VolumeAccessBucket, nil
+	default:
+		return dv1.VolumeAccessMount, fmt.Errorf("%w: invalid volume access %q, expected %q or %q",
+			errSDLInvalid, v.Access, volumeAccessMount, volumeAccessBucket)
 	}
 }
 
@@ -320,9 +341,9 @@ func (sdl *v2_2) validateVolumesStanza() error {
 			}
 
 			if vol.Size != 0 || vol.Class != "" || vol.Lifecycle != nil ||
-				vol.MaxReplicas != 0 || vol.Adopt != nil || vol.ReplicaOf != nil {
+				vol.MaxReplicas != 0 || vol.Adopt != nil || vol.ReplicaOf != nil || vol.Access != "" {
 				return fmt.Errorf(
-					"%w: volume %q: external reference must not carry declaration fields (size/class/lifecycle/max-replicas/adopt/replica-of)",
+					"%w: volume %q: external reference must not carry declaration fields (size/class/lifecycle/max-replicas/adopt/replica-of/access)",
 					errSDLInvalid,
 					name,
 				)
@@ -367,6 +388,15 @@ func (sdl *v2_2) validateVolumesStanza() error {
 
 		if vol.ReplicaOf != nil && vol.ReplicaOf.DSeq == 0 {
 			return fmt.Errorf("%w: volume %q: replica-of dseq must be > 0", errSDLInvalid, name)
+		}
+
+		access, err := vol.access()
+		if err != nil {
+			return fmt.Errorf("volume %q: %w", name, err)
+		}
+
+		if access == dv1.VolumeAccessBucket && (vol.MaxReplicas != 0 || vol.ReplicaOf != nil) {
+			return fmt.Errorf("%w: volume %q: a bucket has no replicas (max-replicas/replica-of)", errSDLInvalid, name)
 		}
 	}
 

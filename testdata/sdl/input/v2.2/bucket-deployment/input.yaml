@@ -1,0 +1,26 @@
+version: "2.2"
+
+volumes:
+  media:
+    size: 50Gi
+    class: beta3
+    access: bucket
+    lifecycle:
+      reclaim: retain
+      retention: 168h
+
+profiles:
+  placement:
+    us-west:
+      attributes:
+        region: us-west
+      pricing:
+        media:
+          denom: uakt
+          amount: 150
+
+deployment:
+  media:
+    us-west:
+      profile: media
+      count: 1

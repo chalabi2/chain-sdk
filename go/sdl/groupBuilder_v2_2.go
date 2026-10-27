@@ -300,12 +300,24 @@ func (sdl *v2_2) buildVolumeGroup(volName string, placementName string, svcdepl 
 		return nil, err
 	}
 
+	access, err := vol.access()
+	if err != nil {
+		return nil, err
+	}
+
 	policy := &dv1.VolumePolicy{
 		Vid:            volName,
 		Reclaim:        reclaim,
 		Retention:      retention,
 		MaxAttachments: 1, // v1 volumes are RWO; RWX is additive later
 		MaxReplicas:    vol.MaxReplicas,
+		Access:         access,
+	}
+
+	capability := StorageCapabilityVolumes
+	if policy.IsBucket() {
+		policy.MaxAttachments = 0 // reached over the network, never attached
+		capability = StorageCapabilityBuckets
 	}
 
 	if vol.Adopt != nil {
@@ -367,7 +379,7 @@ func (sdl *v2_2) buildVolumeGroup(volName string, placementName string, svcdepl 
 
 	attrs := make(types.Attributes, 0, len(infra.Attributes)+1)
 	attrs = append(attrs, types.Attributes(infra.Attributes)...)
-	attrs = append(attrs, types.Attribute{Key: StorageCapabilityVolumes, Value: "true"})
+	attrs = append(attrs, types.Attribute{Key: capability, Value: "true"})
 
 	// keep ordering stable
 	sort.Sort(attrs)

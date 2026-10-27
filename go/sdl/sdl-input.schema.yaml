@@ -250,6 +250,13 @@ definitions:
         $ref: '#/definitions/volumePolicyRef'
       replica-of:
         $ref: '#/definitions/volumePolicyRef'
+      access:
+        description: >-
+          How deployments reach the volume: mount (default) is a disk a
+          deployment on the same provider mounts; bucket is an S3-compatible
+          bucket the provider serves over the network to the owner's keys.
+        enum: [mount, bucket]
+        type: string
     required:
       - size
     type: object
