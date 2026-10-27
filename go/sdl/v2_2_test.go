@@ -331,6 +331,7 @@ func TestV2_2_CanonicalVolumeManifestVersion(t *testing.T) {
 // moves a hash fails one of the two suites.
 func TestV2_2_FixtureManifestVersions(t *testing.T) {
 	expected := map[string]string{
+		"bucket-deployment": canonicalVolumeManifestVersion,
 		"volume-attach":     "3276b959c4f4bcc0fdf74b56033eb0402bb2253c6509df3efa1c4c992195d148",
 		"volume-deployment": canonicalVolumeManifestVersion,
 	}

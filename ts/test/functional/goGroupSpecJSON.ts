@@ -105,6 +105,7 @@ function volumePolicyToGoJSON(policy: VolumePolicy) {
     max_replicas: policy.maxReplicas,
     ...(policy.adopt ? { adopt: volumeRefToGoJSON(policy.adopt) } : {}),
     ...(policy.replicaOf ? { replica_of: volumeRefToGoJSON(policy.replicaOf) } : {}),
+    ...(policy.access ? { access: policy.access } : {}),
   };
 }
 

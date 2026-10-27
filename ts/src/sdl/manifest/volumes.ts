@@ -1,4 +1,4 @@
-import { VolumePolicy, VolumePolicy_ReclaimPolicy, VolumeRef } from "../../generated/protos/akash/deployment/v1/volume.ts";
+import { VolumePolicy, VolumePolicy_Access, VolumePolicy_ReclaimPolicy, VolumeRef } from "../../generated/protos/akash/deployment/v1/volume.ts";
 import { Duration } from "../../generated/protos/google/protobuf/duration.ts";
 import { parseDuration } from "../duration.ts";
 import type { SDLInput } from "../validateSDL/validateSDL.ts";
@@ -12,6 +12,22 @@ export type SDLVolume = VolumeExternalRef | VolumeDeclaration;
  * providers that opted into the decoupled storage market match the order.
  */
 export const STORAGE_CAPABILITY_VOLUMES = "capabilities/storage/volumes";
+
+/**
+ * Placement capability a bucket group injects instead, so only providers
+ * that serve S3 buckets match the order.
+ */
+export const STORAGE_CAPABILITY_BUCKETS = "capabilities/storage/buckets";
+
+/** A bucket is reached over the network by key holders rather than attached. */
+export function isBucketVolume(volume: VolumeDeclaration): boolean {
+  return volume.access === "bucket";
+}
+
+/** Mirrors the capability choice in `buildVolumeGroup` in go/sdl/groupBuilder_v2_2.go. */
+export function volumeCapability(volume: VolumeDeclaration): string {
+  return isBucketVolume(volume) ? STORAGE_CAPABILITY_BUCKETS : STORAGE_CAPABILITY_VOLUMES;
+}
 
 export function isExternalVolume(volume: SDLVolume): volume is VolumeExternalRef {
   return "external" in volume;
@@ -72,8 +88,9 @@ export function buildVolumePolicy(name: string, volume: VolumeDeclaration, owner
     vid: name,
     reclaim: volume.lifecycle?.reclaim === "delete" ? VolumePolicy_ReclaimPolicy.delete : VolumePolicy_ReclaimPolicy.retain,
     retention: retentionToDuration(volume.lifecycle?.retention),
-    maxAttachments: 1,
+    maxAttachments: isBucketVolume(volume) ? 0 : 1,
     maxReplicas: volume["max-replicas"] ?? 0,
+    access: isBucketVolume(volume) ? VolumePolicy_Access.bucket : VolumePolicy_Access.mount,
     adopt: volume.adopt && policyRef(name, volume.adopt, owner),
     replicaOf: volume["replica-of"] && policyRef(name, volume["replica-of"], owner),
   });

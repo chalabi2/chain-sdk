@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { VolumePolicy, VolumePolicy_ReclaimPolicy } from "../../generated/protos/index.akash.v1.ts";
+import { VolumePolicy, VolumePolicy_Access, VolumePolicy_ReclaimPolicy } from "../../generated/protos/index.akash.v1.ts";
 import { GroupSpec } from "../../generated/protos/index.akash.v1beta4.ts";
 import { Group } from "../../generated/protos/index.provider.akash.v2beta3.ts";
 import { yaml } from "../../utils/yaml.ts";
@@ -1206,6 +1206,24 @@ describe(generateManifest.name, () => {
         retention: {},
         maxAttachments: 1,
       }));
+    });
+
+    it("compiles a bucket into a group that is never attached and asks for bucket providers", () => {
+      const { result } = setup({ sdl: createVolumeSdl({ access: "bucket" }) });
+      const [group] = result.groupSpecs;
+
+      expect(group.requirements?.attributes).toEqual([
+        { key: "capabilities/storage/buckets", value: "true" },
+        { key: "region", value: "us-west" },
+      ]);
+      expect(group.volume).toEqual(expect.objectContaining({ maxAttachments: 0, access: VolumePolicy_Access.bucket }));
+      expect(result.groups).toEqual([Group.fromPartial({ name: "us-west", services: [] })]);
+    });
+
+    it("compiles an explicit mount access as a disk", () => {
+      const { result } = setup({ sdl: createVolumeSdl({ access: "mount" }) });
+
+      expect(result.groupSpecs[0].volume).toEqual(expect.objectContaining({ maxAttachments: 1, access: VolumePolicy_Access.mount }));
     });
 
     it("resolves adopt to the owner's volume of the same name", () => {

@@ -2,7 +2,7 @@ import type { ErrorMessages, ValidationError, ValidationFunction } from "../../u
 import { dirname, getErrorLocation, humanizeErrors } from "../../utils/jsonSchemaValidation.ts";
 import { MAX_HTTP_TIMEOUT_MILLISECONDS, parseHTTPTimeout } from "../httpTimeout.ts";
 import { compareStrings, INTERCONNECT_GROUP_AUTO, parseStorageBytes, resolveInterconnectGroup } from "../manifest/manifestUtils.ts";
-import { declaredVolumeNames, isExternalVolume, serviceVolumeNames } from "../manifest/volumes.ts";
+import { declaredVolumeNames, isBucketVolume, isExternalVolume, serviceVolumeNames } from "../manifest/volumes.ts";
 import { castArray, stringToBoolean } from "../utils.ts";
 import { schema as validationSDLSchema, type SDLInput, validate as validateSDLInput, type VolumeDeclaration } from "./validateSDLInput.ts";
 
@@ -640,6 +640,16 @@ class SDLValidator {
           message: `Volume "${name}" sets both adopt and replica-of, which are mutually exclusive.`,
           instancePath: `/volumes/${name}`,
           schemaPath: "#/definitions/volumeDeclaration",
+          keyword: "not",
+          params: {},
+        });
+      }
+
+      if (isBucketVolume(volume) && (volume["max-replicas"] || volume["replica-of"])) {
+        this.#errors.push({
+          message: `Volume "${name}" is a bucket, and a bucket has no replicas (max-replicas/replica-of).`,
+          instancePath: `/volumes/${name}`,
+          schemaPath: "#/definitions/volumeDeclaration/properties/access",
           keyword: "not",
           params: {},
         });

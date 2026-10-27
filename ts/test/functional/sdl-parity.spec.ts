@@ -46,6 +46,7 @@ describe("SDL Parity Tests", () => {
      * manifest is not enough: the bytes must match.
      */
     const GO_MANIFEST_VERSIONS: Record<string, string> = {
+      "bucket-deployment": "74066c155b207484e1e3671548c44e5c9dff4d2fbd1293f61fd4f7f466a24e0e",
       "volume-attach": "3276b959c4f4bcc0fdf74b56033eb0402bb2253c6509df3efa1c4c992195d148",
       "volume-deployment": "74066c155b207484e1e3671548c44e5c9dff4d2fbd1293f61fd4f7f466a24e0e",
     };

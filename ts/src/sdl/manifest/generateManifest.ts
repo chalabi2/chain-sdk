@@ -40,7 +40,7 @@ import {
   declaredVolumeNames,
   externalVolumeRefs,
   serviceVolumeRefs,
-  STORAGE_CAPABILITY_VOLUMES,
+  volumeCapability,
   volumeRefToString,
 } from "./volumes.ts";
 
@@ -247,7 +247,7 @@ function buildVolumeGroupSpec(sdl: SDLInput, name: string, placementName: string
   const pricing = infra.pricing[name];
   const attributes = [
     ...(buildResourceAttributes(infra.attributes) ?? []),
-    { key: STORAGE_CAPABILITY_VOLUMES, value: "true" },
+    { key: volumeCapability(volume), value: "true" },
   ].sort((a, b) => compareStrings(a.key, b.key));
 
   return GroupSpec.fromPartial({

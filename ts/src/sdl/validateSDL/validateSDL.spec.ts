@@ -2697,6 +2697,26 @@ describe(validateSDL.name, () => {
       }));
     });
 
+    it("accepts a bucket", () => {
+      expect(validateSDL(createVolumeSDL({ access: "bucket" }))).toBeUndefined();
+    });
+
+    it.each([
+      { field: "max-replicas", value: 1 },
+      { field: "replica-of", value: { dseq: 555 } },
+    ])("rejects a bucket with $field, since a bucket has no replicas", ({ field, value }) => {
+      expect(validateSDL(createVolumeSDL({ access: "bucket", [field]: value }), { owner })).toContainEqual(expect.objectContaining({
+        instancePath: "/volumes/myapp-pgdata",
+        message: expect.stringContaining("a bucket has no replicas"),
+      }));
+    });
+
+    it("rejects an unknown access", () => {
+      expect(validateSDL(createVolumeSDL({ access: "nfs" }))).toContainEqual(expect.objectContaining({
+        instancePath: "/volumes/myapp-pgdata/access",
+      }));
+    });
+
     it("rejects the volumes section before SDL 2.2", () => {
       const sdl = { ...createAttachSDL({ owner }), version: "2.1" } as const;
 
