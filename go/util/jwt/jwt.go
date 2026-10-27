@@ -37,6 +37,10 @@ const (
 	PermissionScopeHostnameMigrate PermissionScope = "hostname-migrate"
 	PermissionScopeIPMigrate       PermissionScope = "ip-migrate"
 	PermissionScopeAttestation     PermissionScope = "attestation"
+	// PermissionScopeBucket reads a bucket lease's endpoint, usage and key list.
+	PermissionScopeBucket PermissionScope = "bucket"
+	// PermissionScopeBucketKeys creates and revokes a bucket lease's access keys.
+	PermissionScopeBucketKeys PermissionScope = "bucket-keys"
 )
 
 var (
@@ -51,6 +55,8 @@ var (
 		PermissionScopeHostnameMigrate: true,
 		PermissionScopeIPMigrate:       true,
 		PermissionScopeAttestation:     true,
+		PermissionScopeBucket:          true,
+		PermissionScopeBucketKeys:      true,
 	}
 )
 

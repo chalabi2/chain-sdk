@@ -70,7 +70,9 @@
                     "restart",
                     "hostname-migrate",
                     "ip-migrate",
-                    "attestation"
+                    "attestation",
+                    "bucket",
+                    "bucket-keys"
                 ]
             }
         },
