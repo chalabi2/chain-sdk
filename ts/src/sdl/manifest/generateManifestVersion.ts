@@ -7,9 +7,15 @@ const encoder = new TextEncoder();
 // Go marshals nil slices as `null`, so empty manifest arrays must serialize to
 // `null` to stay byte-compatible with the Go SDK's manifest. `storage` covers
 // `params.storage` when a service sets other params (e.g. `tee`) but no storage;
-// resource-level storage is schema-required and never empty, so it is unaffected.
-const NULLABLE_MANIFEST_KEYS = new Set(["command", "args", "env", "hosts", "storage"]);
+// `services` covers the canonical empty group of a storage-only (volume)
+// deployment.
+const NULLABLE_MANIFEST_KEYS = new Set(["command", "args", "env", "hosts", "storage", "services"]);
 const OMITTED_MANIFEST_KEYS = new Set(["kind", "attributes"]);
+
+// Resource-level `storage` is `omitempty` on the Go side, unlike
+// `params.storage`: a service that only attaches external volumes has no local
+// storage, and the key must be dropped rather than serialized as `null`.
+const OMITTED_WHEN_EMPTY_RESOURCE_KEYS = new Set(["storage"]);
 
 // Manifest fields that on the Go side use `omitempty` for string values —
 // the field must NOT appear in the JSON when its value is the empty
@@ -60,6 +66,10 @@ function manifestReplacer(this: unknown, key: string | number, value: unknown): 
   // only top-level "credentials" field can be null, credentials in params should be omitted
   if (typeof this === "object" && this && Object.hasOwn(this, "command") && key === "credentials" && value == null) {
     return null;
+  }
+
+  if (typeof this === "object" && this && Object.hasOwn(this, "endpoints") && OMITTED_WHEN_EMPTY_RESOURCE_KEYS.has(key) && Array.isArray(value) && value.length === 0) {
+    return undefined;
   }
 
   if (NULLABLE_MANIFEST_KEYS.has(key) && ((Array.isArray(value) && value.length === 0) || value == null)) {

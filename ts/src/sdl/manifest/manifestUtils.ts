@@ -12,19 +12,20 @@ import { convertCpuResourceString, convertResourceString } from "../sizes.ts";
 import type { SDLInput } from "../validateSDL/validateSDL.ts";
 import type { StorageAttributesValidation } from "../validateSDL/validateSDLInput.ts";
 
-type SDLService = SDLInput["services"][string];
+type SDLServices = NonNullable<SDLInput["services"]>;
+type SDLService = SDLServices[string];
 type SDLExpose = NonNullable<SDLService["expose"]>[number];
 type SDLExposeTo = NonNullable<SDLExpose["to"]>[number];
 type SDLHttpOptions = SDLExpose["http_options"];
 type SDLHttpProxyOptions = NonNullable<SDLHttpOptions>["proxy"];
-type SDLCompute = SDLInput["profiles"]["compute"][string];
+type SDLCompute = NonNullable<SDLInput["profiles"]["compute"]>[string];
 type SDLStorage = SDLCompute["resources"]["storage"];
 type SDLStorageVolume = SDLStorage extends (infer T)[] ? T : SDLStorage;
 type SDLGpuAttributes = NonNullable<NonNullable<SDLCompute["resources"]["gpu"]>["attributes"]>;
 
-export type { SDLCompute, SDLExpose, SDLExposeTo, SDLGpuAttributes, SDLHttpOptions, SDLService, SDLStorage, SDLStorageVolume };
+export type { SDLCompute, SDLExpose, SDLExposeTo, SDLGpuAttributes, SDLHttpOptions, SDLService, SDLServices, SDLStorage, SDLStorageVolume };
 
-export function computeEndpointSequenceNumbers(services: SDLInput["services"]): Record<string, number> {
+export function computeEndpointSequenceNumbers(services: SDLServices): Record<string, number> {
   const endpointNames: string[] = [];
 
   for (const service of Object.values(services)) {

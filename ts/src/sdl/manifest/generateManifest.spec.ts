@@ -3,12 +3,14 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { VolumePolicy, VolumePolicy_ReclaimPolicy } from "../../generated/protos/index.akash.v1.ts";
 import { GroupSpec } from "../../generated/protos/index.akash.v1beta4.ts";
 import { Group } from "../../generated/protos/index.provider.akash.v2beta3.ts";
 import { yaml } from "../../utils/yaml.ts";
 import type { SDLInput } from "../validateSDL/validateSDL.ts";
 import type { GenerateManifestResult } from "./generateManifest.ts";
 import { generateManifest } from "./generateManifest.ts";
+import type { SDLCompute, SDLService } from "./manifestUtils.ts";
 
 describe(generateManifest.name, () => {
   describe("basic manifest generation", () => {
@@ -213,7 +215,7 @@ describe(generateManifest.name, () => {
   describe("TEE configuration", () => {
     it("projects tee cpu into service params with attestation true", () => {
       const sdl = createBasicSdl();
-      sdl.services.web.params = { tee: "cpu" };
+      sdl.services!.web.params = { tee: "cpu" };
       const { result } = setup({ sdl });
 
       expect(result.groups[0].services[0].params?.tee).toEqual({ type: "cpu", attestation: true });
@@ -223,7 +225,7 @@ describe(generateManifest.name, () => {
       const sdl = createBasicSdl({
         gpu: { units: 1, attributes: { vendor: { nvidia: [{ model: "a100" }] } } },
       });
-      sdl.services.web.params = { tee: "cpu-gpu" };
+      sdl.services!.web.params = { tee: "cpu-gpu" };
       const { result } = setup({ sdl });
 
       expect(result.groups[0].services[0].params?.tee).toEqual({ type: "cpu-gpu", attestation: true });
@@ -231,7 +233,7 @@ describe(generateManifest.name, () => {
 
     it("omits tee from params when not set", () => {
       const sdl = createBasicSdl();
-      sdl.services.web.params = { permissions: { read: ["logs"] } };
+      sdl.services!.web.params = { permissions: { read: ["logs"] } };
       const { result } = setup({ sdl });
 
       expect(result.groups[0].services[0].params?.tee).toBeUndefined();
@@ -239,7 +241,7 @@ describe(generateManifest.name, () => {
 
     it("projects tee cpu as a sorted tee/type group-spec requirement attribute", () => {
       const sdl = createBasicSdl({ placementAttributes: { region: "us-west", zone: "z1" } });
-      sdl.services.web.params = { tee: "cpu" };
+      sdl.services!.web.params = { tee: "cpu" };
       const { result } = setup({ sdl });
 
       const attributes = result.groupSpecs[0].requirements?.attributes;
@@ -253,7 +255,7 @@ describe(generateManifest.name, () => {
       const sdl = createBasicSdl({
         gpu: { units: 1, attributes: { vendor: { nvidia: [{ model: "a100" }] } } },
       });
-      sdl.services.web.params = { tee: "cpu-gpu" };
+      sdl.services!.web.params = { tee: "cpu-gpu" };
       const { result } = setup({ sdl });
 
       expect(result.groupSpecs[0].requirements?.attributes).toContainEqual({ key: "tee/type", value: "cpu-gpu" });
@@ -1138,10 +1140,192 @@ describe(generateManifest.name, () => {
     });
   });
 
+  describe("volumes (SDL 2.2)", () => {
+    const owner = "akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh";
+
+    it("compiles a declared volume into a storage-only group with an empty manifest group", () => {
+      const sdl = createVolumeSdl({ lifecycle: { reclaim: "delete", retention: "2h" }, "max-replicas": 3 });
+      const { result } = setup({ sdl });
+
+      expect(result.groupSpecs).toEqual([
+        GroupSpec.fromPartial({
+          name: "us-west",
+          requirements: {
+            attributes: [
+              { key: "capabilities/storage/volumes", value: "true" },
+              { key: "region", value: "us-west" },
+            ],
+            signedBy: {},
+          },
+          resources: [
+            {
+              resource: {
+                id: 1,
+                cpu: { units: { val: 0n } },
+                memory: { quantity: { val: 0n } },
+                storage: [
+                  {
+                    name: "myapp-pgdata",
+                    quantity: { val: 10737418240n },
+                    attributes: [
+                      { key: "class", value: "beta2" },
+                      { key: "persistent", value: "true" },
+                    ],
+                  },
+                ],
+                gpu: { units: { val: 0n } },
+                endpoints: [],
+              },
+              count: 1,
+              price: { denom: "uakt", amount: "150" },
+            },
+          ],
+          volume: {
+            vid: "myapp-pgdata",
+            reclaim: VolumePolicy_ReclaimPolicy.delete,
+            retention: { seconds: 7200n, nanos: 0 },
+            maxAttachments: 1,
+            maxReplicas: 3,
+          },
+        }),
+      ]);
+      expect(result.groups).toEqual([Group.fromPartial({ name: "us-west", services: [] })]);
+    });
+
+    it("defaults the storage class, the reclaim policy and the retention", () => {
+      const { result } = setup({ sdl: createVolumeSdl({ class: undefined }) });
+      const [group] = result.groupSpecs;
+
+      expect(group.resources[0].resource?.storage[0].attributes).toEqual([
+        { key: "class", value: "default" },
+        { key: "persistent", value: "true" },
+      ]);
+      expect(group.volume).toEqual(VolumePolicy.fromPartial({
+        vid: "myapp-pgdata",
+        reclaim: VolumePolicy_ReclaimPolicy.retain,
+        retention: {},
+        maxAttachments: 1,
+      }));
+    });
+
+    it("resolves adopt to the owner's volume of the same name", () => {
+      const { result } = setup({ sdl: createVolumeSdl({ adopt: { dseq: 555 } }), owner });
+
+      expect(result.groupSpecs[0].volume?.adopt).toEqual({ owner, dseq: 555n, gseq: 1, name: "myapp-pgdata" });
+      expect(result.groupSpecs[0].volume?.replicaOf).toBeUndefined();
+    });
+
+    it("resolves replica-of to the owner's named volume", () => {
+      const { result } = setup({ sdl: createVolumeSdl({ "replica-of": { dseq: 556, name: "other-name" } }), owner });
+
+      expect(result.groupSpecs[0].volume?.replicaOf).toEqual({ owner, dseq: 556n, gseq: 1, name: "other-name" });
+      expect(result.groupSpecs[0].volume?.adopt).toBeUndefined();
+    });
+
+    it("attaches an external volume through the resource unit and the storage params", () => {
+      const { result } = setup({ sdl: createAttachSdl(), owner });
+      const [unit] = result.groupSpecs[0].resources;
+
+      expect(result.groupSpecs[0].volume).toBeUndefined();
+      expect(unit.volumes).toEqual([{ owner, dseq: 1234567n, gseq: 1, name: "myapp-pgdata" }]);
+      expect(unit.resource?.storage).toEqual([]);
+      expect(result.groups[0].services[0].params?.storage).toEqual([
+        { name: "data", mount: "/var/lib/postgresql/data", readOnly: false, volume: `${owner}/1234567/1/myapp-pgdata` },
+      ]);
+    });
+
+    it("prefers the owner named by the reference over the owner option", () => {
+      const referenceOwner = "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63";
+      const { result } = setup({ sdl: createAttachSdl({ "myapp-pgdata": { owner: referenceOwner, dseq: 1234567 } }), owner });
+
+      expect(result.groupSpecs[0].resources[0].volumes[0].owner).toBe(referenceOwner);
+      expect(result.groups[0].services[0].params?.storage[0].volume).toBe(`${referenceOwner}/1234567/1/myapp-pgdata`);
+    });
+
+    it("orders a unit's volume references by their canonical string form", () => {
+      const sdl = createAttachSdl(
+        { "aa-vol": { dseq: 9 }, "zz-vol": { dseq: 10 } },
+        { a: { mount: "/a", volume: "aa-vol" }, z: { mount: "/z", volume: "zz-vol" } },
+      );
+      const { result } = setup({ sdl, owner });
+
+      expect(result.groupSpecs[0].resources[0].volumes.map(({ name }) => name)).toEqual(["zz-vol", "aa-vol"]);
+    });
+
+    it("returns validation errors when an attached volume's owner is unknown", () => {
+      const result = generateManifest(createAttachSdl());
+
+      expect(result.ok).toBe(false);
+      expect(result.value).toContainEqual(expect.objectContaining({
+        message: expect.stringContaining("owner is unknown"),
+      }));
+    });
+
+    function createVolumeSdl(volume: Record<string, unknown> = {}): SDLInput {
+      return yaml`
+        version: "2.2"
+        volumes:
+          myapp-pgdata: ${{ size: "10Gi", class: "beta2", ...volume }}
+        profiles:
+          placement:
+            us-west:
+              attributes:
+                region: us-west
+              pricing:
+                myapp-pgdata:
+                  denom: uakt
+                  amount: 150
+        deployment:
+          myapp-pgdata:
+            us-west:
+              profile: myapp-pgdata
+              count: 1
+      `;
+    }
+
+    function createAttachSdl(
+      volumes: Record<string, { owner?: string; dseq: number }> = { "myapp-pgdata": { dseq: 1234567 } },
+      storage: Record<string, { mount: string; volume: string }> = { data: { mount: "/var/lib/postgresql/data", volume: "myapp-pgdata" } },
+    ): SDLInput {
+      const externalVolumes = Object.fromEntries(Object.entries(volumes).map(([name, external]) => [name, { external }]));
+
+      return yaml`
+        version: "2.2"
+        volumes: ${externalVolumes}
+        services:
+          db:
+            image: postgres:16
+            params:
+              storage: ${storage}
+        profiles:
+          compute:
+            db:
+              resources:
+                cpu:
+                  units: 2
+                memory:
+                  size: 4Gi
+                storage: []
+          placement:
+            anywhere:
+              pricing:
+                db:
+                  denom: uakt
+                  amount: 800
+        deployment:
+          db:
+            anywhere:
+              profile: db
+              count: 1
+      `;
+    }
+  });
+
   function setup(input?: {
     sdl: SDLInput;
+    owner?: string;
   }) {
-    const result = generateManifest(input?.sdl ?? createBasicSdl());
+    const result = generateManifest(input?.sdl ?? createBasicSdl(), { owner: input?.owner });
     assertBuildResult(result);
     return { result: result.value };
   }
@@ -1157,17 +1341,17 @@ describe(generateManifest.name, () => {
     port?: number;
     cpu?: number | string;
     memory?: string;
-    storage?: SDLInput["profiles"]["compute"][string]["resources"]["storage"];
-    gpu?: SDLInput["profiles"]["compute"][string]["resources"]["gpu"];
+    storage?: SDLCompute["resources"]["storage"];
+    gpu?: SDLCompute["resources"]["gpu"];
     denom?: string;
     amount?: number;
     placementAttributes?: SDLInput["profiles"]["placement"][string]["attributes"];
     signedBy?: SDLInput["profiles"]["placement"][string]["signedBy"];
-    env?: SDLInput["services"][string]["env"];
-    command?: SDLInput["services"][string]["command"];
-    args?: SDLInput["services"][string]["args"];
-    credentials?: SDLInput["services"][string]["credentials"];
-    expose?: SDLInput["services"][string]["expose"];
+    env?: SDLService["env"];
+    command?: SDLService["command"];
+    args?: SDLService["args"];
+    credentials?: SDLService["credentials"];
+    expose?: SDLService["expose"];
     endpoints?: SDLInput["endpoints"];
     reclamation?: SDLInput["reclamation"];
   } = {}): SDLInput {

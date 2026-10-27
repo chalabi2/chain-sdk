@@ -24,6 +24,7 @@
  */
 
 export { validateSDL, validationSDLSchema } from "./validateSDL/validateSDL.ts";
+export type { SDLOptions } from "./validateSDL/validateSDL.ts";
 export type { SDLInput } from "./validateSDL/validateSDLInput.ts";
 export type { ValidationError } from "../utils/jsonSchemaValidation.ts";
 

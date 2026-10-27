@@ -5,6 +5,7 @@ import { Memory } from "../../generated/protos/akash/base/resources/v1beta4/memo
 import { Resources } from "../../generated/protos/akash/base/resources/v1beta4/resources.ts";
 import { Storage } from "../../generated/protos/akash/base/resources/v1beta4/storage.ts";
 import { DeploymentReclamation } from "../../generated/protos/akash/deployment/v1/deployment.ts";
+import type { VolumeRef } from "../../generated/protos/akash/deployment/v1/volume.ts";
 import { GroupSpec } from "../../generated/protos/akash/deployment/v1beta4/groupspec.ts";
 import { ResourceUnit } from "../../generated/protos/akash/deployment/v1beta4/resourceunit.ts";
 import { Group } from "../../generated/protos/akash/manifest/v2beta3/group.ts";
@@ -12,8 +13,9 @@ import { ImageCredentials, Service, ServiceParams, StorageParams, TEEParams } fr
 import { ServiceExpose } from "../../generated/protos/akash/manifest/v2beta3/serviceexpose.ts";
 import type { ValidationError } from "../../utils/jsonSchemaValidation.ts";
 import { castArray } from "../utils.ts";
-import type { SDLInput } from "../validateSDL/validateSDL.ts";
+import type { SDLInput, SDLOptions } from "../validateSDL/validateSDL.ts";
 import { validateSDL } from "../validateSDL/validateSDL.ts";
+import type { VolumeDeclaration } from "../validateSDL/validateSDLInput.ts";
 import {
   buildHttpOptions,
   buildResourceAttributes,
@@ -33,6 +35,14 @@ import {
   transformGpuAttributes,
 } from "./manifestUtils.ts";
 import { minWindowToDuration } from "./reclamationDuration.ts";
+import {
+  buildVolumePolicy,
+  declaredVolumeNames,
+  externalVolumeRefs,
+  serviceVolumeRefs,
+  STORAGE_CAPABILITY_VOLUMES,
+  volumeRefToString,
+} from "./volumes.ts";
 
 export interface GenerateManifestOkResult {
   groups: Group[];
@@ -44,11 +54,13 @@ export type Manifest = GenerateManifestOkResult["groups"];
 export type GenerateManifestResult =
   | { ok?: false; value: ValidationError[] }
   | { ok: true; value: GenerateManifestOkResult };
-export function generateManifest(sdl: SDLInput): GenerateManifestResult {
-  const errors = validateSDL(sdl);
+export function generateManifest(sdl: SDLInput, options: SDLOptions = {}): GenerateManifestResult {
+  const errors = validateSDL(sdl, options);
   if (errors) return { ok: false, value: errors };
 
-  const endpointSequenceNumbers = computeEndpointSequenceNumbers(sdl.services);
+  const sdlServices = sdl.services ?? {};
+  const volumeRefs = externalVolumeRefs(sdl, options.owner);
+  const endpointSequenceNumbers = computeEndpointSequenceNumbers(sdlServices);
   const groupsMap = new Map<string, {
     dgroup: GroupSpec;
     boundComputes: Record<string, number>;
@@ -71,11 +83,13 @@ export function generateManifest(sdl: SDLInput): GenerateManifestResult {
     list.sort(([a], [b]) => compareStrings(a, b));
   }
 
-  const services = Object.entries(sdl.services).sort(([a], [b]) => compareStrings(a, b));
+  const services = Object.entries(sdlServices).sort(([a], [b]) => compareStrings(a, b));
 
   for (const [svcName, service] of services) {
+    const volumes = serviceVolumeRefs(service, volumeRefs);
+
     for (const [placementName, svcdepl] of Object.entries(sdl.deployment[svcName])) {
-      const compute = sdl.profiles.compute[svcdepl.profile];
+      const compute = sdl.profiles.compute![svcdepl.profile];
       const infra = sdl.profiles.placement[placementName];
       const pricing = infra.pricing[svcdepl.profile];
       const price = {
@@ -129,6 +143,7 @@ export function generateManifest(sdl: SDLInput): GenerateManifestResult {
             resource: resources,
             count: svcdepl.count,
             price,
+            volumes,
           }),
         );
 
@@ -155,6 +170,15 @@ export function generateManifest(sdl: SDLInput): GenerateManifestResult {
     }
   }
 
+  for (const volumeName of declaredVolumeNames(sdl)) {
+    for (const placementName of Object.keys(sdl.deployment[volumeName])) {
+      groupsMap.set(placementName, {
+        dgroup: buildVolumeGroupSpec(sdl, volumeName, placementName, options.owner),
+        boundComputes: {},
+      });
+    }
+  }
+
   const sortedGroupNames = [...groupsMap.keys()].sort();
   let groups: Group[] | undefined;
   let groupSpecs: GroupSpec[] | undefined;
@@ -175,14 +199,18 @@ export function generateManifest(sdl: SDLInput): GenerateManifestResult {
     },
     get groups() {
       groups ??= sortedGroupNames.map((placementName) => {
+        if (groupsMap.get(placementName)!.dgroup.volume) {
+          return Group.fromPartial({ name: placementName, services: [] });
+        }
+
         const deployments = deploymentsByPlacement.get(placementName)!;
 
         return Group.fromPartial({
           name: placementName,
           services: deployments.map(([svcName]) => {
-            const service = sdl.services[svcName];
+            const service = sdlServices[svcName];
             const deployment = sdl.deployment[svcName][placementName];
-            const compute = sdl.profiles.compute[deployment.profile];
+            const compute = sdl.profiles.compute![deployment.profile];
             const resourceId = resourceIds.get(`${placementName}:${deployment.profile}`) || 1;
 
             return buildManifestService(
@@ -192,6 +220,7 @@ export function generateManifest(sdl: SDLInput): GenerateManifestResult {
               compute,
               deployment.count,
               endpointSequenceNumbers,
+              volumeRefs,
             );
           }),
         });
@@ -205,6 +234,59 @@ export function generateManifest(sdl: SDLInput): GenerateManifestResult {
   };
 
   return { ok: true, value: manifest };
+}
+
+/**
+ * Mirrors `buildVolumeGroup` in go/sdl/groupBuilder_v2_2.go. The compute legs
+ * stay present but zero, so every consumer can dereference them while the
+ * group remains storage-only; the paired manifest group has no services.
+ */
+function buildVolumeGroupSpec(sdl: SDLInput, name: string, placementName: string, owner: string | undefined): GroupSpec {
+  const volume = sdl.volumes![name] as VolumeDeclaration;
+  const infra = sdl.profiles.placement[placementName];
+  const pricing = infra.pricing[name];
+  const attributes = [
+    ...(buildResourceAttributes(infra.attributes) ?? []),
+    { key: STORAGE_CAPABILITY_VOLUMES, value: "true" },
+  ].sort((a, b) => compareStrings(a.key, b.key));
+
+  return GroupSpec.fromPartial({
+    name: placementName,
+    requirements: PlacementRequirements.fromPartial({
+      attributes,
+      signedBy: SignedBy.fromPartial({
+        allOf: infra.signedBy?.allOf,
+        anyOf: infra.signedBy?.anyOf,
+      }),
+    }),
+    resources: [
+      ResourceUnit.fromPartial({
+        resource: Resources.fromPartial({
+          id: 1,
+          cpu: CPU.fromPartial({ units: { val: 0n } }),
+          memory: Memory.fromPartial({ quantity: { val: 0n } }),
+          storage: [
+            Storage.fromPartial({
+              name,
+              quantity: { val: parseStorageBytes(volume.size) },
+              attributes: [
+                { key: "class", value: volume.class ?? "default" },
+                { key: "persistent", value: "true" },
+              ],
+            }),
+          ],
+          gpu: GPU.fromPartial({ units: { val: 0n } }),
+          endpoints: [],
+        }),
+        count: 1,
+        price: {
+          denom: pricing.denom,
+          amount: pricing.amount?.toString(),
+        },
+      }),
+    ],
+    volume: buildVolumePolicy(name, volume, owner),
+  });
 }
 
 function buildResources(
@@ -248,6 +330,7 @@ function buildManifestService(
   compute: SDLCompute,
   count: number,
   endpointSequenceNumbers: Record<string, number>,
+  volumeRefs: Map<string, VolumeRef>,
 ): Service {
   const credentials = service.credentials
     ? ImageCredentials.fromPartial({
@@ -258,7 +341,7 @@ function buildManifestService(
       })
     : undefined;
 
-  const params = buildParams(service);
+  const params = buildParams(service, volumeRefs);
 
   // The interconnect group lives under gpu.attributes.interconnect (either
   // `[]` for the implicit `auto` group or `{ group: <name> }` for an
@@ -284,7 +367,7 @@ function buildManifestService(
   });
 }
 
-function buildParams(service: SDLService): ServiceParams | undefined {
+function buildParams(service: SDLService, volumeRefs: Map<string, VolumeRef>): ServiceParams | undefined {
   if (!service.params) return undefined;
 
   const storage = service.params.storage || {};
@@ -296,6 +379,7 @@ function buildParams(service: SDLService): ServiceParams | undefined {
         name,
         mount: config.mount || "",
         readOnly: config.readOnly || false,
+        volume: config.volume && volumeRefToString(volumeRefs.get(config.volume)!),
       });
     }),
   });

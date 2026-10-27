@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { DeepPartial } from "../../encoding/typeEncodingHelpers.ts";
 import type { NetworkId } from "../../network/index.ts";
 import { AKT_DENOM } from "../../network/index.ts";
+import { yaml } from "../../utils/yaml.ts";
 import { MAX_HTTP_TIMEOUT_MILLISECONDS } from "../httpTimeout.ts";
 import { type SDLInput, validateSDL } from "./validateSDL.ts";
 
@@ -1287,7 +1288,7 @@ describe(validateSDL.name, () => {
             credentials: {
               username: "user",
               password: "password123",
-            } as SDLInput["services"][string]["credentials"],
+            } as NonNullable<SDLInput["services"]>[string]["credentials"],
           },
         },
       });
@@ -1308,7 +1309,7 @@ describe(validateSDL.name, () => {
             credentials: {
               host: "registry.example.com",
               password: "password123",
-            } as SDLInput["services"][string]["credentials"],
+            } as NonNullable<SDLInput["services"]>[string]["credentials"],
           },
         },
       });
@@ -1329,7 +1330,7 @@ describe(validateSDL.name, () => {
             credentials: {
               host: "registry.example.com",
               username: "user",
-            } as SDLInput["services"][string]["credentials"],
+            } as NonNullable<SDLInput["services"]>[string]["credentials"],
           },
         },
       });
@@ -2656,6 +2657,235 @@ describe(validateSDL.name, () => {
         message: expect.stringContaining("mixes implicit"),
       }));
     });
+  });
+
+  describe("volumes (SDL 2.2)", () => {
+    const owner = "akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh";
+
+    it("accepts a compute deployment without volumes", () => {
+      const { sdl } = setup({ version: "2.2" });
+
+      expect(validateSDL(sdl)).toBeUndefined();
+    });
+
+    it("accepts a volume deployment without services or compute profiles", () => {
+      expect(validateSDL(createVolumeSDL())).toBeUndefined();
+    });
+
+    it("accepts an attaching service whose owner comes from the owner option", () => {
+      expect(validateSDL(createAttachSDL(), { owner })).toBeUndefined();
+    });
+
+    it("accepts an attaching service whose reference names the owner", () => {
+      expect(validateSDL(createAttachSDL({ owner }))).toBeUndefined();
+    });
+
+    it("rejects an attaching service whose owner is unknown", () => {
+      expect(validateSDL(createAttachSDL())).toContainEqual(expect.objectContaining({
+        instancePath: "/volumes/myapp-pgdata/external",
+        message: expect.stringContaining("owner is unknown"),
+      }));
+    });
+
+    it.each(["adopt", "replica-of"])("requires the owner option for %s", (field) => {
+      const sdl = createVolumeSDL({ [field]: { dseq: 555 } });
+
+      expect(validateSDL(sdl, { owner })).toBeUndefined();
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: `/volumes/myapp-pgdata/${field}`,
+        message: expect.stringContaining("requires the owner"),
+      }));
+    });
+
+    it("rejects the volumes section before SDL 2.2", () => {
+      const sdl = { ...createAttachSDL({ owner }), version: "2.1" } as const;
+
+      expect(validateSDL(sdl)).toEqual([expect.objectContaining({
+        instancePath: "",
+        message: "The \"volumes\" section requires SDL version 2.2.",
+      })]);
+    });
+
+    it("rejects an SDL 2.2 that declares neither services nor volumes", () => {
+      const sdl = createVolumeSDL();
+      delete sdl.volumes;
+
+      expect(validateSDL(sdl)?.map(({ message }) => message)).toEqual([
+        "Missing required field: \"services\".",
+        "Missing required field: \"volumes\".",
+      ]);
+    });
+
+    it("rejects a volume named after a service", () => {
+      expect(validateSDL(createAttachSDL({ owner }, "db"))).toContainEqual(expect.objectContaining({
+        instancePath: "/volumes/db",
+        message: expect.stringContaining("collides with a service of the same name"),
+      }));
+    });
+
+    it("rejects a volume named after a compute profile", () => {
+      const sdl = merge(createVolumeSDL(), {
+        profiles: {
+          compute: {
+            "myapp-pgdata": {
+              resources: { cpu: { units: 1 }, memory: { size: "512Mi" }, storage: { size: "1Gi" } },
+            },
+          },
+        },
+      });
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/profiles/compute/myapp-pgdata",
+        message: expect.stringContaining("collides with a compute profile of the same name"),
+      }));
+    });
+
+    it("rejects a volume deployed under another profile", () => {
+      const sdl = merge(createVolumeSDL(), {
+        profiles: { placement: { "us-west": { pricing: { other: { denom: AKT_DENOM, amount: 150 } } } } },
+        deployment: { "myapp-pgdata": { "us-west": { profile: "other" } } },
+      });
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/deployment/myapp-pgdata/us-west/profile",
+        message: expect.stringContaining("must be deployed with the profile \"myapp-pgdata\""),
+      }));
+    });
+
+    it("rejects a volume deployed to more than one placement", () => {
+      const sdl = merge(createVolumeSDL(), {
+        profiles: { placement: { "us-east": { pricing: { "myapp-pgdata": { denom: AKT_DENOM, amount: 150 } } } } },
+        deployment: { "myapp-pgdata": { "us-east": { profile: "myapp-pgdata", count: 1 } } },
+      });
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/deployment/myapp-pgdata",
+        message: expect.stringContaining("exactly one placement (2 given)"),
+      }));
+    });
+
+    it("rejects a volume deployment without pricing", () => {
+      const sdl = createVolumeSDL();
+      sdl.profiles.placement["us-west"].pricing = { other: { denom: AKT_DENOM, amount: 150 } };
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/profiles/placement/us-west/pricing",
+        message: "The pricing for the \"myapp-pgdata\" profile is not defined in the \"us-west\" placement.",
+      }));
+    });
+
+    it("rejects a deployment that matches neither a service nor a declared volume", () => {
+      const sdl = merge(createVolumeSDL(), {
+        deployment: { stray: { "us-west": { profile: "myapp-pgdata", count: 1 } } },
+      });
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/deployment/stray",
+        message: expect.stringContaining("matches neither a service nor a declared volume"),
+      }));
+    });
+
+    it("rejects a service that references a volume declared in the same SDL", () => {
+      const sdl = createAttachSDL();
+      sdl.volumes = { "myapp-pgdata": { size: "10Gi", class: "beta2" } };
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/volumes/myapp-pgdata",
+        message: expect.stringContaining("which is declared in this SDL"),
+      }));
+    });
+
+    it("rejects a service that references the same volume twice", () => {
+      const sdl = merge(createAttachSDL({ owner }), {
+        services: { db: { params: { storage: { logs: { mount: "/logs", volume: "myapp-pgdata" } } } } },
+      });
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/services/db/params/storage/logs/volume",
+        message: "Service \"db\" references volume \"myapp-pgdata\" more than once.",
+      }));
+    });
+
+    it("rejects a local storage mounted where an attached volume is mounted", () => {
+      const sdl = merge(createAttachSDL({ owner }), {
+        services: { db: { params: { storage: { cache: { mount: "/var/lib/postgresql/data" } } } } },
+        profiles: { compute: { db: { resources: { storage: [{ name: "cache", size: "1Gi" }] } } } },
+      });
+
+      expect(validateSDL(sdl)).toContainEqual(expect.objectContaining({
+        instancePath: "/services/db/params/storage/cache/mount",
+        message: "Mount \"/var/lib/postgresql/data\" already in use by volume \"data\".",
+      }));
+    });
+
+    it("rejects a ram-backed volume", () => {
+      expect(validateSDL(createVolumeSDL({ class: "ram" }))).toContainEqual(expect.objectContaining({
+        instancePath: "/volumes/myapp-pgdata/class",
+        keyword: "enum",
+      }));
+    });
+
+    it("rejects a compound retention that the Go parser would accept", () => {
+      expect(validateSDL(createVolumeSDL({ lifecycle: { retention: "1h30m" } }))).toContainEqual(expect.objectContaining({
+        instancePath: "/volumes/myapp-pgdata/lifecycle/retention",
+        keyword: "pattern",
+      }));
+    });
+
+    function createVolumeSDL(volume: Record<string, unknown> = {}): SDLInput {
+      return yaml`
+        version: "2.2"
+        volumes:
+          myapp-pgdata: ${{ size: "10Gi", class: "beta2", ...volume }}
+        profiles:
+          placement:
+            us-west:
+              pricing:
+                myapp-pgdata:
+                  denom: uakt
+                  amount: 150
+        deployment:
+          myapp-pgdata:
+            us-west:
+              profile: myapp-pgdata
+              count: 1
+      `;
+    }
+
+    function createAttachSDL(external: { owner?: string } = {}, volumeName = "myapp-pgdata"): SDLInput {
+      return yaml`
+        version: "2.2"
+        volumes: ${{ [volumeName]: { external: { dseq: 1234567, ...external } } }}
+        services:
+          db:
+            image: postgres:16
+            params:
+              storage:
+                data:
+                  mount: /var/lib/postgresql/data
+                  volume: ${volumeName}
+        profiles:
+          compute:
+            db:
+              resources:
+                cpu:
+                  units: 2
+                memory:
+                  size: 4Gi
+                storage: []
+          placement:
+            anywhere:
+              pricing:
+                db:
+                  denom: uakt
+                  amount: 800
+        deployment:
+          db:
+            anywhere:
+              profile: db
+              count: 1
+      `;
+    }
   });
 
   function setup(overrides: DeepPartial<SDLInput> = {}, networkId: NetworkId = "sandbox") {

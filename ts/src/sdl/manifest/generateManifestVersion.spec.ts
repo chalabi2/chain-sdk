@@ -621,6 +621,122 @@ describe(generateManifestVersion.name, () => {
     });
   });
 
+  describe("volumes (SDL 2.2)", () => {
+    const owner = "akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh";
+
+    it("hashes a volume deployment's canonical empty manifest like Go", async () => {
+      const result = generateManifest(yaml`
+        version: "2.2"
+        volumes:
+          myapp-pgdata:
+            size: 200Gi
+            class: beta3
+        profiles:
+          placement:
+            us-west:
+              pricing:
+                myapp-pgdata:
+                  denom: uakt
+                  amount: 150
+        deployment:
+          myapp-pgdata:
+            us-west:
+              profile: myapp-pgdata
+              count: 1
+      `);
+      assertBuildResult(result);
+
+      expect(manifestToSortedJSON(result.value.groups)).toBe("[{\"name\":\"us-west\",\"services\":null}]");
+      expect(Buffer.from(await generateManifestVersion(result.value.groups)).toString("hex"))
+        .toBe("74066c155b207484e1e3671548c44e5c9dff4d2fbd1293f61fd4f7f466a24e0e");
+    });
+
+    it("drops an attaching service's empty resource storage but keeps its storage params", () => {
+      const result = generateManifest(yaml`
+        version: "2.2"
+        volumes:
+          myapp-pgdata:
+            external:
+              dseq: 1234567
+        services:
+          db:
+            image: postgres:16
+            params:
+              storage:
+                data:
+                  mount: /var/lib/postgresql/data
+                  volume: myapp-pgdata
+        profiles:
+          compute:
+            db:
+              resources:
+                cpu:
+                  units: 2
+                memory:
+                  size: 4Gi
+                storage: []
+          placement:
+            anywhere:
+              pricing:
+                db:
+                  denom: uakt
+                  amount: 800
+        deployment:
+          db:
+            anywhere:
+              profile: db
+              count: 1
+      `, { owner });
+      assertBuildResult(result);
+
+      const [service] = JSON.parse(manifestToSortedJSON(result.value.groups))[0].services;
+      expect(service.resources).not.toHaveProperty("storage");
+      expect(service.params.storage).toEqual([
+        { mount: "/var/lib/postgresql/data", name: "data", readOnly: false, volume: `${owner}/1234567/1/myapp-pgdata` },
+      ]);
+    });
+
+    it("omits the volume of storage params that mount local storage", () => {
+      const result = generateManifest(yaml`
+        version: "2.0"
+        services:
+          web:
+            image: nginx
+            params:
+              storage:
+                data:
+                  mount: /data
+        profiles:
+          compute:
+            web:
+              resources:
+                cpu:
+                  units: 0.5
+                memory:
+                  size: 512Mi
+                storage:
+                  - size: 512Mi
+                  - name: data
+                    size: 1Gi
+          placement:
+            dcloud:
+              pricing:
+                web:
+                  denom: uakt
+                  amount: 1000
+        deployment:
+          web:
+            dcloud:
+              profile: web
+              count: 1
+      `);
+      assertBuildResult(result);
+
+      const [service] = JSON.parse(manifestToSortedJSON(result.value.groups))[0].services;
+      expect(service.params.storage).toEqual([{ mount: "/data", name: "data", readOnly: false }]);
+    });
+  });
+
   function setup(options: {
     sdl?: SDLInput;
     image?: string;

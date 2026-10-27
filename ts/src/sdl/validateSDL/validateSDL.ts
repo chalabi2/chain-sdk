@@ -1,12 +1,23 @@
 import type { ErrorMessages, ValidationError, ValidationFunction } from "../../utils/jsonSchemaValidation.ts";
 import { dirname, getErrorLocation, humanizeErrors } from "../../utils/jsonSchemaValidation.ts";
 import { MAX_HTTP_TIMEOUT_MILLISECONDS, parseHTTPTimeout } from "../httpTimeout.ts";
-import { INTERCONNECT_GROUP_AUTO, resolveInterconnectGroup } from "../manifest/manifestUtils.ts";
+import { compareStrings, INTERCONNECT_GROUP_AUTO, parseStorageBytes, resolveInterconnectGroup } from "../manifest/manifestUtils.ts";
+import { declaredVolumeNames, isExternalVolume, serviceVolumeNames } from "../manifest/volumes.ts";
 import { castArray, stringToBoolean } from "../utils.ts";
-import { schema as validationSDLSchema, type SDLInput, validate as validateSDLInput } from "./validateSDLInput.ts";
+import { schema as validationSDLSchema, type SDLInput, validate as validateSDLInput, type VolumeDeclaration } from "./validateSDLInput.ts";
 
 export { validationSDLSchema };
 export type { SDLInput };
+
+export interface SDLOptions {
+  /**
+   * Deployment owner (the tx signer, bech32). SDL 2.2 volume references
+   * (external, adopt, replica-of) compile to owner-keyed VolumeRefs, and the
+   * SDL omits the owner because it is the signer; an explicit
+   * `volumes.<name>.external.owner` wins.
+   */
+  owner?: string;
+}
 
 const ERROR_MESSAGES: ErrorMessages = {
   "#/definitions/storageRamClassMustNotBePersistent"(error) {
@@ -21,14 +32,23 @@ const ERROR_MESSAGES: ErrorMessages = {
   "#/properties/reclamation/properties/min_window/pattern"() {
     return `Reclamation min_window must be a whole number followed by s, m, or h (e.g. "24h", "30m").`;
   },
+  "#/definitions/legacyVersionConstraints/then/not"() {
+    return `The "volumes" section requires SDL version 2.2.`;
+  },
+  "#/definitions/legacyVersionConstraints/if": reportedByThenBranch,
+  "#/definitions/v2_2RequiresServicesOrVolumes/if": reportedByThenBranch,
 };
 
-export function validateSDL(sdl: SDLInput): undefined | ValidationError[] {
+function reportedByThenBranch(): undefined {
+  return undefined;
+}
+
+export function validateSDL(sdl: SDLInput, options: SDLOptions = {}): undefined | ValidationError[] {
   validateSDLInput(sdl);
   const schemaErrors = humanizeErrors((validateSDLInput as ValidationFunction).errors, validationSDLSchema, ERROR_MESSAGES);
   if (schemaErrors.length) return schemaErrors;
 
-  const validator = new SDLValidator(sdl);
+  const validator = new SDLValidator(sdl, options);
   const errors = validator.validate();
 
   const allErrors = schemaErrors.concat(errors);
@@ -39,11 +59,14 @@ class SDLValidator {
   readonly #endpointsUsed = new Set<string>();
   readonly #portsUsed = new Map<string, string>();
   readonly #teeTypeByPlacement = new Map<string, string>();
+  readonly #volumesUsed = new Set<string>();
   readonly #sdl: SDLInput;
+  readonly #owner: string | undefined;
   readonly #errors: ValidationError[] = [];
 
-  constructor(sdl: SDLInput) {
+  constructor(sdl: SDLInput, options: SDLOptions) {
     this.#sdl = sdl;
+    this.#owner = options.owner || undefined;
   }
 
   validate() {
@@ -55,6 +78,12 @@ class SDLValidator {
       });
     }
 
+    if (this.#sdl.version === "2.2") {
+      this.#validateVolumes();
+    } else {
+      this.#validateNoVolumeReferences();
+    }
+
     this.#validateInterconnect();
     this.#validateEndpoints();
     return this.#errors;
@@ -63,7 +92,7 @@ class SDLValidator {
   // JSON Schema caps numeric values, but its string pattern cannot enforce the
   // maximum after unit conversion. For example, "1194h" matches the pattern.
   #validateHTTPTimeoutRanges(serviceName: string) {
-    const exposes = this.#sdl.services[serviceName]?.expose ?? [];
+    const exposes = this.#sdl.services?.[serviceName]?.expose ?? [];
     for (const [exposeIndex, expose] of exposes.entries()) {
       const options = expose.http_options;
       if (!options) continue;
@@ -116,31 +145,8 @@ class SDLValidator {
   #validateDeploymentRelations(serviceName: string, deploymentName: string) {
     const serviceDeployment = this.#sdl.deployment?.[serviceName]?.[deploymentName];
     const compute = this.#sdl.profiles?.compute?.[serviceDeployment?.profile];
-    const infra = this.#sdl.profiles?.placement?.[deploymentName];
 
-    if (!infra) {
-      this.#errors.push({
-        message: `The placement "${deploymentName}" is not defined in the "placement" section.`,
-        instancePath: `/profiles/placement`,
-        schemaPath: "#/properties/profiles/properties/placement",
-        keyword: "required",
-        params: {
-          missingProperty: deploymentName,
-        },
-      });
-    }
-
-    if (infra && !infra.pricing?.[serviceDeployment?.profile]) {
-      this.#errors.push({
-        message: `The pricing for the "${serviceDeployment?.profile}" profile is not defined in the "${deploymentName}" placement.`,
-        instancePath: `/profiles/placement/${deploymentName}/pricing`,
-        schemaPath: "#/properties/profiles/properties/placement/additionalProperties/properties/pricing",
-        keyword: "required",
-        params: {
-          missingProperty: serviceDeployment?.profile,
-        },
-      });
-    }
+    this.#validatePlacementPricing(deploymentName, serviceDeployment?.profile);
 
     if (!compute) {
       this.#errors.push({
@@ -150,6 +156,34 @@ class SDLValidator {
         keyword: "required",
         params: {
           missingProperty: serviceDeployment?.profile,
+        },
+      });
+    }
+  }
+
+  #validatePlacementPricing(placementName: string, profileName: string) {
+    const infra = this.#sdl.profiles?.placement?.[placementName];
+
+    if (!infra) {
+      this.#errors.push({
+        message: `The placement "${placementName}" is not defined in the "placement" section.`,
+        instancePath: `/profiles/placement`,
+        schemaPath: "#/properties/profiles/properties/placement",
+        keyword: "required",
+        params: {
+          missingProperty: placementName,
+        },
+      });
+    }
+
+    if (infra && !infra.pricing?.[profileName]) {
+      this.#errors.push({
+        message: `The pricing for the "${profileName}" profile is not defined in the "${placementName}" placement.`,
+        instancePath: `/profiles/placement/${placementName}/pricing`,
+        schemaPath: "#/properties/profiles/properties/placement/additionalProperties/properties/pricing",
+        keyword: "required",
+        params: {
+          missingProperty: profileName,
         },
       });
     }
@@ -180,7 +214,7 @@ class SDLValidator {
         return;
       }
       const storageNameExists = storages.some(({ name }) => name === storageName);
-      if (!storageNameExists) {
+      if (!storage.volume && !storageNameExists) {
         this.#errors.push({
           message: `Service "${serviceName}" references non-existing compute volume "${storageName}".`,
           instancePath: `/profiles/compute/${serviceDeployment.profile}/resources/storage`,
@@ -535,5 +569,373 @@ class SDLValidator {
         });
       }
     });
+  }
+
+  #validateNoVolumeReferences() {
+    Object.entries(this.#sdl.services ?? {}).forEach(([serviceName, service]) => {
+      Object.entries(service.params?.storage ?? {}).forEach(([storageName, storage]) => {
+        if (!storage?.volume) return;
+
+        this.#errors.push({
+          message: `Service "${serviceName}" storage "${storageName}" sets volume; volume references require SDL version 2.2.`,
+          instancePath: `/services/${serviceName}/params/storage/${storageName}/volume`,
+          schemaPath: "#/properties/services/additionalProperties/properties/params/properties/storage/additionalProperties/properties/volume",
+          keyword: "additionalProperties",
+          params: {
+            additionalProperty: "volume",
+          },
+        });
+      });
+    });
+  }
+
+  /**
+   * Mirrors `validateContent` in go/sdl/v2_2.go. A volume is its own
+   * deployment: an SDL either declares exactly one volume and no services, or
+   * declares services that attach external volumes. Grammar the input schema
+   * already enforces (vid labels, class, reclaim, retention, dseq) is not
+   * repeated here.
+   */
+  #validateVolumes() {
+    this.#validateVolumeDeclarations();
+    this.#validateVolumeDeployments();
+    this.#validateServiceVolumes();
+    this.#validateSharedProfileVolumes();
+    this.#validateUnusedVolumes();
+  }
+
+  #validateVolumeDeclarations() {
+    const declared = declaredVolumeNames(this.#sdl);
+
+    Object.entries(this.#sdl.volumes ?? {}).forEach(([name, volume]) => {
+      if (this.#sdl.services?.[name]) {
+        this.#errors.push({
+          message: `Volume "${name}" collides with a service of the same name.`,
+          instancePath: `/volumes/${name}`,
+          schemaPath: "#/properties/volumes",
+          keyword: "uniqueItems",
+          params: {
+            duplicate: name,
+          },
+        });
+      }
+
+      if (isExternalVolume(volume)) return;
+
+      if (volumeSizeBytes(volume.size) === 0n) {
+        this.#errors.push({
+          message: `Volume "${name}" must declare a valid, non-zero size.`,
+          instancePath: `/volumes/${name}/size`,
+          schemaPath: "#/definitions/volumeDeclaration/properties/size",
+          keyword: "exclusiveMinimum",
+          params: {
+            comparison: ">",
+            limit: 0,
+          },
+        });
+      }
+
+      if (volume.adopt && volume["replica-of"]) {
+        this.#errors.push({
+          message: `Volume "${name}" sets both adopt and replica-of, which are mutually exclusive.`,
+          instancePath: `/volumes/${name}`,
+          schemaPath: "#/definitions/volumeDeclaration",
+          keyword: "not",
+          params: {},
+        });
+      }
+    });
+
+    if (declared.length && Object.keys(this.#sdl.services ?? {}).length) {
+      this.#errors.push({
+        message: "A volume deployment must not declare services; create the volume deployment separately and reference it via volumes.<name>.external.",
+        instancePath: "/services",
+        schemaPath: "#/properties/services",
+        keyword: "not",
+        params: {},
+      });
+    }
+
+    if (declared.length > 1) {
+      this.#errors.push({
+        message: `Only one volume may be declared per SDL, since each volume is its own deployment; found ${declared.length}.`,
+        instancePath: "/volumes",
+        schemaPath: "#/properties/volumes",
+        keyword: "maxProperties",
+        params: {
+          limit: 1,
+        },
+      });
+    }
+  }
+
+  #validateVolumeDeployments() {
+    Object.keys(this.#sdl.deployment).forEach((name) => {
+      const volume = this.#sdl.volumes?.[name];
+
+      if (volume && !isExternalVolume(volume)) {
+        this.#validateVolumeDeployment(name, volume);
+        return;
+      }
+
+      if (!this.#sdl.services?.[name]) {
+        this.#errors.push({
+          message: `Deployment "${name}" matches neither a service nor a declared volume.`,
+          instancePath: `/deployment/${name}`,
+          schemaPath: "#/properties/deployment",
+          keyword: "additionalProperties",
+          params: {
+            additionalProperty: name,
+          },
+        });
+      }
+    });
+  }
+
+  #validateVolumeDeployment(name: string, volume: VolumeDeclaration) {
+    const placements = Object.entries(this.#sdl.deployment[name]);
+
+    this.#volumesUsed.add(name);
+
+    if (placements.length !== 1) {
+      this.#errors.push({
+        message: `Volume "${name}" must be deployed to exactly one placement (${placements.length} given).`,
+        instancePath: `/deployment/${name}`,
+        schemaPath: "#/properties/deployment/additionalProperties",
+        keyword: placements.length ? "maxProperties" : "minProperties",
+        params: {
+          limit: 1,
+        },
+      });
+    }
+
+    if (this.#sdl.profiles.compute?.[name]) {
+      this.#errors.push({
+        message: `Volume "${name}" collides with a compute profile of the same name.`,
+        instancePath: `/profiles/compute/${name}`,
+        schemaPath: "#/properties/profiles/properties/compute",
+        keyword: "uniqueItems",
+        params: {
+          duplicate: name,
+        },
+      });
+    }
+
+    placements.forEach(([placementName, { profile, count }]) => {
+      if (profile !== name) {
+        this.#errors.push({
+          message: `Volume "${name}" must be deployed with the profile "${name}", got "${profile}".`,
+          instancePath: `/deployment/${name}/${placementName}/profile`,
+          schemaPath: "#/properties/deployment/additionalProperties/additionalProperties/properties/profile",
+          keyword: "const",
+          params: {
+            allowedValue: name,
+          },
+        });
+      }
+
+      this.#validatePlacementPricing(placementName, profile);
+
+      if (count !== 1) {
+        this.#errors.push({
+          message: `Volume "${name}" deployment count must be 1, got ${count}.`,
+          instancePath: `/deployment/${name}/${placementName}/count`,
+          schemaPath: "#/properties/deployment/additionalProperties/additionalProperties/properties/count",
+          keyword: "const",
+          params: {
+            allowedValue: 1,
+          },
+        });
+      }
+    });
+
+    (["adopt", "replica-of"] as const).forEach((field) => {
+      if (!volume[field] || this.#owner) return;
+
+      this.#errors.push({
+        message: `Volume "${name}" ${field} requires the owner; pass the signer as the owner option.`,
+        instancePath: `/volumes/${name}/${field}`,
+        schemaPath: "#/definitions/volumePolicyRef",
+        keyword: "required",
+        params: {
+          missingProperty: "owner",
+        },
+      });
+    });
+  }
+
+  #validateServiceVolumes() {
+    const attachedBy = new Map<string, string>();
+    const services = Object.entries(this.#sdl.services ?? {}).sort(([a], [b]) => compareStrings(a, b));
+
+    services.forEach(([serviceName, service]) => {
+      const placements = Object.entries(this.#sdl.deployment[serviceName] ?? {});
+      const profiles = new Set(placements.map(([, { profile }]) => profile));
+
+      Object.entries(service.params?.storage ?? {}).forEach(([storageName, storage]) => {
+        const volumeName = storage?.volume;
+        if (!volumeName) return;
+
+        const storagePath = `/services/${serviceName}/params/storage/${storageName}`;
+        const volume = this.#sdl.volumes?.[volumeName];
+
+        if (!volume) {
+          this.#errors.push({
+            message: `Service "${serviceName}" references non-existing volume "${volumeName}".`,
+            instancePath: "/volumes",
+            schemaPath: "#/properties/volumes",
+            keyword: "required",
+            params: {
+              missingProperty: volumeName,
+            },
+          });
+          return;
+        }
+
+        if (!isExternalVolume(volume)) {
+          this.#errors.push({
+            message: `Service "${serviceName}" references volume "${volumeName}" which is declared in this SDL; a volume is its own deployment, create it first and reference it via volumes.${volumeName}.external.`,
+            instancePath: `/volumes/${volumeName}`,
+            schemaPath: "#/definitions/volumeExternalRef",
+            keyword: "required",
+            params: {
+              missingProperty: "external",
+            },
+          });
+          return;
+        }
+
+        profiles.forEach((profile) => {
+          const storages = castArray(this.#sdl.profiles.compute?.[profile]?.resources.storage);
+          if (!storages.some((entry) => (entry.name || "default") === storageName)) return;
+
+          this.#errors.push({
+            message: `Service "${serviceName}" storage "${storageName}" references volume "${volumeName}" and matches a compute profile storage entry; a volume reference excludes size, class and attributes.`,
+            instancePath: `/profiles/compute/${profile}/resources/storage`,
+            schemaPath: "#/properties/profiles/properties/compute/additionalProperties/properties/resources/properties/storage",
+            keyword: "not",
+            params: {},
+          });
+        });
+
+        if (!storage.mount) {
+          this.#errors.push({
+            message: `Service "${serviceName}" storage "${storageName}" references volume "${volumeName}" and requires a mount.`,
+            instancePath: storagePath,
+            schemaPath: "#/properties/services/additionalProperties/properties/params/properties/storage/additionalProperties/properties/mount",
+            keyword: "required",
+            params: {
+              missingProperty: "mount",
+            },
+          });
+        }
+
+        if (!volume.external.owner && !this.#owner) {
+          this.#errors.push({
+            message: `Volume "${volumeName}" owner is unknown; set volumes.${volumeName}.external.owner or pass the signer as the owner option.`,
+            instancePath: `/volumes/${volumeName}/external`,
+            schemaPath: "#/definitions/volumeExternalRef/properties/external",
+            keyword: "required",
+            params: {
+              missingProperty: "owner",
+            },
+          });
+        }
+
+        const otherService = attachedBy.get(volumeName);
+        if (otherService !== undefined) {
+          this.#errors.push({
+            message: otherService === serviceName
+              ? `Service "${serviceName}" references volume "${volumeName}" more than once.`
+              : `Volume "${volumeName}" is referenced by services "${otherService}" and "${serviceName}"; a volume attaches to a single service (RWO).`,
+            instancePath: `${storagePath}/volume`,
+            schemaPath: "#/properties/services/additionalProperties/properties/params/properties/storage/additionalProperties/properties/volume",
+            keyword: "uniqueItems",
+            params: {
+              duplicate: volumeName,
+            },
+          });
+        }
+
+        attachedBy.set(volumeName, serviceName);
+        this.#volumesUsed.add(volumeName);
+      });
+
+      if (!serviceVolumeNames(service).length) return;
+
+      placements.forEach(([placementName, { count }]) => {
+        if (count === 1) return;
+
+        this.#errors.push({
+          message: `Service "${serviceName}" attaches volumes with count ${count}; volumes attach once (RWO), so count must be 1.`,
+          instancePath: `/deployment/${serviceName}/${placementName}/count`,
+          schemaPath: "#/properties/deployment/additionalProperties/additionalProperties/properties/count",
+          keyword: "const",
+          params: {
+            allowedValue: 1,
+          },
+        });
+      });
+    });
+  }
+
+  /**
+   * Services sharing a compute profile share one resource unit, and the
+   * provider requires every service of a unit to carry exactly the unit's
+   * volume references (`buildGroups` in go/sdl/groupBuilder_v2_2.go).
+   */
+  #validateSharedProfileVolumes() {
+    const unitVolumes = new Map<string, string>();
+    const services = this.#sdl.services ?? {};
+
+    Object.keys(services).sort(compareStrings).forEach((serviceName) => {
+      const volumes = JSON.stringify(serviceVolumeNames(services[serviceName]).sort(compareStrings));
+
+      Object.entries(this.#sdl.deployment[serviceName] ?? {}).forEach(([placementName, { profile }]) => {
+        const unit = JSON.stringify([placementName, profile]);
+        const boundVolumes = unitVolumes.get(unit);
+
+        if (boundVolumes === undefined) {
+          unitVolumes.set(unit, volumes);
+          return;
+        }
+
+        if (boundVolumes === volumes) return;
+
+        this.#errors.push({
+          message: `Service "${serviceName}" shares compute profile "${profile}" in placement "${placementName}" but not its volume references; give volume-mounting services a dedicated profile.`,
+          instancePath: `/deployment/${serviceName}/${placementName}/profile`,
+          schemaPath: "#/properties/deployment/additionalProperties/additionalProperties/properties/profile",
+          keyword: "uniqueItems",
+          params: {
+            duplicate: profile,
+          },
+        });
+      });
+    });
+  }
+
+  #validateUnusedVolumes() {
+    Object.keys(this.#sdl.volumes ?? {}).forEach((name) => {
+      if (this.#volumesUsed.has(name)) return;
+
+      this.#errors.push({
+        message: `Volume "${name}" declared but never used.`,
+        instancePath: `/volumes/${name}`,
+        schemaPath: "#/properties/volumes",
+        keyword: "additionalProperties",
+        params: {
+          additionalProperty: name,
+        },
+      });
+    });
+  }
+}
+
+function volumeSizeBytes(size: string): bigint {
+  try {
+    return parseStorageBytes(size);
+  } catch {
+    return 0n;
   }
 }
