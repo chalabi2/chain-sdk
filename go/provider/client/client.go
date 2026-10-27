@@ -78,6 +78,9 @@ type Client interface {
 		tsq <-chan remotecommand.TerminalSize) error
 	MigrateHostnames(ctx context.Context, hostnames []string, dseq uint64, gseq uint32) error
 	MigrateEndpoints(ctx context.Context, endpoints []string, dseq uint64, gseq uint32) error
+	BucketInfo(ctx context.Context, id mtypes.LeaseID) (BucketInfo, error)
+	CreateBucketKey(ctx context.Context, id mtypes.LeaseID, req BucketKeyRequest) (BucketKey, error)
+	RevokeBucketKey(ctx context.Context, id mtypes.LeaseID, name string) error
 }
 
 type client struct {

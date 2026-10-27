@@ -2,6 +2,7 @@ package rest
 
 import (
 	"fmt"
+	"net/url"
 
 	mtypes "pkg.akt.dev/go/node/market/v1"
 )
@@ -56,4 +57,16 @@ func ServiceStatusPath(id mtypes.LeaseID, service string) string {
 
 func ServiceLogsPath(id mtypes.LeaseID) string {
 	return fmt.Sprintf("%s/logs", LeasePath(id))
+}
+
+func BucketPath(id mtypes.LeaseID) string {
+	return fmt.Sprintf("%s/bucket", LeasePath(id))
+}
+
+func BucketKeysPath(id mtypes.LeaseID) string {
+	return fmt.Sprintf("%s/bucket/keys", LeasePath(id))
+}
+
+func BucketKeyPath(id mtypes.LeaseID, name string) string {
+	return fmt.Sprintf("%s/bucket/keys/%s", LeasePath(id), url.PathEscape(name))
 }
