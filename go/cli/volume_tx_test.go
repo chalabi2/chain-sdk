@@ -1,12 +1,15 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	dv1beta "pkg.akt.dev/go/node/deployment/v1beta4"
 	"pkg.akt.dev/go/sdl"
+	"pkg.akt.dev/go/testutil"
 )
 
 const volumeTestOwner = "akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh"
@@ -109,4 +112,18 @@ func TestVolumeGroupsFromSDLRejectsComputeSDL(t *testing.T) {
 	_, err = volumeGroupsFromSDL(obj)
 	require.ErrorIs(t, err, errVolumeCreate)
 	require.ErrorIs(t, err, errVolumeCreateNoVolumes)
+}
+
+func TestWarnVolumePolicy(t *testing.T) {
+	disk := testutil.VolumeGroupSpec(t, "pgdata")
+	bucket := testutil.BucketGroupSpec(t, "media")
+	unretained := testutil.BucketGroupSpec(t, "scratch")
+	unretained.Volume.Retention = 0
+
+	out := &bytes.Buffer{}
+	warnVolumePolicy(out, dv1beta.GroupSpecs{disk, bucket, unretained})
+
+	require.Contains(t, out.String(), `volume "pgdata" declares max-replicas: 0`)
+	require.NotContains(t, out.String(), `volume "media" declares max-replicas`)
+	require.Contains(t, out.String(), `volume "scratch" declares no retention window`)
 }

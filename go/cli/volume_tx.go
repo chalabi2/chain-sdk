@@ -215,7 +215,7 @@ func warnVolumePolicy(out io.Writer, volumes dv1beta.GroupSpecs) {
 			continue
 		}
 
-		if vol.MaxReplicas == 0 {
+		if vol.MaxReplicas == 0 && !vol.IsBucket() {
 			_, _ = fmt.Fprintf(out, "volume %q declares max-replicas: 0\n"+
 				"no provider is obliged to serve replica exports; the volume has no cross-provider redundancy\n", vol.Vid)
 		}
