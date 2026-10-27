@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../../../../go/sdl/sdl-input.schema.yaml
+---
+version: "2.2"
+volumes:
+  myapp-pgdata:
+    external:
+      owner: akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh
+      dseq: 1234567
+services:
+  db:
+    image: postgres:16
+    expose:
+      - port: 5432
+        to:
+          - global: true
+    params:
+      storage:
+        data:
+          mount: /var/lib/postgresql/data
+          volume: myapp-pgdata
+  # Shares db's compute profile, and so its resource unit, but not the volume
+  # reference that unit carries.
+  sidecar:
+    image: busybox:1
+profiles:
+  compute:
+    shared:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1Gi
+        storage: []
+  placement:
+    anywhere:
+      pricing:
+        shared:
+          denom: uakt
+          amount: 100
+deployment:
+  db:
+    anywhere:
+      profile: shared
+      count: 1
+  sidecar:
+    anywhere:
+      profile: shared
+      count: 1

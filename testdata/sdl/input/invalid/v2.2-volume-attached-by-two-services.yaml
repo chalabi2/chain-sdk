@@ -1,0 +1,63 @@
+# yaml-language-server: $schema=../../../../go/sdl/sdl-input.schema.yaml
+---
+version: "2.2"
+volumes:
+  myapp-pgdata:
+    external:
+      owner: akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh
+      dseq: 1234567
+# Both services mount the same volume, but a volume attaches to a single
+# service (RWO).
+services:
+  db:
+    image: postgres:16
+    expose:
+      - port: 5432
+        to:
+          - global: true
+    params:
+      storage:
+        data:
+          mount: /data
+          volume: myapp-pgdata
+  backup:
+    image: backup:1
+    params:
+      storage:
+        data:
+          mount: /backup
+          volume: myapp-pgdata
+profiles:
+  compute:
+    db:
+      resources:
+        cpu:
+          units: 2
+        memory:
+          size: 4Gi
+        storage: []
+    backup:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1Gi
+        storage: []
+  placement:
+    anywhere:
+      pricing:
+        db:
+          denom: uakt
+          amount: 800
+        backup:
+          denom: uakt
+          amount: 100
+deployment:
+  db:
+    anywhere:
+      profile: db
+      count: 1
+  backup:
+    anywhere:
+      profile: backup
+      count: 1

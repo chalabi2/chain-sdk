@@ -1,8 +1,10 @@
-import type { Attribute, PlacementRequirements } from "../../src/generated/protos/akash/base/attributes/v1/attribute.ts";
+import type { PlacementRequirements } from "../../src/generated/protos/akash/base/attributes/v1/attribute.ts";
 import type { Endpoint } from "../../src/generated/protos/akash/base/resources/v1beta4/endpoint.ts";
 import type { Resources } from "../../src/generated/protos/akash/base/resources/v1beta4/resources.ts";
+import type { VolumePolicy, VolumeRef } from "../../src/generated/protos/akash/deployment/v1/volume.ts";
 import type { GroupSpec } from "../../src/generated/protos/akash/deployment/v1beta4/groupspec.ts";
 import type { ResourceUnit } from "../../src/generated/protos/akash/deployment/v1beta4/resourceunit.ts";
+import type { Duration } from "../../src/generated/protos/google/protobuf/duration.ts";
 
 /**
  * Renders TypeScript group specs the way Go's `json.Marshal` renders
@@ -13,11 +15,19 @@ import type { ResourceUnit } from "../../src/generated/protos/akash/deployment/v
  * mapping is spelled out field by field. The rules come from the gogoproto json
  * tags in `go/node/**`:
  *
- *   - `signed_by` / `all_of` / `any_of` / `size` / `sequence_number` are custom
- *     json tags, not the camelCase ts-proto derives from the field names.
+ *   - `signed_by` / `all_of` / `any_of` / `size` / `sequence_number` /
+ *     `max_attachments` / `max_replicas` / `replica_of` are custom json tags,
+ *     not the camelCase ts-proto derives from the field names.
  *   - `PlacementRequirements.Attributes` has NO `omitempty`, so an empty list
  *     marshals as `null`. Every resource-level `Attributes` (cpu, gpu, memory,
  *     storage) DOES have `omitempty`, so an empty list is dropped entirely.
+ *   - `Resources.Storage` and `ResourceUnit.Volumes` are `omitempty`, so a unit
+ *     that only attaches external volumes has neither key, and a unit that
+ *     attaches none has no `volumes`.
+ *   - `GroupSpec.Volume` and `VolumePolicy.Adopt`/`ReplicaOf` are `omitempty`
+ *     pointers, present only on storage-only (volume) groups.
+ *   - `VolumePolicy.Retention` is a `time.Duration`, which marshals as int64
+ *     nanoseconds; `VolumeRef.DSeq` is a uint64, a plain JSON number.
  *   - `SignedBy.AllOf`/`AnyOf` are nil slices when unset, which marshal as `null`.
  *   - `Endpoint.Kind` has `omitempty`, so SHARED_HTTP (0) is dropped.
  *   - `ResourceValue.Val` is a `cosmossdk.io/math.Int`, which marshals as a
@@ -32,6 +42,7 @@ export function toGoGroupSpecJSON(specs: GroupSpec[]): unknown {
     name: spec.name,
     requirements: requirementsToGoJSON(spec.requirements),
     resources: spec.resources.map(resourceUnitToGoJSON),
+    ...(spec.volume ? { volume: volumePolicyToGoJSON(spec.volume) } : {}),
   }));
 }
 
@@ -50,6 +61,7 @@ function resourceUnitToGoJSON(unit: ResourceUnit) {
     resource: resourcesToGoJSON(unit.resource!),
     count: unit.count,
     price: unit.price,
+    ...omitWhenEmpty("volumes", unit.volumes.map(volumeRefToGoJSON)),
   };
 }
 
@@ -64,11 +76,11 @@ function resourcesToGoJSON(resources: Resources) {
       size: { val: String(resources.memory!.quantity!.val) },
       ...omitWhenEmpty("attributes", resources.memory!.attributes),
     },
-    storage: resources.storage.map((volume) => ({
+    ...omitWhenEmpty("storage", resources.storage.map((volume) => ({
       name: volume.name,
       size: { val: String(volume.quantity!.val) },
       ...omitWhenEmpty("attributes", volume.attributes),
-    })),
+    }))),
     gpu: {
       units: { val: String(resources.gpu!.units!.val) },
       ...omitWhenEmpty("attributes", resources.gpu!.attributes),
@@ -84,10 +96,35 @@ function endpointToGoJSON(endpoint: Endpoint) {
   };
 }
 
+function volumePolicyToGoJSON(policy: VolumePolicy) {
+  return {
+    vid: policy.vid,
+    reclaim: policy.reclaim,
+    retention: durationToGoJSON(policy.retention),
+    max_attachments: policy.maxAttachments,
+    max_replicas: policy.maxReplicas,
+    ...(policy.adopt ? { adopt: volumeRefToGoJSON(policy.adopt) } : {}),
+    ...(policy.replicaOf ? { replica_of: volumeRefToGoJSON(policy.replicaOf) } : {}),
+  };
+}
+
+function volumeRefToGoJSON(ref: VolumeRef) {
+  return {
+    owner: ref.owner,
+    dseq: Number(ref.dseq),
+    gseq: ref.gseq,
+    name: ref.name,
+  };
+}
+
+function durationToGoJSON(duration: Duration | undefined): number {
+  return Number((duration?.seconds ?? 0n) * 1_000_000_000n + BigInt(duration?.nanos ?? 0));
+}
+
 function nullWhenEmpty<T>(values: T[] | undefined): T[] | null {
   return values?.length ? values : null;
 }
 
-function omitWhenEmpty(key: string, attributes: Attribute[] | undefined) {
-  return attributes?.length ? { [key]: attributes } : {};
+function omitWhenEmpty<T>(key: string, values: T[] | undefined) {
+  return values?.length ? { [key]: values } : {};
 }

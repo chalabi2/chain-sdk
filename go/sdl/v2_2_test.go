@@ -3,6 +3,8 @@ package sdl
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -321,6 +323,40 @@ func TestV2_2_CanonicalVolumeManifestVersion(t *testing.T) {
 	handRolled, err := manifest.Manifest{{Name: "us-west"}}.Version()
 	require.NoError(t, err)
 	require.Equal(t, canonicalVolumeManifestVersion, hex.EncodeToString(handRolled))
+}
+
+// TestV2_2_FixtureManifestVersions pins the manifest version of every v2.2
+// parity fixture. The TypeScript SDK pins the same values in
+// ts/test/functional/sdl-parity.spec.ts, so a change on either side that
+// moves a hash fails one of the two suites.
+func TestV2_2_FixtureManifestVersions(t *testing.T) {
+	expected := map[string]string{
+		"volume-attach":     "3276b959c4f4bcc0fdf74b56033eb0402bb2253c6509df3efa1c4c992195d148",
+		"volume-deployment": canonicalVolumeManifestVersion,
+	}
+
+	inputDir := filepath.Join(fixturesInputRoot, "v2.2")
+
+	entries, err := os.ReadDir(inputDir)
+	require.NoError(t, err)
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		t.Run(entry.Name(), func(t *testing.T) {
+			want, pinned := expected[entry.Name()]
+			require.True(t, pinned, "pin the manifest version of v2.2 fixture %q here and in the TypeScript parity test", entry.Name())
+
+			obj, err := ReadFile(filepath.Join(inputDir, entry.Name(), "input.yaml"))
+			require.NoError(t, err)
+
+			version, err := obj.Version()
+			require.NoError(t, err)
+			require.Equal(t, want, hex.EncodeToString(version))
+		})
+	}
 }
 
 func TestV2_2_AttachCompilesIdenticalRefs(t *testing.T) {

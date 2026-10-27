@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../../../go/sdl/sdl-input.schema.yaml
+---
+version: "2.2"
+volumes:
+  myapp-pgdata:
+    size: 10Gi
+    class: beta2
+    # adopt and replica-of are mutually exclusive.
+    adopt:
+      dseq: 555
+    replica-of:
+      dseq: 556
+profiles:
+  placement:
+    us-west:
+      pricing:
+        myapp-pgdata:
+          denom: uakt
+          amount: 150
+deployment:
+  myapp-pgdata:
+    us-west:
+      profile: myapp-pgdata
+      count: 1

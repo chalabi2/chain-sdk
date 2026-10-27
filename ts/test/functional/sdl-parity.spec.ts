@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import { LegacyDec } from "../../src/encoding/customTypes/LegacyDec.ts";
 import { generateManifest } from "../../src/sdl/manifest/generateManifest.ts";
-import { manifestToSortedJSON } from "../../src/sdl/manifest/generateManifestVersion.ts";
+import { generateManifestVersion, manifestToSortedJSON } from "../../src/sdl/manifest/generateManifestVersion.ts";
 import type { SDLInput } from "../../src/sdl/validateSDL/validateSDL.ts";
 import { yaml } from "../../src/utils/yaml.ts";
 import { toGoGroupSpecJSON } from "./goGroupSpecJSON.ts";
@@ -34,6 +34,30 @@ describe("SDL Parity Tests", () => {
         const { manifest, expectedManifest, groupSpecs, expectedGroupSpecs } = setup(fixture);
         expect(manifest).toEqual(expectedManifest);
         expect(groupSpecs).toEqual(expectedGroupSpecs);
+      });
+    });
+  });
+
+  describe("v2.2", () => {
+    /**
+     * Go's `Manifest.Version()` per fixture, pinned on the Go side by
+     * `TestV2_2_FixtureManifestVersions`. The hash is signed into
+     * MsgCreateDeployment and re-derived by the provider, so an equivalent
+     * manifest is not enough: the bytes must match.
+     */
+    const GO_MANIFEST_VERSIONS: Record<string, string> = {
+      "volume-attach": "3276b959c4f4bcc0fdf74b56033eb0402bb2253c6509df3efa1c4c992195d148",
+      "volume-deployment": "74066c155b207484e1e3671548c44e5c9dff4d2fbd1293f61fd4f7f466a24e0e",
+    };
+
+    loadFixtures("v2.2").forEach((fixture) => {
+      it(fixture.name, async () => {
+        const { manifest, expectedManifest, groupSpecs, expectedGroupSpecs, groups } = setup(fixture);
+        expect(manifest).toEqual(expectedManifest);
+        expect(groupSpecs).toEqual(expectedGroupSpecs);
+
+        const version = Buffer.from(await generateManifestVersion(groups)).toString("hex");
+        expect(version).toBe(GO_MANIFEST_VERSIONS[fixture.name]);
       });
     });
   });
@@ -70,6 +94,62 @@ describe("SDL Parity Tests", () => {
       "cpu-unknown-attribute.yaml": {
         instancePath: "/profiles/compute/web/resources/cpu/attributes",
         messageIncludes: '"vendor" is not allowed',
+      },
+      "v2.1-volume-reference.yaml": {
+        instancePath: "/services/web/params/storage/data/volume",
+        messageIncludes: "volume references require SDL version 2.2",
+      },
+      "v2.2-two-volumes-declared.yaml": {
+        instancePath: "/volumes",
+        messageIncludes: "Only one volume may be declared per SDL",
+      },
+      "v2.2-volume-adopt-and-replica-of.yaml": {
+        instancePath: "/volumes/myapp-pgdata",
+        messageIncludes: "mutually exclusive",
+      },
+      "v2.2-volume-attach-count-two.yaml": {
+        instancePath: "/deployment/db/anywhere/count",
+        messageIncludes: "count must be 1",
+      },
+      "v2.2-volume-attached-by-two-services.yaml": {
+        instancePath: "/services/db/params/storage/data/volume",
+        messageIncludes: "referenced by services \"backup\" and \"db\"",
+      },
+      "v2.2-volume-deployment-count-two.yaml": {
+        instancePath: "/deployment/myapp-pgdata/us-west/count",
+        messageIncludes: "deployment count must be 1",
+      },
+      "v2.2-volume-never-used.yaml": {
+        instancePath: "/volumes/unused-data",
+        messageIncludes: "declared but never used",
+      },
+      "v2.2-volume-not-declared.yaml": {
+        instancePath: "/volumes",
+        messageIncludes: "references non-existing volume \"myapp-pgdata\"",
+      },
+      "v2.2-volume-owner-unknown.yaml": {
+        instancePath: "/volumes/myapp-pgdata/external",
+        messageIncludes: "owner is unknown",
+      },
+      "v2.2-volume-ref-without-mount.yaml": {
+        instancePath: "/services/db/params/storage/data",
+        messageIncludes: "requires a mount",
+      },
+      "v2.2-volume-shadows-persistent-storage.yaml": {
+        instancePath: "/profiles/compute/db/resources/storage",
+        messageIncludes: "excludes size, class and attributes",
+      },
+      "v2.2-volume-shared-compute-profile.yaml": {
+        instancePath: "/deployment/sidecar/anywhere/profile",
+        messageIncludes: "shares compute profile \"shared\"",
+      },
+      "v2.2-volume-with-services.yaml": {
+        instancePath: "/services",
+        messageIncludes: "must not declare services",
+      },
+      "v2.2-volume-zero-size.yaml": {
+        instancePath: "/volumes/myapp-pgdata/size",
+        messageIncludes: "non-zero size",
       },
     };
 
@@ -119,6 +199,7 @@ describe("SDL Parity Tests", () => {
       expectedManifest,
       groupSpecs,
       expectedGroupSpecs,
+      groups: result.value.groups,
     };
   }
 });

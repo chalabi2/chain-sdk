@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=../../../../go/sdl/sdl-input.schema.yaml
+---
+version: "2.2"
+# A volume is its own deployment: an SDL declaring one must not declare
+# services as well.
+volumes:
+  myapp-pgdata:
+    size: 10Gi
+    class: beta2
+services:
+  web:
+    image: nginx
+    expose:
+      - port: 80
+        to:
+          - global: true
+profiles:
+  compute:
+    web:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 128Mi
+        storage:
+          size: 512Mi
+  placement:
+    westcoast:
+      pricing:
+        web:
+          denom: uakt
+          amount: 50
+        myapp-pgdata:
+          denom: uakt
+          amount: 150
+deployment:
+  web:
+    westcoast:
+      profile: web
+      count: 1
+  myapp-pgdata:
+    westcoast:
+      profile: myapp-pgdata
+      count: 1

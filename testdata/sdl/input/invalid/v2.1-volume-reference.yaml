@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../../../go/sdl/sdl-input.schema.yaml
+---
+version: "2.1"
+services:
+  web:
+    image: nginx:latest
+    expose:
+      - port: 80
+        as: 80
+        to:
+          - global: true
+    # Volume references are SDL 2.2 grammar; older versions reject them
+    # instead of silently ignoring them.
+    params:
+      storage:
+        data:
+          mount: /data
+          volume: myapp-pgdata
+profiles:
+  compute:
+    web:
+      resources:
+        cpu:
+          units: 100m
+        memory:
+          size: 512Mi
+        storage:
+          - size: 512Mi
+          - name: data
+            size: 1Gi
+  placement:
+    akash:
+      pricing:
+        web:
+          denom: uakt
+          amount: 1000
+deployment:
+  web:
+    akash:
+      profile: web
+      count: 1

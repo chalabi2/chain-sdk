@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../../../../go/sdl/sdl-input.schema.yaml
+---
+version: "2.2"
+volumes:
+  myapp-pgdata:
+    external:
+      owner: akash1qufa3xzrf34qvwyejkhvnc4psf49fftaw0asmh
+      dseq: 1234567
+services:
+  db:
+    image: postgres:16
+    expose:
+      - port: 5432
+        to:
+          - global: true
+    params:
+      storage:
+        data:
+          mount: /var/lib/postgresql/data
+          volume: myapp-pgdata
+profiles:
+  compute:
+    db:
+      resources:
+        cpu:
+          units: 2
+        memory:
+          size: 4Gi
+        # The attached volume is also declared as persistent profile storage
+        # of the same name; a volume reference excludes size/class/attributes.
+        storage:
+          - name: data
+            size: 10Gi
+            attributes:
+              persistent: true
+              class: beta2
+  placement:
+    anywhere:
+      pricing:
+        db:
+          denom: uakt
+          amount: 800
+deployment:
+  db:
+    anywhere:
+      profile: db
+      count: 1

@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=../../../../go/sdl/sdl-input.schema.yaml
+---
+version: "2.2"
+# Each volume is its own deployment, so an SDL declares at most one.
+volumes:
+  vol-one:
+    size: 10Gi
+    class: beta2
+  vol-two:
+    size: 10Gi
+    class: beta2
+profiles:
+  placement:
+    us-west:
+      pricing:
+        vol-one:
+          denom: uakt
+          amount: 150
+        vol-two:
+          denom: uakt
+          amount: 150
+deployment:
+  vol-one:
+    us-west:
+      profile: vol-one
+      count: 1
+  vol-two:
+    us-west:
+      profile: vol-two
+      count: 1
