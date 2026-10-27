@@ -1320,6 +1320,9 @@ impl serde::Serialize for VolumePolicy {
         if self.replica_of.is_some() {
             len += 1;
         }
+        if self.access != 0 {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.deployment.v1.VolumePolicy", len)?;
         if !self.vid.is_empty() {
             struct_ser.serialize_field("vid", &self.vid)?;
@@ -1344,6 +1347,11 @@ impl serde::Serialize for VolumePolicy {
         if let Some(v) = self.replica_of.as_ref() {
             struct_ser.serialize_field("replicaOf", v)?;
         }
+        if self.access != 0 {
+            let v = volume_policy::Access::try_from(self.access)
+                .map_err(|_| serde::ser::Error::custom(format!("Invalid variant {}", self.access)))?;
+            struct_ser.serialize_field("access", &v)?;
+        }
         struct_ser.end()
     }
 }
@@ -1364,6 +1372,7 @@ impl<'de> serde::Deserialize<'de> for VolumePolicy {
             "adopt",
             "replica_of",
             "replicaOf",
+            "access",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -1375,6 +1384,7 @@ impl<'de> serde::Deserialize<'de> for VolumePolicy {
             MaxReplicas,
             Adopt,
             ReplicaOf,
+            Access,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -1403,6 +1413,7 @@ impl<'de> serde::Deserialize<'de> for VolumePolicy {
                             "maxReplicas" | "max_replicas" => Ok(GeneratedField::MaxReplicas),
                             "adopt" => Ok(GeneratedField::Adopt),
                             "replicaOf" | "replica_of" => Ok(GeneratedField::ReplicaOf),
+                            "access" => Ok(GeneratedField::Access),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -1429,6 +1440,7 @@ impl<'de> serde::Deserialize<'de> for VolumePolicy {
                 let mut max_replicas__ = None;
                 let mut adopt__ = None;
                 let mut replica_of__ = None;
+                let mut access__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Vid => {
@@ -1477,6 +1489,12 @@ impl<'de> serde::Deserialize<'de> for VolumePolicy {
                             }
                             replica_of__ = map_.next_value()?;
                         }
+                        GeneratedField::Access => {
+                            if access__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("access"));
+                            }
+                            access__ = Some(map_.next_value::<volume_policy::Access>()? as i32);
+                        }
                     }
                 }
                 Ok(VolumePolicy {
@@ -1487,10 +1505,82 @@ impl<'de> serde::Deserialize<'de> for VolumePolicy {
                     max_replicas: max_replicas__.unwrap_or_default(),
                     adopt: adopt__,
                     replica_of: replica_of__,
+                    access: access__.unwrap_or_default(),
                 })
             }
         }
         deserializer.deserialize_struct("akash.deployment.v1.VolumePolicy", FIELDS, GeneratedVisitor)
+    }
+}
+impl serde::Serialize for volume_policy::Access {
+    #[allow(deprecated)]
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let variant = match self {
+            Self::Mount => "mount",
+            Self::Bucket => "bucket",
+        };
+        serializer.serialize_str(variant)
+    }
+}
+impl<'de> serde::Deserialize<'de> for volume_policy::Access {
+    #[allow(deprecated)]
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        const FIELDS: &[&str] = &[
+            "mount",
+            "bucket",
+        ];
+
+        struct GeneratedVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for GeneratedVisitor {
+            type Value = volume_policy::Access;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(formatter, "expected one of: {:?}", &FIELDS)
+            }
+
+            fn visit_i64<E>(self, v: i64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Signed(v), &self)
+                    })
+            }
+
+            fn visit_u64<E>(self, v: u64) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                i32::try_from(v)
+                    .ok()
+                    .and_then(|x| x.try_into().ok())
+                    .ok_or_else(|| {
+                        serde::de::Error::invalid_value(serde::de::Unexpected::Unsigned(v), &self)
+                    })
+            }
+
+            fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+            where
+                E: serde::de::Error,
+            {
+                match value {
+                    "mount" => Ok(volume_policy::Access::Mount),
+                    "bucket" => Ok(volume_policy::Access::Bucket),
+                    _ => Err(serde::de::Error::unknown_variant(value, FIELDS)),
+                }
+            }
+        }
+        deserializer.deserialize_any(GeneratedVisitor)
     }
 }
 impl serde::Serialize for volume_policy::ReclaimPolicy {

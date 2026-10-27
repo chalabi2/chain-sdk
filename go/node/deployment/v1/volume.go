@@ -49,6 +49,12 @@ func (v *VolumePolicy) Dup() *VolumePolicy {
 	return &res
 }
 
+// IsBucket reports whether the volume is an S3 bucket reached over the network
+// rather than a disk that compute leases attach by VolumeRef.
+func (v *VolumePolicy) IsBucket() bool {
+	return v != nil && v.Access == VolumeAccessBucket
+}
+
 // GroupID method returns the GroupID of the volume group this reference
 // addresses.
 func (v VolumeRef) GroupID() GroupID {

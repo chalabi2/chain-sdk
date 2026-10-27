@@ -119,4 +119,24 @@ message VolumePolicy {
     (gogoproto.jsontag)  = "replica_of,omitempty",
     (gogoproto.moretags) = "yaml:\"replica_of,omitempty\""
   ];
+
+  // Access declares how deployments reach the volume's data.
+  enum Access {
+    option (gogoproto.goproto_enum_prefix) = false;
+
+    // mount is a disk that compute leases on the volume's provider attach by
+    // VolumeRef. It is the zero value, so every volume created before Access
+    // existed stays a disk.
+    mount = 0 [(gogoproto.enumvalue_customname) = "VolumeAccessMount"];
+    // bucket is an S3-compatible bucket the provider serves over the network to
+    // clients holding the owner's keys. It is never attached by VolumeRef.
+    bucket = 1 [(gogoproto.enumvalue_customname) = "VolumeAccessBucket"];
+  }
+
+  // Access declares how deployments reach the volume's data. Omitted when it is
+  // mount, so the encoding of every existing volume is unchanged.
+  Access access = 8 [
+    (gogoproto.jsontag)  = "access,omitempty",
+    (gogoproto.moretags) = "yaml:\"access,omitempty\""
+  ];
 }

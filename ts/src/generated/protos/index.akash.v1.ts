@@ -20,7 +20,7 @@ export { MsgCreateCertificate, MsgCreateCertificateResponse, MsgRevokeCertificat
 export { CertificateResponse, QueryCertificatesRequest, QueryCertificatesResponse } from "./akash/cert/v1/query.ts";
 export { DeploymentID, Deployment, Deployment_State, DeploymentReclamation } from "./akash/deployment/v1/deployment.ts";
 export { GroupID } from "./akash/deployment/v1/group.ts";
-export { VolumeRef, VolumePolicy, VolumePolicy_ReclaimPolicy } from "./akash/deployment/v1/volume.ts";
+export { VolumeRef, VolumePolicy, VolumePolicy_ReclaimPolicy, VolumePolicy_Access } from "./akash/deployment/v1/volume.ts";
 export { EventDeploymentCreated, EventDeploymentUpdated, EventDeploymentClosed, EventGroupStarted, EventGroupPaused, EventGroupClosed, EventVolumeAdopted } from "./akash/deployment/v1/event.ts";
 export { Account, Payment, Scope } from "./akash/escrow/id/v1/id.ts";
 export { Balance } from "./akash/escrow/types/v1/balance.ts";

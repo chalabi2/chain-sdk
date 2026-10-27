@@ -52,6 +52,16 @@ func VolumeGroupSpec(t testing.TB, vid string) dvbeta.GroupSpec {
 	}
 }
 
+// BucketGroupSpec generates a valid bucket group spec for the given vid: a
+// volume group whose data is served over the network, so never attached.
+func BucketGroupSpec(t testing.TB, vid string) dvbeta.GroupSpec {
+	t.Helper()
+	gspec := VolumeGroupSpec(t, vid)
+	gspec.Volume.Access = dtypes.VolumeAccessBucket
+	gspec.Volume.MaxAttachments = 0
+	return gspec
+}
+
 // VolumeDeploymentGroup generates a volume group in state `GroupOpen` carrying
 // the given vid. A volume group is always its deployment's only group.
 func VolumeDeploymentGroup(t testing.TB, did dtypes.DeploymentID, vid string) dvbeta.Group {

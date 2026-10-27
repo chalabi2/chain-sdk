@@ -110,6 +110,15 @@ func TestVolumeGroupSpec_Valid(t *testing.T) {
 		{"minimum size", func(g *v1beta4.GroupSpec) {
 			g.Resources[0].Storage[0].Quantity = rtypes.NewResourceValue(5 * unit.Mi)
 		}},
+		{"bucket", func(g *v1beta4.GroupSpec) {
+			g.Volume.Access = v1.VolumeAccessBucket
+			g.Volume.MaxAttachments = 0
+		}},
+		{"bucket adopting a retained bucket", func(g *v1beta4.GroupSpec) {
+			g.Volume.Access = v1.VolumeAccessBucket
+			g.Volume.MaxAttachments = 0
+			g.Volume.Adopt = &v1.VolumeRef{Owner: owner, DSeq: 7, GSeq: 1, Name: "data"}
+		}},
 	} {
 		gspec := volumeGroupSpec()
 		tc.mutate(&gspec)
@@ -218,6 +227,22 @@ func TestVolumeGroupSpec_Invalid(t *testing.T) {
 		}},
 		{"max_attachments two", func(g *v1beta4.GroupSpec) {
 			g.Volume.MaxAttachments = 2
+		}},
+		{"unknown access", func(g *v1beta4.GroupSpec) {
+			g.Volume.Access = 7
+		}},
+		{"bucket with an attachment", func(g *v1beta4.GroupSpec) {
+			g.Volume.Access = v1.VolumeAccessBucket
+		}},
+		{"bucket with replicas", func(g *v1beta4.GroupSpec) {
+			g.Volume.Access = v1.VolumeAccessBucket
+			g.Volume.MaxAttachments = 0
+			g.Volume.MaxReplicas = 1
+		}},
+		{"bucket replica", func(g *v1beta4.GroupSpec) {
+			g.Volume.Access = v1.VolumeAccessBucket
+			g.Volume.MaxAttachments = 0
+			g.Volume.ReplicaOf = &v1.VolumeRef{Owner: owner, DSeq: 7, GSeq: 1, Name: "data"}
 		}},
 		{"adopt and replica_of both set", func(g *v1beta4.GroupSpec) {
 			g.Volume.Adopt = &v1.VolumeRef{Owner: owner, DSeq: 7, GSeq: 1, Name: "data"}

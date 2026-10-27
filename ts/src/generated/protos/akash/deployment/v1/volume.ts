@@ -76,7 +76,14 @@ export interface VolumePolicy {
    * ReplicaOf, when set, declares this volume a replica of the named volume
    * (same owner). Drives data-plane authorization on both ends.
    */
-  replicaOf: VolumeRef | undefined;
+  replicaOf:
+    | VolumeRef
+    | undefined;
+  /**
+   * Access declares how deployments reach the volume's data. Omitted when it is
+   * mount, so the encoding of every existing volume is unchanged.
+   */
+  access: VolumePolicy_Access;
 }
 
 /**
@@ -120,6 +127,49 @@ export function volumePolicy_ReclaimPolicyToJSON(object: VolumePolicy_ReclaimPol
     case VolumePolicy_ReclaimPolicy.delete:
       return "delete";
     case VolumePolicy_ReclaimPolicy.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
+
+/** Access declares how deployments reach the volume's data. */
+export enum VolumePolicy_Access {
+  /**
+   * mount - mount is a disk that compute leases on the volume's provider attach by
+   * VolumeRef. It is the zero value, so every volume created before Access
+   * existed stays a disk.
+   */
+  mount = 0,
+  /**
+   * bucket - bucket is an S3-compatible bucket the provider serves over the network to
+   * clients holding the owner's keys. It is never attached by VolumeRef.
+   */
+  bucket = 1,
+  UNRECOGNIZED = -1,
+}
+
+export function volumePolicy_AccessFromJSON(object: any): VolumePolicy_Access {
+  switch (object) {
+    case 0:
+    case "mount":
+      return VolumePolicy_Access.mount;
+    case 1:
+    case "bucket":
+      return VolumePolicy_Access.bucket;
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return VolumePolicy_Access.UNRECOGNIZED;
+  }
+}
+
+export function volumePolicy_AccessToJSON(object: VolumePolicy_Access): string {
+  switch (object) {
+    case VolumePolicy_Access.mount:
+      return "mount";
+    case VolumePolicy_Access.bucket:
+      return "bucket";
+    case VolumePolicy_Access.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
   }
@@ -243,6 +293,7 @@ function createBaseVolumePolicy(): VolumePolicy {
     maxReplicas: 0,
     adopt: undefined,
     replicaOf: undefined,
+    access: 0,
   };
 }
 
@@ -270,6 +321,9 @@ export const VolumePolicy: MessageFns<VolumePolicy, "akash.deployment.v1.VolumeP
     }
     if (message.replicaOf !== undefined) {
       VolumeRef.encode(message.replicaOf, writer.uint32(58).fork()).join();
+    }
+    if (message.access !== 0) {
+      writer.uint32(64).int32(message.access);
     }
     return writer;
   },
@@ -337,6 +391,14 @@ export const VolumePolicy: MessageFns<VolumePolicy, "akash.deployment.v1.VolumeP
           message.replicaOf = VolumeRef.decode(reader, reader.uint32());
           continue;
         }
+        case 8: {
+          if (tag !== 64) {
+            break;
+          }
+
+          message.access = reader.int32() as any;
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -355,6 +417,7 @@ export const VolumePolicy: MessageFns<VolumePolicy, "akash.deployment.v1.VolumeP
       maxReplicas: isSet(object.max_replicas) ? globalThis.Number(object.max_replicas) : 0,
       adopt: isSet(object.adopt) ? VolumeRef.fromJSON(object.adopt) : undefined,
       replicaOf: isSet(object.replica_of) ? VolumeRef.fromJSON(object.replica_of) : undefined,
+      access: isSet(object.access) ? volumePolicy_AccessFromJSON(object.access) : 0,
     };
   },
 
@@ -381,6 +444,9 @@ export const VolumePolicy: MessageFns<VolumePolicy, "akash.deployment.v1.VolumeP
     if (message.replicaOf !== undefined) {
       obj.replica_of = VolumeRef.toJSON(message.replicaOf);
     }
+    if (message.access !== 0) {
+      obj.access = volumePolicy_AccessToJSON(message.access);
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<VolumePolicy>): VolumePolicy {
@@ -398,6 +464,7 @@ export const VolumePolicy: MessageFns<VolumePolicy, "akash.deployment.v1.VolumeP
     message.replicaOf = (object.replicaOf !== undefined && object.replicaOf !== null)
       ? VolumeRef.fromPartial(object.replicaOf)
       : undefined;
+    message.access = object.access ?? 0;
     return message;
   },
 };

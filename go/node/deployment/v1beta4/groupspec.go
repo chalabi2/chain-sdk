@@ -189,8 +189,17 @@ func (g *GroupSpec) validateVolumeGroup() error {
 		return fmt.Errorf("error: invalid volume retention (%v < 0 fails)", vol.Retention)
 	}
 
-	if vol.MaxAttachments != 1 {
-		return fmt.Errorf("error: invalid volume max_attachments (%v != 1 fails)", vol.MaxAttachments)
+	switch vol.Access {
+	case v1.VolumeAccessMount:
+		if vol.MaxAttachments != 1 {
+			return fmt.Errorf("error: invalid volume max_attachments (%v != 1 fails)", vol.MaxAttachments)
+		}
+	case v1.VolumeAccessBucket:
+		if err := validateBucketPolicy(vol); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("error: invalid volume access (%v)", vol.Access)
 	}
 
 	if vol.Adopt != nil && vol.ReplicaOf != nil {
@@ -211,6 +220,24 @@ func (g *GroupSpec) validateVolumeGroup() error {
 
 	if err := g.Resources[0].validateVolumeUnit(); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// validateBucketPolicy holds a bucket to what v1 serves: reached over the
+// network by key holders, so never attached, and without replicas.
+func validateBucketPolicy(vol *v1.VolumePolicy) error {
+	if vol.MaxAttachments != 0 {
+		return fmt.Errorf("error: invalid bucket max_attachments (%v != 0 fails)", vol.MaxAttachments)
+	}
+
+	if vol.MaxReplicas != 0 {
+		return fmt.Errorf("error: invalid bucket max_replicas (%v != 0 fails)", vol.MaxReplicas)
+	}
+
+	if vol.ReplicaOf != nil {
+		return fmt.Errorf("error: a bucket cannot be a replica")
 	}
 
 	return nil
