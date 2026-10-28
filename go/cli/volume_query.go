@@ -13,11 +13,11 @@ import (
 )
 
 // GetQueryVolumeCmds returns the query commands for volumes — storage-only
-// deployments of the decoupled storage market (AEP-87). Volumes ride the
+// deployments of the decoupled storage market. Volumes ride the
 // existing deployment and market query surfaces, filtered on
 // GroupSpec.Volume != nil.
 //
-// TODO(aep-87): resolve volumes by vid through the x/deployment volumesByVid
+// TODO(storage-market): resolve volumes by vid through the x/deployment volumesByVid
 // (0x13) index query once it lands with the node work; until then volumes are
 // addressed by deployment ID and list filters client-side.
 func GetQueryVolumeCmds() *cobra.Command {
@@ -71,7 +71,7 @@ func GetQueryVolumesCmd() *cobra.Command {
 				return err
 			}
 
-			// TODO(aep-87): replace the client-side filter with the
+			// TODO(storage-market): replace the client-side filter with the
 			// volumesByVid index query once the node work lands.
 			volumes := make(dv1beta.DeploymentResponses, 0, len(res.Deployments))
 			for _, dep := range res.Deployments {
@@ -128,7 +128,7 @@ func GetQueryVolumeStatusCmd() *cobra.Command {
 				return err
 			}
 
-			// TODO(aep-87): surface the escrow runway (EventAccountRunway)
+			// TODO(storage-market): surface the escrow runway (EventAccountRunway)
 			// and the post-close retention deadline once the node work lands.
 			out := struct {
 				Deployment dv1beta.QueryDeploymentResponse `json:"deployment"`

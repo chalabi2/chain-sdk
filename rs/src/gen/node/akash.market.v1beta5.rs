@@ -289,7 +289,7 @@ pub struct Params {
     /// max_reclamation_window is the maximum reclamation window duration allowed.
     #[prost(message, optional, tag="5")]
     pub max_reclamation_window: ::core::option::Option<::pbjson_types::Duration>,
-    /// VolumeOrdersEnabled is the AEP-87 feature flag: it gates volume-group
+    /// VolumeOrdersEnabled is the storage-market feature flag: it gates volume-group
     /// CreateDeployment and, defense-in-depth, CreateBid on volume orders.
     /// Default false; flipped by governance.
     #[prost(bool, tag="6")]

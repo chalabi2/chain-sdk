@@ -22,7 +22,7 @@ var (
 )
 
 // GetTxVolumeCmds returns the transaction commands for volumes — storage-only
-// deployments of the decoupled storage market (AEP-87). A volume is an
+// deployments of the decoupled storage market. A volume is an
 // ordinary deployment whose single group carries a VolumePolicy, so these
 // commands ride the existing deployment messages; no new Msg types exist.
 func GetTxVolumeCmds() *cobra.Command {

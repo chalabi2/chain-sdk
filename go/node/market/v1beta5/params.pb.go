@@ -42,7 +42,7 @@ type Params struct {
 	MinReclamationWindow time.Duration `protobuf:"bytes,4,opt,name=min_reclamation_window,json=minReclamationWindow,proto3,stdduration" json:"min_reclamation_window" yaml:"min_reclamation_window"`
 	// max_reclamation_window is the maximum reclamation window duration allowed.
 	MaxReclamationWindow time.Duration `protobuf:"bytes,5,opt,name=max_reclamation_window,json=maxReclamationWindow,proto3,stdduration" json:"max_reclamation_window" yaml:"max_reclamation_window"`
-	// VolumeOrdersEnabled is the AEP-87 feature flag: it gates volume-group
+	// VolumeOrdersEnabled is the storage-market feature flag: it gates volume-group
 	// CreateDeployment and, defense-in-depth, CreateBid on volume orders.
 	// Default false; flipped by governance.
 	VolumeOrdersEnabled bool `protobuf:"varint,6,opt,name=volume_orders_enabled,json=volumeOrdersEnabled,proto3" json:"volume_orders_enabled" yaml:"volume_orders_enabled"`

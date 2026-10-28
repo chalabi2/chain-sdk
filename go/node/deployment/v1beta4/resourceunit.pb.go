@@ -36,7 +36,7 @@ type ResourceUnit struct {
 	Price types.DecCoin `protobuf:"bytes,3,opt,name=price,proto3" json:"price" yaml:"price"`
 	// Volumes lists externally-leased volumes this unit's services mount.
 	// Attached volumes contribute zero storage quantity to the unit: no
-	// Storage entry corresponds to a VolumeRef. Empty for all pre-AEP-87
+	// Storage entry corresponds to a VolumeRef. Empty for all pre-storage-market
 	// deployments.
 	Volumes []v1.VolumeRef `protobuf:"bytes,4,rep,name=volumes,proto3" json:"volumes,omitempty" yaml:"volumes,omitempty"`
 }

@@ -22,7 +22,7 @@ var (
 	DefaultMinReclamationWindow = 1 * time.Hour
 	DefaultMaxReclamationWindow = 720 * time.Hour // 30 days
 
-	// DefaultVolumeOrdersEnabled ships the AEP-87 feature flag off; it is
+	// DefaultVolumeOrdersEnabled ships the storage-market feature flag off; it is
 	// flipped by governance.
 	DefaultVolumeOrdersEnabled = false
 

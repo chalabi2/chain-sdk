@@ -15,7 +15,7 @@ pub struct ResourceUnit {
     pub price: ::core::option::Option<super::super::super::cosmos::base::v1beta1::DecCoin>,
     /// Volumes lists externally-leased volumes this unit's services mount.
     /// Attached volumes contribute zero storage quantity to the unit: no
-    /// Storage entry corresponds to a VolumeRef. Empty for all pre-AEP-87
+    /// Storage entry corresponds to a VolumeRef. Empty for all pre-storage-market
     /// deployments.
     #[prost(message, repeated, tag="4")]
     pub volumes: ::prost::alloc::vec::Vec<super::v1::VolumeRef>,
