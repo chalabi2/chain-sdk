@@ -1,4 +1,4 @@
-import { ExportChunk, ExportRequest, StatusRequest, StatusResponse } from "./service.ts";
+import { ExportChunk, ExportObjectsRequest, ExportRequest, ObjectChunk, StatusRequest, StatusResponse } from "./service.ts";
 
 export const VolumeTransfer = {
   typeName: "akash.volume.v1.VolumeTransfer",
@@ -8,6 +8,13 @@ export const VolumeTransfer = {
       kind: "server_streaming",
       input: ExportRequest,
       output: ExportChunk,
+      get parent() { return VolumeTransfer; },
+    },
+    exportObjects: {
+      name: "ExportObjects",
+      kind: "server_streaming",
+      input: ExportObjectsRequest,
+      output: ObjectChunk,
       get parent() { return VolumeTransfer; },
     },
     status: {

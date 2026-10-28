@@ -150,6 +150,136 @@ message StatusResponse {
   ];
 }
 
+// ExportObjectsRequest asks the exporting provider for the objects of a
+// bucket that moves to the requester. Authorization mirrors ExportRequest.
+message ExportObjectsRequest {
+  // owner is the account bech32 address of the bucket owner.
+  string owner = 1 [
+    (gogoproto.jsontag)  = "owner",
+    (gogoproto.moretags) = "yaml:\"owner\""
+  ];
+
+  // vid is the tenant-chosen data-continuity label of the bucket.
+  string vid = 2 [
+    (gogoproto.jsontag)  = "vid",
+    (gogoproto.moretags) = "yaml:\"vid\""
+  ];
+
+  // dseq is the bucket's deployment on the EXPORTER's side.
+  uint64 dseq = 3 [
+    (gogoproto.customname) = "DSeq",
+    (gogoproto.jsontag)    = "dseq",
+    (gogoproto.moretags)   = "yaml:\"dseq\""
+  ];
+
+  // requester is the destination provider address; it must match the mTLS
+  // client certificate presented on the connection.
+  string requester = 4 [
+    (gogoproto.jsontag)  = "requester",
+    (gogoproto.moretags) = "yaml:\"requester\""
+  ];
+
+  // start_after resumes an interrupted export: objects stream in key order,
+  // so the stream starts with the first object whose key sorts after it.
+  // Empty starts with the bucket's first object.
+  string start_after = 5 [
+    (gogoproto.jsontag)  = "start_after",
+    (gogoproto.moretags) = "yaml:\"start_after\""
+  ];
+}
+
+// ObjectAttributes are what an object is served with besides its content.
+message ObjectAttributes {
+  // size is the object's length in bytes.
+  uint64 size = 1 [
+    (gogoproto.jsontag)  = "size",
+    (gogoproto.moretags) = "yaml:\"size\""
+  ];
+
+  string content_type = 2 [
+    (gogoproto.jsontag)  = "content_type,omitempty",
+    (gogoproto.moretags) = "yaml:\"content_type,omitempty\""
+  ];
+
+  string content_encoding = 3 [
+    (gogoproto.jsontag)  = "content_encoding,omitempty",
+    (gogoproto.moretags) = "yaml:\"content_encoding,omitempty\""
+  ];
+
+  string content_disposition = 4 [
+    (gogoproto.jsontag)  = "content_disposition,omitempty",
+    (gogoproto.moretags) = "yaml:\"content_disposition,omitempty\""
+  ];
+
+  string content_language = 5 [
+    (gogoproto.jsontag)  = "content_language,omitempty",
+    (gogoproto.moretags) = "yaml:\"content_language,omitempty\""
+  ];
+
+  string cache_control = 6 [
+    (gogoproto.jsontag)  = "cache_control,omitempty",
+    (gogoproto.moretags) = "yaml:\"cache_control,omitempty\""
+  ];
+
+  // expires is the object's Expires header, as the S3 server serves it.
+  string expires = 7 [
+    (gogoproto.jsontag)  = "expires,omitempty",
+    (gogoproto.moretags) = "yaml:\"expires,omitempty\""
+  ];
+
+  // metadata is the object's user metadata (x-amz-meta-*), keyed by the
+  // lower-case name without the prefix.
+  map<string, string> metadata = 8 [
+    (gogoproto.jsontag)  = "metadata,omitempty",
+    (gogoproto.moretags) = "yaml:\"metadata,omitempty\""
+  ];
+}
+
+// ObjectChunk is one piece of a bucket's export stream. Objects stream whole,
+// one after another in key order. An object's first chunk is at offset 0 and
+// carries its attributes; its last chunk carries the sha256 of the whole
+// object, which the destination checks before keeping it.
+message ObjectChunk {
+  // key is the key of the object the chunk belongs to.
+  string key = 1 [
+    (gogoproto.jsontag)  = "key",
+    (gogoproto.moretags) = "yaml:\"key\""
+  ];
+
+  // attributes describe the object; set on its first chunk only.
+  ObjectAttributes attributes = 2 [
+    (gogoproto.jsontag)  = "attributes,omitempty",
+    (gogoproto.moretags) = "yaml:\"attributes,omitempty\""
+  ];
+
+  // offset is where data starts within the object.
+  uint64 offset = 3 [
+    (gogoproto.jsontag)  = "offset",
+    (gogoproto.moretags) = "yaml:\"offset\""
+  ];
+
+  // data is a piece of the object's content.
+  bytes data = 4 [
+    (gogoproto.jsontag)  = "data",
+    (gogoproto.moretags) = "yaml:\"data\""
+  ];
+
+  // sha256 is the digest of data.
+  bytes sha256 = 5 [
+    (gogoproto.customname) = "SHA256",
+    (gogoproto.jsontag)    = "sha256",
+    (gogoproto.moretags)   = "yaml:\"sha256\""
+  ];
+
+  // object_sha256 is the digest of the whole object; set on its last chunk
+  // only, which ends the object.
+  bytes object_sha256 = 6 [
+    (gogoproto.customname) = "ObjectSHA256",
+    (gogoproto.jsontag)    = "object_sha256,omitempty",
+    (gogoproto.moretags)   = "yaml:\"object_sha256,omitempty\""
+  ];
+}
+
 // VolumeTransfer is the off-chain volume data plane, served by the storage
 // operator on the provider gateway. Both directions authenticate with mTLS
 // against on-chain provider identities (x/cert); authorization is derived
@@ -158,6 +288,12 @@ service VolumeTransfer {
   // Export streams the volume image, full or as a diff from a snapshot.
   // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
   rpc Export(ExportRequest) returns (stream ExportChunk);
+
+  // ExportObjects streams every object of a bucket moving to the requester.
+  // The exporter serves it only once the bucket is final: its lease closed and
+  // no key can write to it any more.
+  // buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+  rpc ExportObjects(ExportObjectsRequest) returns (stream ObjectChunk);
 
   // Status reports sync lag, snapshots held, and image digests.
   // buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE

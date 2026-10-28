@@ -136,6 +136,15 @@ export function createSDK(transport: Transport) {
             return getClient(service).export(input, options);
           }, { path: [4, "export"], serviceLoader }),
           /**
+           * exportObjects streams every object of a bucket moving to the requester.
+           * The exporter serves it only once the bucket is final: its lease closed and
+           * no key can write to it any more.
+           */
+          exportObjects: withMetadata(async function exportObjects(input: DeepPartial<akash_volume_v1_service.ExportObjectsRequest>, options?: CallOptions) {
+            const service = await serviceLoader.loadAt(4);
+            return getClient(service).exportObjects(input, options);
+          }, { path: [4, "exportObjects"], serviceLoader }),
+          /**
            * status reports sync lag, snapshots held, and image digests.
            */
           status: withMetadata(async function status(input: DeepPartial<akash_volume_v1_service.StatusRequest>, options?: CallOptions) {

@@ -362,62 +362,382 @@ func (m *StatusResponse) GetFinal() bool {
 	return false
 }
 
+// ExportObjectsRequest asks the exporting provider for the objects of a
+// bucket that moves to the requester. Authorization mirrors ExportRequest.
+type ExportObjectsRequest struct {
+	// owner is the account bech32 address of the bucket owner.
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner" yaml:"owner"`
+	// vid is the tenant-chosen data-continuity label of the bucket.
+	Vid string `protobuf:"bytes,2,opt,name=vid,proto3" json:"vid" yaml:"vid"`
+	// dseq is the bucket's deployment on the EXPORTER's side.
+	DSeq uint64 `protobuf:"varint,3,opt,name=dseq,proto3" json:"dseq" yaml:"dseq"`
+	// requester is the destination provider address; it must match the mTLS
+	// client certificate presented on the connection.
+	Requester string `protobuf:"bytes,4,opt,name=requester,proto3" json:"requester" yaml:"requester"`
+	// start_after resumes an interrupted export: objects stream in key order,
+	// so the stream starts with the first object whose key sorts after it.
+	// Empty starts with the bucket's first object.
+	StartAfter string `protobuf:"bytes,5,opt,name=start_after,json=startAfter,proto3" json:"start_after" yaml:"start_after"`
+}
+
+func (m *ExportObjectsRequest) Reset()         { *m = ExportObjectsRequest{} }
+func (m *ExportObjectsRequest) String() string { return proto.CompactTextString(m) }
+func (*ExportObjectsRequest) ProtoMessage()    {}
+func (*ExportObjectsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_61c75dc3591f98f0, []int{4}
+}
+func (m *ExportObjectsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ExportObjectsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ExportObjectsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ExportObjectsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ExportObjectsRequest.Merge(m, src)
+}
+func (m *ExportObjectsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ExportObjectsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ExportObjectsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ExportObjectsRequest proto.InternalMessageInfo
+
+func (m *ExportObjectsRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *ExportObjectsRequest) GetVid() string {
+	if m != nil {
+		return m.Vid
+	}
+	return ""
+}
+
+func (m *ExportObjectsRequest) GetDSeq() uint64 {
+	if m != nil {
+		return m.DSeq
+	}
+	return 0
+}
+
+func (m *ExportObjectsRequest) GetRequester() string {
+	if m != nil {
+		return m.Requester
+	}
+	return ""
+}
+
+func (m *ExportObjectsRequest) GetStartAfter() string {
+	if m != nil {
+		return m.StartAfter
+	}
+	return ""
+}
+
+// ObjectAttributes are what an object is served with besides its content.
+type ObjectAttributes struct {
+	// size is the object's length in bytes.
+	Size_              uint64 `protobuf:"varint,1,opt,name=size,proto3" json:"size" yaml:"size"`
+	ContentType        string `protobuf:"bytes,2,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty" yaml:"content_type,omitempty"`
+	ContentEncoding    string `protobuf:"bytes,3,opt,name=content_encoding,json=contentEncoding,proto3" json:"content_encoding,omitempty" yaml:"content_encoding,omitempty"`
+	ContentDisposition string `protobuf:"bytes,4,opt,name=content_disposition,json=contentDisposition,proto3" json:"content_disposition,omitempty" yaml:"content_disposition,omitempty"`
+	ContentLanguage    string `protobuf:"bytes,5,opt,name=content_language,json=contentLanguage,proto3" json:"content_language,omitempty" yaml:"content_language,omitempty"`
+	CacheControl       string `protobuf:"bytes,6,opt,name=cache_control,json=cacheControl,proto3" json:"cache_control,omitempty" yaml:"cache_control,omitempty"`
+	// expires is the object's Expires header, as the S3 server serves it.
+	Expires string `protobuf:"bytes,7,opt,name=expires,proto3" json:"expires,omitempty" yaml:"expires,omitempty"`
+	// metadata is the object's user metadata (x-amz-meta-*), keyed by the
+	// lower-case name without the prefix.
+	Metadata map[string]string `protobuf:"bytes,8,rep,name=metadata,proto3" json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (m *ObjectAttributes) Reset()         { *m = ObjectAttributes{} }
+func (m *ObjectAttributes) String() string { return proto.CompactTextString(m) }
+func (*ObjectAttributes) ProtoMessage()    {}
+func (*ObjectAttributes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_61c75dc3591f98f0, []int{5}
+}
+func (m *ObjectAttributes) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ObjectAttributes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ObjectAttributes.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ObjectAttributes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ObjectAttributes.Merge(m, src)
+}
+func (m *ObjectAttributes) XXX_Size() int {
+	return m.Size()
+}
+func (m *ObjectAttributes) XXX_DiscardUnknown() {
+	xxx_messageInfo_ObjectAttributes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ObjectAttributes proto.InternalMessageInfo
+
+func (m *ObjectAttributes) GetSize_() uint64 {
+	if m != nil {
+		return m.Size_
+	}
+	return 0
+}
+
+func (m *ObjectAttributes) GetContentType() string {
+	if m != nil {
+		return m.ContentType
+	}
+	return ""
+}
+
+func (m *ObjectAttributes) GetContentEncoding() string {
+	if m != nil {
+		return m.ContentEncoding
+	}
+	return ""
+}
+
+func (m *ObjectAttributes) GetContentDisposition() string {
+	if m != nil {
+		return m.ContentDisposition
+	}
+	return ""
+}
+
+func (m *ObjectAttributes) GetContentLanguage() string {
+	if m != nil {
+		return m.ContentLanguage
+	}
+	return ""
+}
+
+func (m *ObjectAttributes) GetCacheControl() string {
+	if m != nil {
+		return m.CacheControl
+	}
+	return ""
+}
+
+func (m *ObjectAttributes) GetExpires() string {
+	if m != nil {
+		return m.Expires
+	}
+	return ""
+}
+
+func (m *ObjectAttributes) GetMetadata() map[string]string {
+	if m != nil {
+		return m.Metadata
+	}
+	return nil
+}
+
+// ObjectChunk is one piece of a bucket's export stream. Objects stream whole,
+// one after another in key order. An object's first chunk is at offset 0 and
+// carries its attributes; its last chunk carries the sha256 of the whole
+// object, which the destination checks before keeping it.
+type ObjectChunk struct {
+	// key is the key of the object the chunk belongs to.
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key" yaml:"key"`
+	// attributes describe the object; set on its first chunk only.
+	Attributes *ObjectAttributes `protobuf:"bytes,2,opt,name=attributes,proto3" json:"attributes,omitempty" yaml:"attributes,omitempty"`
+	// offset is where data starts within the object.
+	Offset uint64 `protobuf:"varint,3,opt,name=offset,proto3" json:"offset" yaml:"offset"`
+	// data is a piece of the object's content.
+	Data []byte `protobuf:"bytes,4,opt,name=data,proto3" json:"data" yaml:"data"`
+	// sha256 is the digest of data.
+	SHA256 []byte `protobuf:"bytes,5,opt,name=sha256,proto3" json:"sha256" yaml:"sha256"`
+	// object_sha256 is the digest of the whole object; set on its last chunk
+	// only, which ends the object.
+	ObjectSHA256 []byte `protobuf:"bytes,6,opt,name=object_sha256,json=objectSha256,proto3" json:"object_sha256,omitempty" yaml:"object_sha256,omitempty"`
+}
+
+func (m *ObjectChunk) Reset()         { *m = ObjectChunk{} }
+func (m *ObjectChunk) String() string { return proto.CompactTextString(m) }
+func (*ObjectChunk) ProtoMessage()    {}
+func (*ObjectChunk) Descriptor() ([]byte, []int) {
+	return fileDescriptor_61c75dc3591f98f0, []int{6}
+}
+func (m *ObjectChunk) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ObjectChunk) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ObjectChunk.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ObjectChunk) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ObjectChunk.Merge(m, src)
+}
+func (m *ObjectChunk) XXX_Size() int {
+	return m.Size()
+}
+func (m *ObjectChunk) XXX_DiscardUnknown() {
+	xxx_messageInfo_ObjectChunk.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ObjectChunk proto.InternalMessageInfo
+
+func (m *ObjectChunk) GetKey() string {
+	if m != nil {
+		return m.Key
+	}
+	return ""
+}
+
+func (m *ObjectChunk) GetAttributes() *ObjectAttributes {
+	if m != nil {
+		return m.Attributes
+	}
+	return nil
+}
+
+func (m *ObjectChunk) GetOffset() uint64 {
+	if m != nil {
+		return m.Offset
+	}
+	return 0
+}
+
+func (m *ObjectChunk) GetData() []byte {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+func (m *ObjectChunk) GetSHA256() []byte {
+	if m != nil {
+		return m.SHA256
+	}
+	return nil
+}
+
+func (m *ObjectChunk) GetObjectSHA256() []byte {
+	if m != nil {
+		return m.ObjectSHA256
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ExportRequest)(nil), "akash.volume.v1.ExportRequest")
 	proto.RegisterType((*ExportChunk)(nil), "akash.volume.v1.ExportChunk")
 	proto.RegisterType((*StatusRequest)(nil), "akash.volume.v1.StatusRequest")
 	proto.RegisterType((*StatusResponse)(nil), "akash.volume.v1.StatusResponse")
+	proto.RegisterType((*ExportObjectsRequest)(nil), "akash.volume.v1.ExportObjectsRequest")
+	proto.RegisterType((*ObjectAttributes)(nil), "akash.volume.v1.ObjectAttributes")
+	proto.RegisterMapType((map[string]string)(nil), "akash.volume.v1.ObjectAttributes.MetadataEntry")
+	proto.RegisterType((*ObjectChunk)(nil), "akash.volume.v1.ObjectChunk")
 }
 
 func init() { proto.RegisterFile("akash/volume/v1/service.proto", fileDescriptor_61c75dc3591f98f0) }
 
 var fileDescriptor_61c75dc3591f98f0 = []byte{
-	// 718 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x55, 0xc1, 0x6e, 0xd3, 0x4a,
-	0x14, 0xad, 0x9b, 0x34, 0x7a, 0x9d, 0x26, 0x69, 0xdf, 0xa8, 0xb4, 0x26, 0x94, 0x4c, 0x19, 0x09,
-	0x51, 0x28, 0xc4, 0x34, 0x55, 0xbb, 0x40, 0x42, 0x88, 0x14, 0xa4, 0x2e, 0x10, 0x48, 0x0e, 0xaa,
-	0x04, 0x9b, 0x68, 0xda, 0x4c, 0x1c, 0x2b, 0x89, 0x27, 0xf5, 0x4c, 0x0c, 0x65, 0xc9, 0x17, 0x20,
-	0xf1, 0x1f, 0xec, 0xf8, 0x02, 0x36, 0x2c, 0x2b, 0xb1, 0x61, 0x35, 0xa0, 0x94, 0x95, 0x97, 0xfe,
-	0x01, 0x90, 0x67, 0x9c, 0xb8, 0x09, 0x74, 0xc3, 0x92, 0x9d, 0xcf, 0x39, 0x73, 0x4f, 0x3c, 0xd7,
-	0xe7, 0xde, 0x80, 0xab, 0xa4, 0x43, 0x78, 0xdb, 0x0a, 0x58, 0x77, 0xd0, 0xa3, 0x56, 0xb0, 0x65,
-	0x71, 0xea, 0x07, 0xee, 0x11, 0xad, 0xf4, 0x7d, 0x26, 0x18, 0x5c, 0x54, 0x72, 0x45, 0xcb, 0x95,
-	0x60, 0xab, 0xb4, 0xe6, 0x30, 0xe6, 0x74, 0xa9, 0x45, 0xfa, 0xae, 0x45, 0x3c, 0x8f, 0x09, 0x22,
-	0x5c, 0xe6, 0x71, 0x7d, 0xbc, 0xb4, 0xec, 0x30, 0x87, 0xa9, 0x47, 0x2b, 0x7e, 0xd2, 0x2c, 0xfe,
-	0x39, 0x0b, 0x0a, 0x8f, 0x5f, 0xf7, 0x99, 0x2f, 0x6c, 0x7a, 0x3c, 0xa0, 0x5c, 0x40, 0x0b, 0xcc,
-	0xb1, 0x57, 0x1e, 0xf5, 0x4d, 0x63, 0xdd, 0xd8, 0x98, 0xaf, 0x5d, 0x0e, 0x25, 0xd2, 0x44, 0x24,
-	0x51, 0xfe, 0x84, 0xf4, 0xba, 0xf7, 0xb0, 0x82, 0xd8, 0xd6, 0x34, 0xbc, 0x01, 0x32, 0x81, 0xdb,
-	0x34, 0x67, 0xd5, 0xf1, 0x4b, 0xa1, 0x44, 0x31, 0x8c, 0x24, 0x02, 0xfa, 0x70, 0xe0, 0x36, 0xb1,
-	0x1d, 0x53, 0x70, 0x1b, 0x64, 0x9b, 0x9c, 0x1e, 0x9b, 0x99, 0x75, 0x63, 0x23, 0x5b, 0x43, 0x43,
-	0x89, 0xb2, 0x8f, 0xea, 0xf4, 0x38, 0x94, 0x48, 0xf1, 0x91, 0x44, 0x0b, 0xba, 0x24, 0x46, 0xd8,
-	0x56, 0x24, 0x7c, 0x00, 0xe6, 0x7d, 0xfd, 0x66, 0xd4, 0x37, 0xb3, 0xea, 0x37, 0xae, 0x85, 0x12,
-	0xa5, 0x64, 0x24, 0xd1, 0x92, 0x2e, 0x1b, 0x53, 0xd8, 0x4e, 0x65, 0xf8, 0x14, 0x14, 0x5a, 0x3e,
-	0xeb, 0x35, 0xb8, 0x47, 0xfa, 0xbc, 0xcd, 0x84, 0x39, 0xa7, 0x4c, 0x6e, 0x86, 0x12, 0x4d, 0x0a,
-	0x91, 0x44, 0xcb, 0xda, 0x68, 0x82, 0xc6, 0x76, 0x3e, 0xc6, 0xf5, 0x04, 0xc6, 0x7e, 0x3e, 0xe5,
-	0x83, 0x1e, 0x6d, 0xb0, 0x56, 0x8b, 0x53, 0x61, 0xe6, 0xd4, 0x75, 0x94, 0xdf, 0x84, 0x90, 0xfa,
-	0x4d, 0xd0, 0xd8, 0xce, 0x6b, 0xfc, 0x4c, 0xc3, 0x0f, 0x06, 0x58, 0xd0, 0x5f, 0x60, 0xaf, 0x3d,
-	0xf0, 0x3a, 0x70, 0x13, 0x64, 0x9b, 0x44, 0x10, 0xd5, 0xfe, 0x7c, 0x6d, 0x55, 0x75, 0x87, 0x08,
-	0x72, 0xae, 0x3b, 0x44, 0x90, 0xb8, 0x3b, 0x44, 0x10, 0x78, 0x1f, 0xe4, 0x78, 0x9b, 0x54, 0x77,
-	0x76, 0x55, 0xfb, 0xf3, 0xb5, 0xeb, 0x43, 0x89, 0x72, 0xf5, 0xfd, 0x87, 0xd5, 0x9d, 0xdd, 0x50,
-	0xa2, 0x44, 0x8b, 0x24, 0x2a, 0xe8, 0x52, 0x8d, 0xb1, 0x9d, 0x08, 0x70, 0x1b, 0xe4, 0x92, 0x4b,
-	0xe8, 0x6f, 0x72, 0x25, 0x2e, 0x1a, 0xbf, 0x7d, 0x52, 0x34, 0x7a, 0xed, 0x44, 0xc0, 0xdf, 0x0c,
-	0x50, 0xa8, 0x0b, 0x22, 0x06, 0xfc, 0x1f, 0x8d, 0x0c, 0xfe, 0x98, 0x01, 0xc5, 0xd1, 0x0d, 0x79,
-	0x9f, 0x79, 0x9c, 0xc6, 0x9e, 0xa3, 0x40, 0x70, 0xd3, 0x58, 0xcf, 0x8c, 0x3c, 0xc7, 0x64, 0xea,
-	0x39, 0xa6, 0xb0, 0x9d, 0xca, 0xf0, 0x00, 0x2c, 0x76, 0x89, 0xa0, 0x5c, 0xa4, 0x41, 0xd4, 0xd7,
-	0xbf, 0x13, 0x4a, 0x34, 0x2d, 0x45, 0x12, 0xad, 0x68, 0xb3, 0x29, 0x01, 0xdb, 0x45, 0xcd, 0x8c,
-	0xe3, 0xb8, 0x09, 0xb2, 0xdc, 0x7d, 0x43, 0x93, 0x0e, 0xa9, 0xb8, 0xc4, 0x38, 0xed, 0x4c, 0x8c,
-	0xb0, 0xad, 0xc8, 0x73, 0x71, 0xc9, 0xfe, 0x4d, 0x5c, 0x5e, 0x80, 0x25, 0x7e, 0xe2, 0x1d, 0x35,
-	0xba, 0xc4, 0x69, 0x70, 0x7a, 0xc4, 0xbc, 0x26, 0x57, 0xd3, 0x94, 0xa9, 0x59, 0xa1, 0x44, 0xbf,
-	0x69, 0x91, 0x44, 0xab, 0x89, 0xd1, 0x94, 0x82, 0xed, 0x62, 0x4c, 0x3d, 0x21, 0x4e, 0x5d, 0x13,
-	0x70, 0x0f, 0xcc, 0xb5, 0x5c, 0x8f, 0x74, 0xd5, 0x34, 0xfd, 0xa7, 0x9b, 0xa2, 0x88, 0xdb, 0xac,
-	0xe7, 0x0a, 0xda, 0xeb, 0x8b, 0x93, 0xb4, 0x29, 0x53, 0x02, 0xb6, 0x75, 0x6d, 0xf5, 0x93, 0x01,
-	0x8a, 0x07, 0x6a, 0x1d, 0x3e, 0xf7, 0x89, 0xc7, 0x5b, 0xd4, 0x87, 0xfb, 0x20, 0xa7, 0x87, 0x0b,
-	0x96, 0x2b, 0x53, 0xfb, 0xb2, 0x32, 0xb1, 0xf7, 0x4a, 0x6b, 0x17, 0xe8, 0x6a, 0x2a, 0xef, 0x1a,
-	0xd0, 0x01, 0x39, 0x9d, 0x89, 0x3f, 0x38, 0x4d, 0x8c, 0x43, 0x09, 0x5d, 0xa8, 0xeb, 0x30, 0xe1,
-	0xb5, 0xb7, 0x5f, 0x7e, 0xbc, 0x9f, 0x5d, 0x39, 0x34, 0x6e, 0xc1, 0xff, 0xe3, 0xbd, 0x9e, 0x6c,
-	0x78, 0xae, 0x4e, 0xd5, 0xaa, 0x9f, 0x87, 0x65, 0xe3, 0x74, 0x58, 0x36, 0xbe, 0x0f, 0xcb, 0xc6,
-	0xbb, 0xb3, 0xf2, 0xcc, 0xe9, 0x59, 0x79, 0xe6, 0xeb, 0x59, 0x79, 0xe6, 0xa5, 0xd9, 0xef, 0x38,
-	0x15, 0xd2, 0x11, 0x95, 0x26, 0x0d, 0x2c, 0x87, 0xa5, 0xff, 0x0c, 0x87, 0x39, 0xb5, 0xcd, 0xb7,
-	0x7f, 0x05, 0x00, 0x00, 0xff, 0xff, 0xc5, 0x6c, 0x13, 0x94, 0x33, 0x06, 0x00, 0x00,
+	// 1186 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x57, 0xcf, 0x6e, 0x1b, 0xb7,
+	0x13, 0xce, 0x4a, 0xb2, 0x12, 0x53, 0x92, 0xe3, 0xf0, 0xe7, 0x5f, 0xac, 0x28, 0x89, 0xe8, 0x10,
+	0x0d, 0x92, 0x36, 0xad, 0x94, 0xc8, 0x48, 0x5a, 0x24, 0x08, 0x8a, 0xc8, 0x71, 0x91, 0xa2, 0x49,
+	0x03, 0x50, 0x81, 0x81, 0xf6, 0x50, 0x81, 0x96, 0xa8, 0xf5, 0x56, 0xd2, 0xae, 0xbc, 0xa4, 0xd4,
+	0xc8, 0xa7, 0xa2, 0x4f, 0x50, 0xa0, 0xc7, 0xbe, 0x43, 0x6e, 0x7d, 0x86, 0xf6, 0x18, 0xa0, 0x97,
+	0x9e, 0xd8, 0x42, 0xee, 0x69, 0xd1, 0x93, 0x5e, 0xa0, 0xc5, 0x92, 0x94, 0x56, 0x2b, 0xc9, 0xfd,
+	0xe3, 0x63, 0x6e, 0x3b, 0xdf, 0x37, 0xf3, 0x0d, 0x67, 0x38, 0xbb, 0xe4, 0x82, 0xab, 0xb4, 0x4d,
+	0xf9, 0x41, 0x79, 0xe0, 0x75, 0xfa, 0x5d, 0x56, 0x1e, 0xdc, 0x29, 0x73, 0xe6, 0x0f, 0x9c, 0x06,
+	0x2b, 0xf5, 0x7c, 0x4f, 0x78, 0xf0, 0xbc, 0xa2, 0x4b, 0x9a, 0x2e, 0x0d, 0xee, 0x14, 0xae, 0xd8,
+	0x9e, 0x67, 0x77, 0x58, 0x99, 0xf6, 0x9c, 0x32, 0x75, 0x5d, 0x4f, 0x50, 0xe1, 0x78, 0x2e, 0xd7,
+	0xee, 0x85, 0x0d, 0xdb, 0xb3, 0x3d, 0xf5, 0x58, 0x0e, 0x9f, 0x34, 0x8a, 0xff, 0x4c, 0x80, 0xdc,
+	0xee, 0xcb, 0x9e, 0xe7, 0x0b, 0xc2, 0x0e, 0xfb, 0x8c, 0x0b, 0x58, 0x06, 0x2b, 0xde, 0x57, 0x2e,
+	0xf3, 0xf3, 0xd6, 0x96, 0x75, 0x73, 0xb5, 0x7a, 0x29, 0x90, 0x48, 0x03, 0x63, 0x89, 0xb2, 0x43,
+	0xda, 0xed, 0xdc, 0xc7, 0xca, 0xc4, 0x44, 0xc3, 0xf0, 0x06, 0x48, 0x0e, 0x9c, 0x66, 0x3e, 0xa1,
+	0xdc, 0xff, 0x1f, 0x48, 0x14, 0x9a, 0x63, 0x89, 0x80, 0x76, 0x1e, 0x38, 0x4d, 0x4c, 0x42, 0x08,
+	0x6e, 0x83, 0x54, 0x93, 0xb3, 0xc3, 0x7c, 0x72, 0xcb, 0xba, 0x99, 0xaa, 0xa2, 0x91, 0x44, 0xa9,
+	0xc7, 0x35, 0x76, 0x18, 0x48, 0xa4, 0xf0, 0xb1, 0x44, 0x19, 0x1d, 0x12, 0x5a, 0x98, 0x28, 0x10,
+	0x7e, 0x08, 0x56, 0x7d, 0xbd, 0x32, 0xe6, 0xe7, 0x53, 0x2a, 0xc7, 0xb5, 0x40, 0xa2, 0x08, 0x1c,
+	0x4b, 0xb4, 0xae, 0xc3, 0xa6, 0x10, 0x26, 0x11, 0x0d, 0x3f, 0x05, 0xb9, 0x96, 0xef, 0x75, 0xeb,
+	0xdc, 0xa5, 0x3d, 0x7e, 0xe0, 0x89, 0xfc, 0x8a, 0x12, 0x79, 0x3b, 0x90, 0x28, 0x4e, 0x8c, 0x25,
+	0xda, 0xd0, 0x42, 0x31, 0x18, 0x93, 0x6c, 0x68, 0xd7, 0x8c, 0x19, 0xea, 0xf9, 0x8c, 0xf7, 0xbb,
+	0xac, 0xee, 0xb5, 0x5a, 0x9c, 0x89, 0x7c, 0x5a, 0x95, 0xa3, 0xf4, 0x62, 0x44, 0xa4, 0x17, 0x83,
+	0x31, 0xc9, 0x6a, 0xfb, 0xb9, 0x36, 0x5f, 0x59, 0x20, 0xa3, 0x77, 0x60, 0xe7, 0xa0, 0xef, 0xb6,
+	0xe1, 0x2d, 0x90, 0x6a, 0x52, 0x41, 0x55, 0xfb, 0xb3, 0xd5, 0x4d, 0xd5, 0x1d, 0x2a, 0xe8, 0x4c,
+	0x77, 0xa8, 0xa0, 0x61, 0x77, 0xa8, 0xa0, 0xf0, 0x21, 0x48, 0xf3, 0x03, 0x5a, 0xb9, 0x7b, 0x4f,
+	0xb5, 0x3f, 0x5b, 0xbd, 0x3e, 0x92, 0x28, 0x5d, 0x7b, 0xf2, 0xa8, 0x72, 0xf7, 0x5e, 0x20, 0x91,
+	0xe1, 0xc6, 0x12, 0xe5, 0x74, 0xa8, 0xb6, 0x31, 0x31, 0x04, 0xdc, 0x06, 0x69, 0x53, 0x84, 0xde,
+	0x93, 0xcb, 0x61, 0xd0, 0x74, 0xf5, 0x26, 0x68, 0xb2, 0x6c, 0x43, 0xe0, 0x5f, 0x2d, 0x90, 0xab,
+	0x09, 0x2a, 0xfa, 0xfc, 0x0d, 0x1d, 0x19, 0xfc, 0x43, 0x12, 0xac, 0x4d, 0x2a, 0xe4, 0x3d, 0xcf,
+	0xe5, 0x2c, 0xd4, 0x9c, 0x0c, 0x04, 0xcf, 0x5b, 0x5b, 0xc9, 0x89, 0xe6, 0x14, 0x8c, 0x34, 0xa7,
+	0x10, 0x26, 0x11, 0x0d, 0xf7, 0xc0, 0xf9, 0x0e, 0x15, 0x8c, 0x8b, 0x68, 0x10, 0x75, 0xf9, 0xef,
+	0x05, 0x12, 0xcd, 0x53, 0x63, 0x89, 0x2e, 0x6a, 0xb1, 0x39, 0x02, 0x93, 0x35, 0x8d, 0x4c, 0xc7,
+	0xf1, 0x16, 0x48, 0x71, 0xe7, 0x88, 0x99, 0x0e, 0xa9, 0x71, 0x09, 0xed, 0xa8, 0x33, 0xa1, 0x85,
+	0x89, 0x02, 0x67, 0xc6, 0x25, 0x75, 0x9a, 0x71, 0xf9, 0x0c, 0xac, 0xf3, 0xa1, 0xdb, 0xa8, 0x77,
+	0xa8, 0x5d, 0xe7, 0xac, 0xe1, 0xb9, 0x4d, 0xae, 0xde, 0xa6, 0x64, 0xb5, 0x1c, 0x48, 0xb4, 0xc0,
+	0x8d, 0x25, 0xda, 0x34, 0x42, 0x73, 0x0c, 0x26, 0x6b, 0x21, 0xf4, 0x94, 0xda, 0x35, 0x0d, 0xc0,
+	0x1d, 0xb0, 0xd2, 0x72, 0x5c, 0xda, 0x51, 0x6f, 0xd3, 0x39, 0xdd, 0x14, 0x05, 0xbc, 0xeb, 0x75,
+	0x1d, 0xc1, 0xba, 0x3d, 0x31, 0x8c, 0x9a, 0x32, 0x47, 0x60, 0xa2, 0x63, 0xf1, 0xab, 0x04, 0xd8,
+	0xd0, 0xaf, 0xd2, 0xf3, 0xfd, 0x2f, 0x59, 0x43, 0xbc, 0xa9, 0x03, 0x0a, 0x3f, 0x02, 0x19, 0x2e,
+	0xa8, 0x2f, 0xea, 0xb4, 0x15, 0x4a, 0xe8, 0x2f, 0xda, 0xf5, 0x40, 0xa2, 0x59, 0x78, 0x2c, 0x11,
+	0x34, 0xed, 0x8f, 0x40, 0x4c, 0x80, 0xb2, 0x1e, 0x29, 0xe3, 0x8f, 0x34, 0x58, 0xd7, 0xad, 0x7a,
+	0x24, 0x84, 0xef, 0xec, 0xf7, 0x05, 0xe3, 0xd3, 0x89, 0xb2, 0xfe, 0xcd, 0x44, 0x7d, 0x01, 0xb2,
+	0x0d, 0xcf, 0x15, 0xcc, 0x15, 0x75, 0x31, 0xec, 0x31, 0xd3, 0xb1, 0x07, 0x81, 0x44, 0x17, 0x67,
+	0xf1, 0xd8, 0x2e, 0x5e, 0xd5, 0x32, 0xcb, 0x79, 0x4c, 0x32, 0x86, 0x78, 0x31, 0xec, 0x31, 0xe8,
+	0x82, 0xf5, 0x89, 0x1f, 0x73, 0x1b, 0x5e, 0xd3, 0x71, 0x6d, 0xd5, 0xeb, 0xd5, 0xea, 0x4e, 0x20,
+	0x51, 0x61, 0x9e, 0x8b, 0xe5, 0xb9, 0x16, 0xcf, 0xb3, 0xe8, 0x83, 0xc9, 0x79, 0x43, 0xee, 0x1a,
+	0x0e, 0x1e, 0x81, 0xff, 0x4d, 0xfc, 0x9b, 0x0e, 0xef, 0x79, 0xdc, 0x09, 0xcf, 0x50, 0xb3, 0x49,
+	0x1f, 0x07, 0x12, 0x5d, 0x5d, 0x42, 0xc7, 0xb2, 0xbe, 0x15, 0xcf, 0xba, 0xd4, 0x0d, 0x13, 0x68,
+	0xf8, 0xc7, 0x11, 0x3d, 0x5b, 0x6b, 0x87, 0xba, 0x76, 0x9f, 0xda, 0xcc, 0x6c, 0x6d, 0xac, 0xd6,
+	0x09, 0xf7, 0x77, 0xb5, 0x2e, 0xfa, 0x44, 0xb5, 0x3e, 0x35, 0x1c, 0xdc, 0x07, 0xb9, 0x06, 0x6d,
+	0x1c, 0xb0, 0x7a, 0x48, 0xf8, 0x9e, 0x7e, 0xf7, 0x56, 0xab, 0x0f, 0x03, 0x89, 0x36, 0x63, 0x44,
+	0x2c, 0x53, 0xd1, 0x64, 0x5a, 0xee, 0x80, 0x49, 0x56, 0x31, 0x3b, 0x9a, 0x80, 0x9f, 0x80, 0xb3,
+	0xec, 0x65, 0xcf, 0xf1, 0x19, 0xcf, 0x9f, 0x55, 0xea, 0x77, 0x02, 0x89, 0x2e, 0x18, 0x28, 0xa6,
+	0x9b, 0xd7, 0xba, 0x0b, 0x14, 0x26, 0x13, 0x05, 0xf8, 0xb5, 0x05, 0xce, 0x75, 0x99, 0xa0, 0xea,
+	0x7c, 0x3c, 0xb7, 0x95, 0xbc, 0x99, 0xa9, 0x94, 0x4b, 0x73, 0xb7, 0xa0, 0xd2, 0xfc, 0x3c, 0x97,
+	0x9e, 0x99, 0x88, 0x5d, 0x57, 0xf8, 0xc3, 0xea, 0x76, 0x20, 0x11, 0x9c, 0x88, 0xc4, 0x16, 0x70,
+	0x49, 0x2f, 0x60, 0x91, 0xc3, 0x64, 0x9a, 0xb5, 0xf0, 0x00, 0xe4, 0x62, 0x7a, 0x70, 0x1d, 0x24,
+	0xdb, 0x6c, 0xa8, 0x3f, 0x2c, 0x24, 0x7c, 0x84, 0x1b, 0x60, 0x65, 0x40, 0x3b, 0x7d, 0xf3, 0x2e,
+	0x10, 0x6d, 0xdc, 0x4f, 0x7c, 0x60, 0xe1, 0x1f, 0x93, 0x20, 0xa3, 0x97, 0xa7, 0x8f, 0xfa, 0x1b,
+	0x33, 0xb1, 0xfa, 0x2b, 0xd3, 0x66, 0xc3, 0xe8, 0x2b, 0xd3, 0x66, 0x43, 0xac, 0x25, 0x8f, 0x00,
+	0xa0, 0xd3, 0x82, 0x94, 0x6e, 0xa6, 0x72, 0xed, 0x1f, 0x2b, 0xaf, 0xbe, 0x1f, 0x48, 0xb4, 0x11,
+	0x05, 0xc6, 0xaa, 0xbd, 0xac, 0x73, 0x2c, 0x63, 0x31, 0x99, 0xc9, 0x76, 0xaa, 0x3b, 0xc2, 0xf4,
+	0x12, 0x93, 0xfa, 0x6f, 0x97, 0x98, 0x95, 0xd3, 0x9c, 0x4a, 0x3e, 0xc8, 0x79, 0xaa, 0xf2, 0xba,
+	0x51, 0x49, 0x2b, 0x95, 0x67, 0x23, 0x89, 0xb2, 0xba, 0x25, 0x53, 0xad, 0xcd, 0x98, 0xe3, 0xb2,
+	0xb1, 0x3e, 0xc1, 0x01, 0x93, 0xac, 0x66, 0x6a, 0x8a, 0xa8, 0x7c, 0x9f, 0x00, 0x6b, 0x7b, 0xaa,
+	0xf1, 0x2f, 0x7c, 0xea, 0xf2, 0x16, 0xf3, 0xe1, 0x13, 0x90, 0xd6, 0x67, 0x0f, 0x2c, 0x2e, 0xec,
+	0x4c, 0xec, 0x86, 0x5d, 0xb8, 0x72, 0x02, 0xaf, 0x86, 0xe2, 0xb6, 0x05, 0xf7, 0x26, 0x57, 0x72,
+	0x73, 0x8a, 0xc1, 0xeb, 0x27, 0x04, 0xc4, 0x4f, 0xb9, 0x25, 0xba, 0x33, 0xc3, 0x76, 0xdb, 0x82,
+	0x36, 0x48, 0xeb, 0x5b, 0xcd, 0x92, 0x15, 0xc6, 0x2e, 0x74, 0x05, 0x74, 0x22, 0xaf, 0xaf, 0x43,
+	0xf8, 0xca, 0x37, 0x3f, 0xff, 0xfe, 0x5d, 0xe2, 0xe2, 0xbe, 0xf5, 0x0e, 0xbc, 0x10, 0xfe, 0x99,
+	0x98, 0x7f, 0x14, 0xae, 0xbc, 0xaa, 0x95, 0x9f, 0x46, 0x45, 0xeb, 0xf5, 0xa8, 0x68, 0xfd, 0x36,
+	0x2a, 0x5a, 0xdf, 0x1e, 0x17, 0xcf, 0xbc, 0x3e, 0x2e, 0x9e, 0xf9, 0xe5, 0xb8, 0x78, 0xe6, 0xf3,
+	0x7c, 0xaf, 0x6d, 0x97, 0x68, 0x5b, 0x94, 0x9a, 0x6c, 0x50, 0xb6, 0xbd, 0xe8, 0xdf, 0x66, 0x3f,
+	0xad, 0xfe, 0x47, 0xb6, 0xff, 0x0a, 0x00, 0x00, 0xff, 0xff, 0xd9, 0x4b, 0x11, 0xac, 0xf5, 0x0c,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -435,6 +755,11 @@ type VolumeTransferClient interface {
 	// Export streams the volume image, full or as a diff from a snapshot.
 	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	Export(ctx context.Context, in *ExportRequest, opts ...grpc.CallOption) (VolumeTransfer_ExportClient, error)
+	// ExportObjects streams every object of a bucket moving to the requester.
+	// The exporter serves it only once the bucket is final: its lease closed and
+	// no key can write to it any more.
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+	ExportObjects(ctx context.Context, in *ExportObjectsRequest, opts ...grpc.CallOption) (VolumeTransfer_ExportObjectsClient, error)
 	// Status reports sync lag, snapshots held, and image digests.
 	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
 	Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error)
@@ -480,6 +805,38 @@ func (x *volumeTransferExportClient) Recv() (*ExportChunk, error) {
 	return m, nil
 }
 
+func (c *volumeTransferClient) ExportObjects(ctx context.Context, in *ExportObjectsRequest, opts ...grpc.CallOption) (VolumeTransfer_ExportObjectsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_VolumeTransfer_serviceDesc.Streams[1], "/akash.volume.v1.VolumeTransfer/ExportObjects", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &volumeTransferExportObjectsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type VolumeTransfer_ExportObjectsClient interface {
+	Recv() (*ObjectChunk, error)
+	grpc.ClientStream
+}
+
+type volumeTransferExportObjectsClient struct {
+	grpc.ClientStream
+}
+
+func (x *volumeTransferExportObjectsClient) Recv() (*ObjectChunk, error) {
+	m := new(ObjectChunk)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *volumeTransferClient) Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*StatusResponse, error) {
 	out := new(StatusResponse)
 	err := c.cc.Invoke(ctx, "/akash.volume.v1.VolumeTransfer/Status", in, out, opts...)
@@ -494,6 +851,11 @@ type VolumeTransferServer interface {
 	// Export streams the volume image, full or as a diff from a snapshot.
 	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
 	Export(*ExportRequest, VolumeTransfer_ExportServer) error
+	// ExportObjects streams every object of a bucket moving to the requester.
+	// The exporter serves it only once the bucket is final: its lease closed and
+	// no key can write to it any more.
+	// buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+	ExportObjects(*ExportObjectsRequest, VolumeTransfer_ExportObjectsServer) error
 	// Status reports sync lag, snapshots held, and image digests.
 	// buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
 	Status(context.Context, *StatusRequest) (*StatusResponse, error)
@@ -505,6 +867,9 @@ type UnimplementedVolumeTransferServer struct {
 
 func (*UnimplementedVolumeTransferServer) Export(req *ExportRequest, srv VolumeTransfer_ExportServer) error {
 	return status.Errorf(codes.Unimplemented, "method Export not implemented")
+}
+func (*UnimplementedVolumeTransferServer) ExportObjects(req *ExportObjectsRequest, srv VolumeTransfer_ExportObjectsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ExportObjects not implemented")
 }
 func (*UnimplementedVolumeTransferServer) Status(ctx context.Context, req *StatusRequest) (*StatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Status not implemented")
@@ -532,6 +897,27 @@ type volumeTransferExportServer struct {
 }
 
 func (x *volumeTransferExportServer) Send(m *ExportChunk) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _VolumeTransfer_ExportObjects_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ExportObjectsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(VolumeTransferServer).ExportObjects(m, &volumeTransferExportObjectsServer{stream})
+}
+
+type VolumeTransfer_ExportObjectsServer interface {
+	Send(*ObjectChunk) error
+	grpc.ServerStream
+}
+
+type volumeTransferExportObjectsServer struct {
+	grpc.ServerStream
+}
+
+func (x *volumeTransferExportObjectsServer) Send(m *ObjectChunk) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -567,6 +953,11 @@ var _VolumeTransfer_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Export",
 			Handler:       _VolumeTransfer_Export_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "ExportObjects",
+			Handler:       _VolumeTransfer_ExportObjects_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -791,6 +1182,219 @@ func (m *StatusResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ExportObjectsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ExportObjectsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ExportObjectsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.StartAfter) > 0 {
+		i -= len(m.StartAfter)
+		copy(dAtA[i:], m.StartAfter)
+		i = encodeVarintService(dAtA, i, uint64(len(m.StartAfter)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Requester) > 0 {
+		i -= len(m.Requester)
+		copy(dAtA[i:], m.Requester)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Requester)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.DSeq != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.DSeq))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Vid) > 0 {
+		i -= len(m.Vid)
+		copy(dAtA[i:], m.Vid)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Vid)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ObjectAttributes) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ObjectAttributes) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ObjectAttributes) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Metadata) > 0 {
+		for k := range m.Metadata {
+			v := m.Metadata[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintService(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintService(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintService(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.Expires) > 0 {
+		i -= len(m.Expires)
+		copy(dAtA[i:], m.Expires)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Expires)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.CacheControl) > 0 {
+		i -= len(m.CacheControl)
+		copy(dAtA[i:], m.CacheControl)
+		i = encodeVarintService(dAtA, i, uint64(len(m.CacheControl)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.ContentLanguage) > 0 {
+		i -= len(m.ContentLanguage)
+		copy(dAtA[i:], m.ContentLanguage)
+		i = encodeVarintService(dAtA, i, uint64(len(m.ContentLanguage)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.ContentDisposition) > 0 {
+		i -= len(m.ContentDisposition)
+		copy(dAtA[i:], m.ContentDisposition)
+		i = encodeVarintService(dAtA, i, uint64(len(m.ContentDisposition)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ContentEncoding) > 0 {
+		i -= len(m.ContentEncoding)
+		copy(dAtA[i:], m.ContentEncoding)
+		i = encodeVarintService(dAtA, i, uint64(len(m.ContentEncoding)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ContentType) > 0 {
+		i -= len(m.ContentType)
+		copy(dAtA[i:], m.ContentType)
+		i = encodeVarintService(dAtA, i, uint64(len(m.ContentType)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Size_ != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.Size_))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ObjectChunk) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ObjectChunk) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ObjectChunk) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ObjectSHA256) > 0 {
+		i -= len(m.ObjectSHA256)
+		copy(dAtA[i:], m.ObjectSHA256)
+		i = encodeVarintService(dAtA, i, uint64(len(m.ObjectSHA256)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.SHA256) > 0 {
+		i -= len(m.SHA256)
+		copy(dAtA[i:], m.SHA256)
+		i = encodeVarintService(dAtA, i, uint64(len(m.SHA256)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Data) > 0 {
+		i -= len(m.Data)
+		copy(dAtA[i:], m.Data)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Data)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Offset != 0 {
+		i = encodeVarintService(dAtA, i, uint64(m.Offset))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Attributes != nil {
+		{
+			size, err := m.Attributes.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintService(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Key) > 0 {
+		i -= len(m.Key)
+		copy(dAtA[i:], m.Key)
+		i = encodeVarintService(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintService(dAtA []byte, offset int, v uint64) int {
 	offset -= sovService(v)
 	base := offset
@@ -905,6 +1509,110 @@ func (m *StatusResponse) Size() (n int) {
 	}
 	if m.Final {
 		n += 2
+	}
+	return n
+}
+
+func (m *ExportObjectsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.Vid)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	if m.DSeq != 0 {
+		n += 1 + sovService(uint64(m.DSeq))
+	}
+	l = len(m.Requester)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.StartAfter)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	return n
+}
+
+func (m *ObjectAttributes) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Size_ != 0 {
+		n += 1 + sovService(uint64(m.Size_))
+	}
+	l = len(m.ContentType)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.ContentEncoding)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.ContentDisposition)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.ContentLanguage)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.CacheControl)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.Expires)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	if len(m.Metadata) > 0 {
+		for k, v := range m.Metadata {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovService(uint64(len(k))) + 1 + len(v) + sovService(uint64(len(v)))
+			n += mapEntrySize + 1 + sovService(uint64(mapEntrySize))
+		}
+	}
+	return n
+}
+
+func (m *ObjectChunk) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Key)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	if m.Attributes != nil {
+		l = m.Attributes.Size()
+		n += 1 + l + sovService(uint64(l))
+	}
+	if m.Offset != 0 {
+		n += 1 + sovService(uint64(m.Offset))
+	}
+	l = len(m.Data)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.SHA256)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
+	}
+	l = len(m.ObjectSHA256)
+	if l > 0 {
+		n += 1 + l + sovService(uint64(l))
 	}
 	return n
 }
@@ -1618,6 +2326,830 @@ func (m *StatusResponse) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Final = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ExportObjectsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ExportObjectsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ExportObjectsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Vid", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Vid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DSeq", wireType)
+			}
+			m.DSeq = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DSeq |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Requester", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Requester = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartAfter", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StartAfter = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ObjectAttributes) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ObjectAttributes: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ObjectAttributes: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Size_", wireType)
+			}
+			m.Size_ = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Size_ |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContentType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContentType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContentEncoding", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContentEncoding = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContentDisposition", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContentDisposition = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContentLanguage", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContentLanguage = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CacheControl", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CacheControl = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Expires", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Expires = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Metadata == nil {
+				m.Metadata = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowService
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowService
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthService
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthService
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowService
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthService
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthService
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipService(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthService
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Metadata[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipService(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthService
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ObjectChunk) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowService
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ObjectChunk: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ObjectChunk: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Attributes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Attributes == nil {
+				m.Attributes = &ObjectAttributes{}
+			}
+			if err := m.Attributes.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Offset", wireType)
+			}
+			m.Offset = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Offset |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = append(m.Data[:0], dAtA[iNdEx:postIndex]...)
+			if m.Data == nil {
+				m.Data = []byte{}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SHA256", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SHA256 = append(m.SHA256[:0], dAtA[iNdEx:postIndex]...)
+			if m.SHA256 == nil {
+				m.SHA256 = []byte{}
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ObjectSHA256", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowService
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthService
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthService
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ObjectSHA256 = append(m.ObjectSHA256[:0], dAtA[iNdEx:postIndex]...)
+			if m.ObjectSHA256 == nil {
+				m.ObjectSHA256 = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipService(dAtA[iNdEx:])

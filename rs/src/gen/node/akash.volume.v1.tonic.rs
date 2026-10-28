@@ -117,6 +117,38 @@ pub mod volume_transfer_client {
                 .insert(GrpcMethod::new("akash.volume.v1.VolumeTransfer", "Export"));
             self.inner.server_streaming(req, path, codec).await
         }
+        /** ExportObjects streams every object of a bucket moving to the requester.
+ The exporter serves it only once the bucket is final: its lease closed and
+ no key can write to it any more.
+ buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+*/
+        pub async fn export_objects(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ExportObjectsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<tonic::codec::Streaming<super::ObjectChunk>>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/akash.volume.v1.VolumeTransfer/ExportObjects",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("akash.volume.v1.VolumeTransfer", "ExportObjects"),
+                );
+            self.inner.server_streaming(req, path, codec).await
+        }
         /** Status reports sync lag, snapshots held, and image digests.
  buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
 */
@@ -164,6 +196,24 @@ pub mod volume_transfer_server {
             &self,
             request: tonic::Request<super::ExportRequest>,
         ) -> std::result::Result<tonic::Response<Self::ExportStream>, tonic::Status>;
+        /// Server streaming response type for the ExportObjects method.
+        type ExportObjectsStream: tonic::codegen::tokio_stream::Stream<
+                Item = std::result::Result<super::ObjectChunk, tonic::Status>,
+            >
+            + Send
+            + 'static;
+        /** ExportObjects streams every object of a bucket moving to the requester.
+ The exporter serves it only once the bucket is final: its lease closed and
+ no key can write to it any more.
+ buf:lint:ignore RPC_RESPONSE_STANDARD_NAME
+*/
+        async fn export_objects(
+            &self,
+            request: tonic::Request<super::ExportObjectsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<Self::ExportObjectsStream>,
+            tonic::Status,
+        >;
         /** Status reports sync lag, snapshots held, and image digests.
  buf:lint:ignore RPC_REQUEST_RESPONSE_UNIQUE
 */
@@ -284,6 +334,52 @@ pub mod volume_transfer_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let method = ExportSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.server_streaming(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/akash.volume.v1.VolumeTransfer/ExportObjects" => {
+                    #[allow(non_camel_case_types)]
+                    struct ExportObjectsSvc<T: VolumeTransfer>(pub Arc<T>);
+                    impl<
+                        T: VolumeTransfer,
+                    > tonic::server::ServerStreamingService<super::ExportObjectsRequest>
+                    for ExportObjectsSvc<T> {
+                        type Response = super::ObjectChunk;
+                        type ResponseStream = T::ExportObjectsStream;
+                        type Future = BoxFuture<
+                            tonic::Response<Self::ResponseStream>,
+                            tonic::Status,
+                        >;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::ExportObjectsRequest>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as VolumeTransfer>::export_objects(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let method = ExportObjectsSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(
