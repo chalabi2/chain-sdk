@@ -491,6 +491,9 @@ impl serde::Serialize for StatusResponse {
         if self.sync_lag_seconds != 0 {
             len += 1;
         }
+        if self.r#final {
+            len += 1;
+        }
         let mut struct_ser = serializer.serialize_struct("akash.volume.v1.StatusResponse", len)?;
         if !self.snapshots.is_empty() {
             struct_ser.serialize_field("snapshots", &self.snapshots)?;
@@ -513,6 +516,9 @@ impl serde::Serialize for StatusResponse {
             #[allow(clippy::needless_borrows_for_generic_args)]
             struct_ser.serialize_field("syncLagSeconds", ToString::to_string(&self.sync_lag_seconds).as_str())?;
         }
+        if self.r#final {
+            struct_ser.serialize_field("final", &self.r#final)?;
+        }
         struct_ser.end()
     }
 }
@@ -530,6 +536,7 @@ impl<'de> serde::Deserialize<'de> for StatusResponse {
             "sha256",
             "sync_lag_seconds",
             "syncLagSeconds",
+            "final",
         ];
 
         #[allow(clippy::enum_variant_names)]
@@ -539,6 +546,7 @@ impl<'de> serde::Deserialize<'de> for StatusResponse {
             Size,
             Sha256,
             SyncLagSeconds,
+            Final,
         }
         impl<'de> serde::Deserialize<'de> for GeneratedField {
             fn deserialize<D>(deserializer: D) -> std::result::Result<GeneratedField, D::Error>
@@ -565,6 +573,7 @@ impl<'de> serde::Deserialize<'de> for StatusResponse {
                             "size" => Ok(GeneratedField::Size),
                             "sha256" => Ok(GeneratedField::Sha256),
                             "syncLagSeconds" | "sync_lag_seconds" => Ok(GeneratedField::SyncLagSeconds),
+                            "final" => Ok(GeneratedField::Final),
                             _ => Err(serde::de::Error::unknown_field(value, FIELDS)),
                         }
                     }
@@ -589,6 +598,7 @@ impl<'de> serde::Deserialize<'de> for StatusResponse {
                 let mut size__ = None;
                 let mut sha256__ = None;
                 let mut sync_lag_seconds__ = None;
+                let mut r#final__ = None;
                 while let Some(k) = map_.next_key()? {
                     match k {
                         GeneratedField::Snapshots => {
@@ -627,6 +637,12 @@ impl<'de> serde::Deserialize<'de> for StatusResponse {
                                 Some(map_.next_value::<::pbjson::private::NumberDeserialize<_>>()?.0)
                             ;
                         }
+                        GeneratedField::Final => {
+                            if r#final__.is_some() {
+                                return Err(serde::de::Error::duplicate_field("final"));
+                            }
+                            r#final__ = Some(map_.next_value()?);
+                        }
                     }
                 }
                 Ok(StatusResponse {
@@ -635,6 +651,7 @@ impl<'de> serde::Deserialize<'de> for StatusResponse {
                     size: size__.unwrap_or_default(),
                     sha256: sha256__.unwrap_or_default(),
                     sync_lag_seconds: sync_lag_seconds__.unwrap_or_default(),
+                    r#final: r#final__.unwrap_or_default(),
                 })
             }
         }

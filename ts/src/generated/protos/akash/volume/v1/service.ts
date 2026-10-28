@@ -88,6 +88,13 @@ export interface StatusResponse {
    * live volume: how far behind a destination syncing from it would be.
    */
   syncLagSeconds: bigint;
+  /**
+   * final reports that latest_snapshot was taken after the volume's lease
+   * closed and the last workload using it stopped: no write can follow it, so
+   * a destination holding that snapshot holds the whole volume. A migration
+   * completes only on a final snapshot.
+   */
+  final: boolean;
 }
 
 function createBaseExportRequest(): ExportRequest {
@@ -439,7 +446,7 @@ export const StatusRequest: MessageFns<StatusRequest, "akash.volume.v1.StatusReq
 };
 
 function createBaseStatusResponse(): StatusResponse {
-  return { snapshots: [], latestSnapshot: "", size: 0n, sha256: new Uint8Array(0), syncLagSeconds: 0n };
+  return { snapshots: [], latestSnapshot: "", size: 0n, sha256: new Uint8Array(0), syncLagSeconds: 0n, final: false };
 }
 
 export const StatusResponse: MessageFns<StatusResponse, "akash.volume.v1.StatusResponse"> = {
@@ -466,6 +473,9 @@ export const StatusResponse: MessageFns<StatusResponse, "akash.volume.v1.StatusR
         throw new globalThis.Error("value provided for field message.syncLagSeconds of type int64 too large");
       }
       writer.uint32(40).int64(message.syncLagSeconds);
+    }
+    if (message.final !== false) {
+      writer.uint32(48).bool(message.final);
     }
     return writer;
   },
@@ -517,6 +527,14 @@ export const StatusResponse: MessageFns<StatusResponse, "akash.volume.v1.StatusR
           message.syncLagSeconds = reader.int64() as bigint;
           continue;
         }
+        case 6: {
+          if (tag !== 48) {
+            break;
+          }
+
+          message.final = reader.bool();
+          continue;
+        }
       }
       if ((tag & 7) === 4 || tag === 0) {
         break;
@@ -535,6 +553,7 @@ export const StatusResponse: MessageFns<StatusResponse, "akash.volume.v1.StatusR
       size: isSet(object.size) ? BigInt(object.size) : 0n,
       sha256: isSet(object.sha256) ? bytesFromBase64(object.sha256) : new Uint8Array(0),
       syncLagSeconds: isSet(object.sync_lag_seconds) ? BigInt(object.sync_lag_seconds) : 0n,
+      final: isSet(object.final) ? globalThis.Boolean(object.final) : false,
     };
   },
 
@@ -555,6 +574,9 @@ export const StatusResponse: MessageFns<StatusResponse, "akash.volume.v1.StatusR
     if (message.syncLagSeconds !== 0n) {
       obj.sync_lag_seconds = message.syncLagSeconds.toString();
     }
+    if (message.final !== false) {
+      obj.final = message.final;
+    }
     return obj;
   },
   fromPartial(object: DeepPartial<StatusResponse>): StatusResponse {
@@ -566,6 +588,7 @@ export const StatusResponse: MessageFns<StatusResponse, "akash.volume.v1.StatusR
     message.syncLagSeconds = (object.syncLagSeconds !== undefined && object.syncLagSeconds !== null)
       ? BigInt(object.syncLagSeconds)
       : 0n;
+    message.final = object.final ?? false;
     return message;
   },
 };

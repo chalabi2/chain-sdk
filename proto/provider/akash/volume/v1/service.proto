@@ -139,6 +139,15 @@ message StatusResponse {
     (gogoproto.jsontag)  = "sync_lag_seconds",
     (gogoproto.moretags) = "yaml:\"sync_lag_seconds\""
   ];
+
+  // final reports that latest_snapshot was taken after the volume's lease
+  // closed and the last workload using it stopped: no write can follow it, so
+  // a destination holding that snapshot holds the whole volume. A migration
+  // completes only on a final snapshot.
+  bool final = 6 [
+    (gogoproto.jsontag)  = "final,omitempty",
+    (gogoproto.moretags) = "yaml:\"final,omitempty\""
+  ];
 }
 
 // VolumeTransfer is the off-chain volume data plane, served by the storage
