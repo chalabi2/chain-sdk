@@ -59,6 +59,10 @@ func ServiceLogsPath(id mtypes.LeaseID) string {
 	return fmt.Sprintf("%s/logs", LeasePath(id))
 }
 
+func LeaseVolumePath(id mtypes.LeaseID) string {
+	return fmt.Sprintf("%s/volume", LeasePath(id))
+}
+
 func BucketPath(id mtypes.LeaseID) string {
 	return fmt.Sprintf("%s/bucket", LeasePath(id))
 }

@@ -81,6 +81,7 @@ type Client interface {
 	BucketInfo(ctx context.Context, id mtypes.LeaseID) (BucketInfo, error)
 	CreateBucketKey(ctx context.Context, id mtypes.LeaseID, req BucketKeyRequest) (BucketKey, error)
 	RevokeBucketKey(ctx context.Context, id mtypes.LeaseID, name string) error
+	LeaseVolume(ctx context.Context, id mtypes.LeaseID) (LeaseVolumeStatus, error)
 }
 
 type client struct {

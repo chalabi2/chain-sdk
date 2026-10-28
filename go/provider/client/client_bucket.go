@@ -53,23 +53,23 @@ type BucketInfo struct {
 
 func (c *client) BucketInfo(ctx context.Context, id mtypes.LeaseID) (BucketInfo, error) {
 	var info BucketInfo
-	err := c.bucketRequest(ctx, http.MethodGet, BucketPath(id), nil, &info)
+	err := c.jsonRequest(ctx, http.MethodGet, BucketPath(id), nil, &info)
 	return info, err
 }
 
 func (c *client) CreateBucketKey(ctx context.Context, id mtypes.LeaseID, req BucketKeyRequest) (BucketKey, error) {
 	var key BucketKey
-	err := c.bucketRequest(ctx, http.MethodPost, BucketKeysPath(id), req, &key)
+	err := c.jsonRequest(ctx, http.MethodPost, BucketKeysPath(id), req, &key)
 	return key, err
 }
 
 func (c *client) RevokeBucketKey(ctx context.Context, id mtypes.LeaseID, name string) error {
-	return c.bucketRequest(ctx, http.MethodDelete, BucketKeyPath(id, name), nil, nil)
+	return c.jsonRequest(ctx, http.MethodDelete, BucketKeyPath(id, name), nil, nil)
 }
 
-// bucketRequest sends an authenticated JSON request and accepts any 2xx, since
-// creating a key answers 201 and revoking one answers 204.
-func (c *client) bucketRequest(ctx context.Context, method, path string, body, out any) error {
+// jsonRequest sends an authenticated JSON request and accepts any 2xx, since
+// creating a bucket key answers 201 and revoking one answers 204.
+func (c *client) jsonRequest(ctx context.Context, method, path string, body, out any) error {
 	uri, err := MakeURI(c.host, path)
 	if err != nil {
 		return err

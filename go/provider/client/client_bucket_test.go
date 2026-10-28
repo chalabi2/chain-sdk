@@ -66,7 +66,7 @@ func TestRevokeBucketKey(t *testing.T) {
 	require.NoError(t, cl.RevokeBucketKey(context.Background(), bucketTestLease(), "web key"))
 }
 
-func TestBucketRequestReportsRefusals(t *testing.T) {
+func TestJSONRequestReportsRefusals(t *testing.T) {
 	cl := newBucketTestClient(t, func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusConflict)
 		_, _ = w.Write([]byte("bucket is retained"))
