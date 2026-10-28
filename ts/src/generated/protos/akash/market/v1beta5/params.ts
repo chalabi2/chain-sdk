@@ -33,7 +33,7 @@ export interface Params {
     | Duration
     | undefined;
   /**
-   * VolumeOrdersEnabled is the AEP-87 feature flag: it gates volume-group
+   * VolumeOrdersEnabled is the storage-market feature flag: it gates volume-group
    * CreateDeployment and, defense-in-depth, CreateBid on volume orders.
    * Default false; flipped by governance.
    */

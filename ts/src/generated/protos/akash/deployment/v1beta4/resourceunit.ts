@@ -27,7 +27,7 @@ export interface ResourceUnit {
   /**
    * Volumes lists externally-leased volumes this unit's services mount.
    * Attached volumes contribute zero storage quantity to the unit: no
-   * Storage entry corresponds to a VolumeRef. Empty for all pre-AEP-87
+   * Storage entry corresponds to a VolumeRef. Empty for all pre-storage-market
    * deployments.
    */
   volumes: VolumeRef[];
