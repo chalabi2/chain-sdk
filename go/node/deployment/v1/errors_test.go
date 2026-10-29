@@ -156,6 +156,12 @@ func TestErrorGRPCStatusCodes(t *testing.T) {
 			expectedGRPCCode: codes.InvalidArgument,
 			expectedABCICode: 23,
 		},
+		{
+			name:             "volume_not_pausable",
+			err:              v1.ErrVolumeNotPausable,
+			expectedGRPCCode: codes.FailedPrecondition,
+			expectedABCICode: 34,
+		},
 	}
 
 	for _, tt := range tests {

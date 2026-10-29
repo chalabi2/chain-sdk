@@ -39,6 +39,7 @@ const (
 	errInvalidVolumeAdoption
 	errInvalidVolumeReplica
 	errInvalidResize
+	errVolumeNotPausable
 )
 
 var (
@@ -115,4 +116,8 @@ var (
 	// ErrInvalidResize is the error when new resources change something a
 	// lease resize may not change
 	ErrInvalidResize = sdkerrors.RegisterWithGRPCCode(ModuleName, errInvalidResize, codes.InvalidArgument, "invalid resize")
+	// ErrVolumeNotPausable is the error when a volume group is paused or
+	// started: a tenant ends a volume by closing it and moves it by closing
+	// its lease
+	ErrVolumeNotPausable = sdkerrors.RegisterWithGRPCCode(ModuleName, errVolumeNotPausable, codes.FailedPrecondition, "volume groups cannot be paused or started; close the volume or move it")
 )
